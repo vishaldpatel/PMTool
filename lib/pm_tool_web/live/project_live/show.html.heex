@@ -1,0 +1,15 @@
+<.header>
+  <%= @project.name %>
+  <:actions>
+    <.link patch={~p"/projects/#{@project}/edit"} phx-click={JS.push_focus()}>
+      <.button>Project Settings</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Name"><%= @project.name %></:item>
+  <:item title="Description"><%= @project.description %></:item>
+</.list>
+
+<.back navigate={~p"/projects"}>Back to projects</.back>
