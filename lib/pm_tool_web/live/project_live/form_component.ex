@@ -59,20 +59,5 @@ defmodule PmToolWeb.ProjectLive.FormComponent do
     end
   end
 
-  defp save_project(socket, :new, project_params) do
-    case Projects.create_project(project_params) do
-      {:ok, project} ->
-        notify_parent({:saved, project})
-
-        {:noreply,
-         socket
-         |> put_flash(:info, "Project created successfully")
-         |> push_patch(to: socket.assigns.patch)}
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, form: to_form(changeset))}
-    end
-  end
-
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 end

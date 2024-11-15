@@ -7,34 +7,26 @@ defmodule PmTool.Projects do
   alias PmTool.Repo
 
   alias PmTool.Projects.Project
+  alias PmTool.Projects.Member
+  alias PmTool.Accounts.User
 
-  @doc """
-  Returns the list of projects.
-
-  ## Examples
-
-      iex> list_projects()
-      [%Project{}, ...]
-
-  """
-  def list_projects do
+  def list_projects() do
     Repo.all(Project)
   end
 
-  @doc """
-  Gets a single project.
+  def list_projects_for_owner(%User{id: user_id}) do
+    Repo.all(from p in Project, where: p.owner_id == ^user_id)
+  end
 
-  Raises `Ecto.NoResultsError` if the Project does not exist.
+  def list_projects_for_member(%User{id: user_id}) do
+    # Get all projects where the user is a member in the members table
+    query = from p in Project,
+            join: m in Member,
+            on: p.id == m.project_id,
+            where: m.user_id == ^user_id
+    Repo.all(query)
+  end
 
-  ## Examples
-
-      iex> get_project!(123)
-      %Project{}
-
-      iex> get_project!(456)
-      ** (Ecto.NoResultsError)
-
-  """
   def get_project!(combo_slug) do 
     url_hash = combo_slug
     |> String.split("--")
@@ -43,68 +35,59 @@ defmodule PmTool.Projects do
     Repo.get_by!(Project, url_hash: url_hash)
   end
 
-  @doc """
-  Creates a project.
-
-  ## Examples
-
-      iex> create_project(%{field: value})
-      {:ok, %Project{}}
-
-      iex> create_project(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def create_project(attrs \\ %{}) do
     %Project{}
     |> Project.changeset(attrs)
     |> Repo.insert()
   end
 
-  @doc """
-  Updates a project.
-
-  ## Examples
-
-      iex> update_project(project, %{field: new_value})
-      {:ok, %Project{}}
-
-      iex> update_project(project, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
   def update_project(%Project{} = project, attrs) do
     project
     |> Project.changeset(attrs)
     |> Repo.update()
   end
 
-  @doc """
-  Deletes a project.
-
-  ## Examples
-
-      iex> delete_project(project)
-      {:ok, %Project{}}
-
-      iex> delete_project(project)
-      {:error, %Ecto.Changeset{}}
-
-  """
   def delete_project(%Project{} = project) do
     Repo.delete(project)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking project changes.
-
-  ## Examples
-
-      iex> change_project(project)
-      %Ecto.Changeset{data: %Project{}}
-
-  """
   def change_project(%Project{} = project, attrs \\ %{}) do
     Project.changeset(project, attrs)
+  end
+
+  #################
+  ## Project Member
+  #################
+
+  alias PmTool.Projects.Member
+
+  def list_members do
+    Repo.all(Member)
+  end
+
+  def list_members_for_project(%Project{id: project_id}) do
+    Repo.all(from m in User, join: p in assoc(m, :members), where: p.id == ^project_id)
+  end
+
+  def get_member!(id), do: Repo.get!(Member, id)
+
+  def add_member_to_project(%User{} = user, %Project{} = project) do
+    %Member{}
+    |> Member.changeset(%{user_id: user.id, project_id: project.id})
+    |> Repo.insert()
+  end
+
+  def update_member(%Member{} = member, attrs) do
+    member
+    |> Member.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def delete_member(%Member{} = member) do
+    Repo.delete(member)
+  end
+
+  def change_member(%Member{} = member, attrs \\ %{}) do
+    Member.changeset(member, attrs)
   end
 end

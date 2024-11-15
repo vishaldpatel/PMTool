@@ -14,6 +14,11 @@ defmodule PmToolWeb.ProjectLive.Index do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
+  @impl true
+  def handle_info({PmToolWeb.ProjectLive.NewFormComponent, {:created, project}}, socket) do
+    {:noreply, stream_insert(socket, :projects, project)}
+  end
+
   defp apply_action(socket, :new, _params) do
     socket
     |> assign(:page_title, "New Project")
@@ -25,13 +30,4 @@ defmodule PmToolWeb.ProjectLive.Index do
     |> assign(:page_title, "Listing Projects")
     |> assign(:project, nil)
   end
-
-  @impl true
-  def handle_info({PmToolWeb.ProjectLive.FormComponent, {:saved, project}}, socket) do
-    {:noreply, stream_insert(socket, :projects, project)}
-  end
-  def handle_info({PmToolWeb.ProjectLive.NewFormComponent, {:created, project}}, socket) do
-    {:noreply, stream_insert(socket, :projects, project)}
-  end
-
 end

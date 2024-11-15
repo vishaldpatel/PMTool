@@ -18,4 +18,19 @@ defmodule PmTool.ProjectsFixtures do
 
     project
   end
+
+  @doc """
+  Generate a member.
+  """
+  def member_fixture(attrs \\ %{}) do
+    {:ok, member} =
+      attrs
+      |> Enum.into(%{
+        project_id: 42,
+        user_id: 42
+      })
+      |> PmTool.Projects.create_member()
+
+    member
+  end
 end

@@ -10,6 +10,10 @@ defmodule PmTool.Accounts.User do
     field :confirmed_at, :naive_datetime
 
     has_many :projects, PmTool.Projects.Project
+    has_many :memberships, {"members", PmTool.Projects.Project}, foreign_key: :project_id
+
+    has_many :tasks, PmTool.Tasks.Task, foreign_key: :owner_id
+    has_many :tasks_created, PmTool.Tasks.Task, foreign_key: :creator_id
 
     timestamps()
   end

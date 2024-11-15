@@ -1,5 +1,5 @@
 <.header>
-  <%= @project.name %>
+  <%= @project.name %>:
   <:actions>
     <.link patch={~p"/projects/#{@project}/edit"} phx-click={JS.push_focus()}>
       <.button>Project Settings</.button>
@@ -7,9 +7,10 @@
   </:actions>
 </.header>
 
-<.list>
-  <:item title="Name"><%= @project.name %></:item>
-  <:item title="Description"><%= @project.description %></:item>
-</.list>
+<ul class="ml-5 list-disc">
+  <%= for task <- @tasks do %>
+    <li><%= task.name %></li>
+  <% end %>
+</ul>
 
 <.back navigate={~p"/projects"}>Back to projects</.back>

@@ -28,5 +28,10 @@ defmodule PmToolWeb.ProjectLive.Edit do
     |> push_redirect(to: ~p"/projects")}
   end
 
+  @impl true
+  def handle_info({PmToolWeb.ProjectLive.FormComponent, {:saved, project}}, socket) do
+    {:noreply, stream_insert(socket, :projects, project)}
+  end
+
   defp page_title(:edit), do: "Project Settings"
 end
