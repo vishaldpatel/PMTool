@@ -1,6 +1,5 @@
 defmodule PmTool.Tasks.Stage do
   use Ecto.Schema
-  import PmTool.UrlTools
   import Ecto.Changeset
 
   schema "stages" do

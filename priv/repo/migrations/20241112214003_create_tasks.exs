@@ -11,8 +11,6 @@ defmodule PmTool.Repo.Migrations.CreateTasks do
 
       # Each task should have a unique hash to be used for the url_string
       add :url_hash, :string, null: false
-      add :url_slug, :string, null: false
-
 
       # Each task should have a unique hash to be used for the url_string
       unique_index(:tasks, [:url_hash])

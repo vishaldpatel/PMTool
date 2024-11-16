@@ -1,6 +1,6 @@
 defmodule PmTool.Projects.Project do
   use Ecto.Schema
-  import PmTool.UrlTools
+  import PmTool.URLs
   import Ecto.Changeset
 
   schema "projects" do

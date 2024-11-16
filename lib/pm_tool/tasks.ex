@@ -10,6 +10,7 @@ defmodule PmTool.Tasks do
   alias PmTool.Tasks.TaskStatus
   alias PmTool.Tasks.Stage
   alias PmTool.Projects.Project
+  alias PmTool.Projects.Epic
 
   ###########
   # Getters #
@@ -35,11 +36,7 @@ defmodule PmTool.Tasks do
 
   def get_task_by_id!(id), do: Repo.get!(Task, id)
 
-  def get_task!(combo_slug) do 
-    url_hash = combo_slug
-    |> String.split("--")
-    |> List.first()
-
+  def get_task!(url_hash) do 
     Repo.get_by!(Task, url_hash: url_hash)
   end
 
@@ -56,6 +53,12 @@ defmodule PmTool.Tasks do
   ###########
   # Setters #
   ###########
+
+  def create_task(attrs \\ %{}) do
+    %Task{}
+    |> Task.changeset(attrs)
+    |> Repo.insert()
+  end
 
   def update_task(%Task{} = task, attrs) do
     task
@@ -107,5 +110,16 @@ defmodule PmTool.Tasks do
 
   def delete_task(%Task{} = task) do
     Repo.delete(task)
+  end
+
+  #########
+  # Epics #
+  #########
+  def set_epic_for_task(%Task{} = task, %Epic{} = epic) do
+    update_task(task, %{epic_id: epic.id})
+  end
+
+  def unset_epic_for_task(%Task{} = task) do
+    update_task(task, %{epic_id: nil})
   end
 end

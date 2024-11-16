@@ -10,7 +10,7 @@ defmodule PmTool.Repo.Migrations.AddStatusToTasks do
     index(:task_status, [:task_id])
 
     alter table(:tasks) do
-      add :current_status_id, references(:task_status, on_delete: :delete_all)
+      add :current_status_id, references(:task_status)
     end
   end
 end

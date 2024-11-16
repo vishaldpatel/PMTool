@@ -8,6 +8,7 @@ defmodule PmTool.Projects do
 
   alias PmTool.Projects.Project
   alias PmTool.Projects.Member
+  alias PmTool.Projects.Epic
   alias PmTool.Accounts.User
 
   def list_projects() do
@@ -89,5 +90,29 @@ defmodule PmTool.Projects do
 
   def change_member(%Member{} = member, attrs \\ %{}) do
     Member.changeset(member, attrs)
+  end
+
+  ################
+  ## Project Epics
+  ################
+
+  def list_epics_for_project(%Project{id: project_id}) do
+    Repo.all(from e in Epic, where: e.project_id == ^project_id)
+  end
+
+  def get_epic!(url_hash), do: Repo.get_by!(Epic, url_hash)
+
+  def get_epic_by_id!(id), do: Repo.get!(Epic, id)
+
+  def create_epic(attrs \\ %{}) do
+    %Epic{}
+    |> Epic.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def update_epic(%Epic{} = epic, attrs) do
+    epic
+    |> Epic.changeset(attrs)
+    |> Repo.update()
   end
 end

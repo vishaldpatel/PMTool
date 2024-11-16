@@ -10,7 +10,7 @@ defmodule PmTool.Repo.Migrations.AddStagesToTasks do
     index(:stagees, [:task_id])
 
     alter table(:tasks) do
-      add :current_stage_id, references(:stages, on_delete: :delete_all)
+      add :current_stage_id, references(:stages)
     end
   end
 end

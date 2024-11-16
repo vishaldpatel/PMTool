@@ -1,4 +1,4 @@
-defmodule PmTool.UrlTools do
+defmodule PmTool.URLs do
   import Ecto.Changeset
 
   def generate_url_hash(changeset) do
