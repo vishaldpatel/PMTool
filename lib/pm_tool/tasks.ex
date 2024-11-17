@@ -11,6 +11,7 @@ defmodule PmTool.Tasks do
   alias PmTool.Tasks.Stage
   alias PmTool.Projects.Project
   alias PmTool.Projects.Epic
+  alias PmTool.Tasks.Blocker
 
   ###########
   # Getters #
@@ -121,5 +122,41 @@ defmodule PmTool.Tasks do
 
   def unset_epic_for_task(%Task{} = task) do
     update_task(task, %{epic_id: nil})
+  end
+
+  ############
+  # Blockers # 
+  ############
+
+  def get_blocked_tasks_for_project(%Project{} = project) do
+    # Get all tasks for project that have an entry in the blockers table with done = false
+    query = from t in Task, 
+            join: b in Blocker, on: b.task_id == t.id, 
+            where: b.done == false and t.project_id == ^project.id
+    Repo.all(query)
+  end
+
+  def add_blocker(attrs \\ %{}) do
+    %Blocker{}
+    |> Blocker.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def update_blocker(%Blocker{} = blocker, attrs) do
+    blocker
+    |> Blocker.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def mark_blocker_as_done(%Blocker{} = blocker) do
+    update_blocker(blocker, %{done: true})
+  end
+
+  def mark_blocker_as_undone(%Blocker{} = blocker) do
+    update_blocker(blocker, %{done: false})
+  end
+
+  def delete_blocker(%Blocker{} = blocker) do
+    Repo.delete(blocker)
   end
 end

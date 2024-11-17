@@ -17,6 +17,7 @@ defmodule PmTool.Tasks.Task do
 
     has_many :task_statuses, PmTool.Tasks.TaskStatus
     has_many :stages, PmTool.Tasks.Stage
+    has_many :blockers, PmTool.Tasks.Blocker
 
     timestamps()
   end
