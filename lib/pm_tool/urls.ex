@@ -1,13 +1,10 @@
-defmodule PmTool.UrlTools do
+defmodule PmTool.URLs do
   import Ecto.Changeset
 
-  def generate_url_hash(changeset) do
-    if get_field(changeset, :url_hash) == nil do
-      url_hash = Ecto.UUID.generate()
-      put_change(changeset, :url_hash, url_hash)
-    else
-      changeset
-    end
+  defp hex_now() do
+    DateTime.utc_now()
+    |> DateTime.to_unix(:millisecond)
+    |> Integer.to_string(16)
   end
 
   def slugify(changeset) do
@@ -19,7 +16,9 @@ defmodule PmTool.UrlTools do
       |> String.replace("&", "and")
       |> String.split()
       |> Enum.join("-")
-      put_change(changeset, :url_slug, url_slug)
+
+      url_slug = "#{hex_now()}-#{url_slug}"
+      put_change(changeset, :slug, url_slug)
     else
       changeset
     end

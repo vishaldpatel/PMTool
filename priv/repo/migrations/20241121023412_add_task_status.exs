@@ -1,4 +1,4 @@
-defmodule PmTool.Repo.Migrations.AddStatusToTasks do
+defmodule PmTool.Repo.Migrations.AddTaskStatus do
   use Ecto.Migration
 
   def change do
@@ -7,7 +7,7 @@ defmodule PmTool.Repo.Migrations.AddStatusToTasks do
       add :status, :string, null: false, default: "unstarted"
       timestamps()
     end
-    index(:task_status, [:task_id])
+    create index(:task_status, [:task_id])
 
     alter table(:tasks) do
       add :current_status_id, references(:task_status)

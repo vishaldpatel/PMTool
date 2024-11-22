@@ -9,11 +9,8 @@ defmodule PmTool.Accounts.User do
     field :current_password, :string, virtual: true, redact: true
     field :confirmed_at, :naive_datetime
 
-    has_many :projects, PmTool.Projects.Project
-    has_many :memberships, {"members", PmTool.Projects.Project}, foreign_key: :project_id
-
-    has_many :tasks, PmTool.Tasks.Task, foreign_key: :owner_id
-    has_many :tasks_created, PmTool.Tasks.Task, foreign_key: :creator_id
+    has_many :memberships, PmTool.Teams.TeamMember
+    has_many :teams, through: [:memberships, :team]
 
     timestamps()
   end

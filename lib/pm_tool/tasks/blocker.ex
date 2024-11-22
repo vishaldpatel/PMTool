@@ -3,17 +3,16 @@ defmodule PmTool.Tasks.Blocker do
   import Ecto.Changeset
 
   schema "blockers" do
-    belongs_to :task, PmTool.Tasks.Task
     field :description, :string
     field :done, :boolean, default: false
-    
+    belongs_to :task, PmTool.Tasks.Task
     timestamps()
   end
 
   @doc false
   def changeset(blocker, attrs) do
     blocker
-    |> cast(attrs, [:task_id, :description, :done])
-    |> validate_required([:task_id, :description])
+    |> cast(attrs, [:description, :task_id, :done])
+    |> validate_required([:description, :task_id, :done])
   end
 end

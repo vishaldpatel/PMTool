@@ -1,4 +1,4 @@
-defmodule PmTool.Repo.Migrations.AddBlockersToTasks do
+defmodule PmTool.Repo.Migrations.AddTaskBlockers do
   use Ecto.Migration
 
   def change do
@@ -9,6 +9,6 @@ defmodule PmTool.Repo.Migrations.AddBlockersToTasks do
 
       timestamps()
     end
-    index(:blockers, [:task_id])
+    create index(:blockers, [:task_id])
   end
 end
