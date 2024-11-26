@@ -3,9 +3,10 @@ defmodule PmTool.Comments.TaskComment do
   import Ecto.Changeset
 
   schema "task_comments" do
-    belongs_to :user, PmTool.Users.User
+    belongs_to :user, PmTool.Accounts.User
     belongs_to :task, PmTool.Tasks.Task
     field :info, :string
+
     timestamps()
   end
 

@@ -1,0 +1,45 @@
+defmodule PmTool.Projects do
+  @moduledoc """
+  The Projects context.
+  """
+
+  import Ecto.Query, warn: false
+  alias PmTool.Repo
+
+  alias PmTool.Projects.Project
+  alias PmTool.Projects.TeamProject
+  alias PmTool.Teams.Team
+
+  def list_projects_for(%Team{} = team) do
+    query = from p in Project,
+      join: t in assoc(p, :team_projects),
+      where: t.team_id == ^team.id
+    Repo.all(query)
+  end
+
+  def get_project!(id), do: Repo.get!(Project, id)
+
+  def get_project_by_slug!(slug), do: Repo.get_by!(Project, slug: slug)
+
+  def create_project(attrs \\ %{}) do
+    %Project{}
+    |> Project.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def add_team_to_project(%Project{} = project, %Team{} = team) do
+    %TeamProject{}
+    |> TeamProject.changeset(%{project_id: project.id, team_id: team.id})
+    |> Repo.insert()
+  end
+
+  def update_project(%Project{} = project, attrs) do
+    project
+    |> Project.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def delete_project(%Project{} = project) do
+    Repo.delete(project)
+  end
+end

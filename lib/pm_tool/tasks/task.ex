@@ -5,6 +5,8 @@ defmodule PmTool.Tasks.Task do
 
   @stages ["backlog", "upcoming", "current", "done"]
   @statuses ["unstarted", "started", "finished", "delivered", "rejected", "acceped"]
+  def statuses, do: @statuses
+  def stages, do: @stages
 
   schema "tasks" do
     field :name, :string
@@ -28,10 +30,28 @@ defmodule PmTool.Tasks.Task do
   def changeset(task, attrs) do
     task
     |> cast(attrs, [:name, :description, :stage, :status, :creator_id, :owner_id, :team_id, :project_id])
-    |> validate_required([:name, :stage, :status, :creator_id, :team_id])
+    |> validate_required([:name, :creator_id])
     |> slugify()
     |> unique_constraint(:slug)
+    |> maybe_set_stage()
+    |> maybe_set_status()
     |> validate_inclusion(:stage, @stages)
     |> validate_inclusion(:status, @statuses)
+  end
+
+  defp maybe_set_status(changeset) do
+    if get_field(changeset, :status) == nil do
+      put_change(changeset, :status, "unstarted")
+    else
+      changeset
+    end
+  end
+
+  defp maybe_set_stage(changeset) do
+    if get_field(changeset, :stage) == nil do
+      put_change(changeset, :stage, "backlog")
+    else
+      changeset
+    end
   end
 end

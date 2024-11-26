@@ -11,6 +11,8 @@ defmodule PmTool.Accounts.User do
 
     has_many :memberships, PmTool.Teams.TeamMember
     has_many :teams, through: [:memberships, :team]
+    has_many :owned_tasks, PmTool.Tasks.Task, foreign_key: :creator_id
+    has_many :created_tasks, PmTool.Tasks.Task, foreign_key: :owner_id
 
     timestamps()
   end

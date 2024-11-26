@@ -11,7 +11,7 @@ defmodule PmTool.Repo.Migrations.AddTasks do
 
       add :creator_id, references(:users), null: false
       add :owner_id, references(:users)
-      add :team_id, references(:teams), null: false
+      add :team_id, references(:teams)
 
       timestamps()
     end

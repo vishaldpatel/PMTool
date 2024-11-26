@@ -69,6 +69,9 @@ defmodule PmToolWeb.Router do
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
 
+      live "/tasks", TasksLive, :index
+      live "/tasks/:slug", TasksLive, :expand_task
+
       # live "/projects", ProjectLive.Index, :index
       # live "/projects/new", ProjectLive.Index, :new
       # live "/projects/:combo_slug", ProjectLive.Show, :show

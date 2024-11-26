@@ -1,7 +1,6 @@
 defmodule PmTool.Projects.TeamProject do
   use Ecto.Schema
   import Ecto.Changeset
-  import PmTool.URLs
 
   schema "team_projects" do
     belongs_to :team, PmTool.Teams.Team
