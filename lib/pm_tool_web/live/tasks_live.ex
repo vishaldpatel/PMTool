@@ -13,10 +13,7 @@ defmodule PmToolWeb.TasksLive do
 
     ## Placeholder:
     ~H"""
-    <div class="float-right w-60">
-      &nbsp;
-    </div>
-    <div class="float-right w-60">
+    <div class="text-left w-80">
       <%= if @task do %>
         <.live_component module={PmToolWeb.TaskComponents} task={@task} id={"task-"<>@task.slug} expanded={true} />
       <% end %>
@@ -39,25 +36,25 @@ defmodule PmToolWeb.TasksLive do
       </form>
 
       <script>
-        tasks_selected = 0;
         selected_tasks = {};
         batch_task_options = document.getElementById("batch_task_options");
+
         document.addEventListener("task_checkbox_clicked", (event) => {
-          if (event.target.checked) {
-            tasks_selected += 1;
-            selected_tasks[event.detail.slug] = true;
-            batch_task_options.innerHTML += `<input type="hidden" name="task_slugs[]" value="${event.detail.slug}" id="chk-${event.detail.slug}">`;
+          button_container = document.getElementById("button_container_task-"+event.detail.slug);
+          button_container.classList.toggle('bg-yellow-100');
+          button_container.classList.toggle('bg-gray-100');
+
+          if (document.querySelectorAll('input[name="batch_task_slugs[]"]:checked').length > 0) {
+            document.getElementById("batch_task_options").style.display = "inline-block";
           } else {
-            tasks_selected -= 1;
-            delete selected_tasks[event.detail.slug];
-            // Remove element with id of chk-id
-            document.getElementById(`chk-${event.detail.slug}`).remove();
+            document.getElementById("batch_task_options").style.display = "none";
           }
 
-          if (tasks_selected == 0) {
-            document.getElementById("batch_task_options").style.display = "none";
+          if (event.target.checked) {
+            batch_task_options.innerHTML += `<input type="hidden" name="task_slugs[]" value="${event.detail.slug}" id="chk-${event.detail.slug}">`;
           } else {
-            document.getElementById("batch_task_options").style.display = "inline-block";
+            // Remove element with id of chk-id
+            document.getElementById(`chk-${event.detail.slug}`).remove();
           }
         });
       </script>
@@ -81,13 +78,10 @@ defmodule PmToolWeb.TasksLive do
   end
 
   def handle_event("delete_tasks", params, socket) do
-    IO.inspect(params)
     current_user = socket.assigns.current_user
     task_slugs = params["task_slugs"]
     Tasks.delete_tasks_with_slugs(current_user, task_slugs)
-    socket = 
-      assign(socket, new_task_id: "new_task")
-      |> maybe_get_tasks_for_current_user()
+    socket = maybe_get_tasks_for_current_user(socket)
     {:noreply, socket}
   end
 

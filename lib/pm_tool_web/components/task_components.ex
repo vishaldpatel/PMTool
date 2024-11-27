@@ -51,7 +51,7 @@ defmodule PmToolWeb.TaskComponents do
         {:noreply, assign(socket, 
           id: new_task_id,
           show_task: "", 
-          show_taskV_edit: "display: none;")}
+          show_task_edit: "display: none;")}
       {:error, changeset} ->
         {:noreply, assign(socket, 
           show_task: "display: none;", 
@@ -61,20 +61,24 @@ defmodule PmToolWeb.TaskComponents do
 
   defp show_task(assigns) do
     ~H"""
-    <div>
+    <div class="text-left">
       <div id={"show-"<>@id}
-          style={@show_task}
-          class="pl-2 bg-yellow-100 border">
-        <input type="checkbox" name={"check-#{@id}"} phx-click={
-          JS.dispatch("task_checkbox_clicked", detail: %{slug: @task.slug})
-        }/>
+          style={@show_task}>
         <div
-          class="inline-block"
+          id={"button_container_#{@id}"}
+          class="align-top w-full pl-1 pr-1 cursor-pointer border text-left bg-yellow-100 inline-block"
           phx-click={
             JS.toggle(to: "#show-"<>@id)
             |> JS.toggle(to: "#edit-#{@id}")
           }>
-          <span class="just_title"><%= @task.name %></span>
+          <span class="just_title text-left"><%= @task.name %></span>
+          <input 
+            type="checkbox" 
+            name="batch_task_slugs[]" 
+            class="float-right align-top mt-1 mr-1" 
+            phx-click={
+              JS.dispatch("task_checkbox_clicked", detail: %{slug: @task.slug})
+            }/>
         </div>
       </div>
       <.task_form task={@task} id={@id} action="update_task" myself={@myself} show_task_edit={@show_task_edit} />
@@ -99,23 +103,27 @@ defmodule PmToolWeb.TaskComponents do
       end
 
     ~H"""
-    <div id={"edit-"<>@id} style={@show_task_edit} class="bg-gray-100 border border-gray-400">
-      <form phx-submit={@action} phx-target={@myself}>
-        <input name="task[name]" type="text" value={@task.name} /><br/>
-        <textarea name="task[description]" type="text"><%= @task.description %></textarea><br/>
-        <select name="task[status]" value={@task.status}>
-          <%= for status <- Tasks.Task.statuses() do %>
-            <option value={status} selected={@task.status == status}><%= status %></option>
-          <% end %>
-        </select><br />
-        <button><%= save_button_name %></button>
-        <input type="hidden" name="task[slug]" value={@task.slug} />
-      </form>
-      <button 
-        phx-click={
-          JS.toggle(to: "#show-"<>@id)
-          |> JS.toggle(to: "#edit-#{@id}")
-        }>Cancel</button>
+    <div id={"edit-"<>@id} style={@show_task_edit} class="text-left">
+      <div class="inline-block w-full bg-gray-100 border border-gray-400 text-left p-1">
+        <form phx-submit={@action} phx-target={@myself}> 
+          <input placeholder="Task Name" name="task[name]" type="text" value={@task.name} class="w-full py-0 px-1 mb-1"/><br/>
+          <textarea placeholder="Task Description" name="task[description]" type="text" class="w-full py-0 px-1 mb-1"><%= @task.description %></textarea><br/>
+          <select name="task[status]" class="w-full py-0 px-2 mb-1" value={@task.status}>
+            <%= for status <- Tasks.Task.statuses() do %>
+              <option value={status} selected={@task.status == status}><%= status %></option>
+            <% end %>
+          </select><br />
+          <input type="hidden" name="task[slug]" value={@task.slug} />
+          <div class="w-full text-right">
+            <button type="reset"
+              phx-click={
+                JS.toggle(to: "#show-"<>@id)
+                |> JS.toggle(to: "#edit-#{@id}")
+              }>Cancel</button>
+            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold px-2 py-1 ml-1 rounded"><%= save_button_name %></button>
+          </div>
+        </form>
+      </div>
     </div>
     """
   end
