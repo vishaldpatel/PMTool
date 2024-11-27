@@ -58,28 +58,31 @@ defmodule PmToolWeb.TaskComponents do
           show_task_edit: "")}
     end
   end
-
+  
   defp show_task(assigns) do
     ~H"""
-    <div class="text-left">
-      <div id={"show-"<>@id}
-          style={@show_task}>
-        <div
-          id={"button_container_#{@id}"}
-          class="align-top w-full pl-1 pr-1 cursor-pointer border text-left bg-yellow-100 inline-block"
+    <div
+      class="text-left"
+      draggable="true"
+      class="Task"
+      ondragstart="dragstartHandler(event)"
+      >
+      <div
+        style={@show_task}
+        id={"show-#{@id}"}
+        class="align-top w-full pl-1 pr-1 cursor-pointer border text-left bg-yellow-100 inline-block"
+        phx-click={
+          JS.toggle(to: "#show-"<>@id)
+          |> JS.toggle(to: "#edit-#{@id}")
+        }>
+        <span class="just_title text-left"><%= @task.name %></span>
+        <input 
+          type="checkbox" 
+          name="batch_task_slugs[]" 
+          class="float-right align-top mt-1 mr-1" 
           phx-click={
-            JS.toggle(to: "#show-"<>@id)
-            |> JS.toggle(to: "#edit-#{@id}")
-          }>
-          <span class="just_title text-left"><%= @task.name %></span>
-          <input 
-            type="checkbox" 
-            name="batch_task_slugs[]" 
-            class="float-right align-top mt-1 mr-1" 
-            phx-click={
-              JS.dispatch("task_checkbox_clicked", detail: %{slug: @task.slug})
-            }/>
-        </div>
+            JS.dispatch("task_checkbox_clicked", detail: %{slug: @task.slug})
+          }/>
       </div>
       <.task_form task={@task} id={@id} action="update_task" myself={@myself} show_task_edit={@show_task_edit} />
     </div>

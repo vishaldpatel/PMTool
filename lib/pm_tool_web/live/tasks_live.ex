@@ -40,9 +40,9 @@ defmodule PmToolWeb.TasksLive do
         batch_task_options = document.getElementById("batch_task_options");
 
         document.addEventListener("task_checkbox_clicked", (event) => {
-          button_container = document.getElementById("button_container_task-"+event.detail.slug);
-          button_container.classList.toggle('bg-yellow-100');
-          button_container.classList.toggle('bg-gray-100');
+          task_container = document.getElementById("show-task-"+event.detail.slug);
+          task_container.classList.toggle('bg-yellow-100');
+          task_container.classList.toggle('bg-gray-100');
 
           if (document.querySelectorAll('input[name="batch_task_slugs[]"]:checked').length > 0) {
             document.getElementById("batch_task_options").style.display = "inline-block";
@@ -59,12 +59,37 @@ defmodule PmToolWeb.TasksLive do
         });
       </script>
 
+      <script>
+        function dragstartHandler(ev) {
+          // Add the target element's id to the data transfer object
+          ev.dataTransfer.setData("text/plain", ev.target.id);
+        }
+
+        function dragoverHandler(ev) {
+          ev.preventDefault();
+          ev.dataTransfer.dropEffect = "move";
+        }
+
+        function dropHandler(ev) {
+          ev.preventDefault();
+          // Get the id of the target and add the moved element to the target's DOM
+          const data = ev.dataTransfer.getData("text/plain");
+          ev.target.appendChild(document.getElementById(data));
+        }
+      </script>
+
       <%= if @tasks do %>
         <%= for task <- @tasks do %>
-          <.live_component module={PmToolWeb.TaskComponents} id={"task-"<>task.slug} task={task} />
+          <div class="text-left"
+            ondragover="dragoverHandler(event)"
+            ondrop="dropHandler(event)"
+            id={"taskContainer-"<>task.slug}>
+            <.live_component module={PmToolWeb.TaskComponents} id={"task-"<>task.slug} task={task} />
+          </div>
         <% end %>
       <% end %>
       <.live_component module={PmToolWeb.TaskComponents} id="new_task" current_user={@current_user} />
+
     </div>
     """
   end
