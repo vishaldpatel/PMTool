@@ -40,10 +40,10 @@ defmodule PmToolWeb.TaskComponents do
   end
 
   def handle_event("create_task", %{"task" => task_params}, socket) do
-    task_params =
-      %{"creator_id" => socket.assigns.current_user.id, "owner_id" => socket.assigns.current_user.id} |> 
-      Enum.into task_params
-    case new_task = Tasks.create_task(task_params) do
+    task_params = 
+      %{"creator_id" => socket.assigns.current_user.id, "owner_id" => socket.assigns.current_user.id}
+      |> Enum.into(task_params)
+    case Tasks.create_task(task_params) do
       {:ok, _task} ->
         pid = self()
         new_task_id = "new-task-#{DateTime.to_unix(DateTime.utc_now())}"
@@ -52,7 +52,7 @@ defmodule PmToolWeb.TaskComponents do
           id: new_task_id,
           show_task: "", 
           show_task_edit: "display: none;")}
-      {:error, changeset} ->
+      {:error, _changeset} ->
         {:noreply, assign(socket, 
           show_task: "display: none;", 
           show_task_edit: "")}
@@ -101,6 +101,7 @@ defmodule PmToolWeb.TaskComponents do
       else
         "Update"
       end
+    assigns = assign(assigns, :save_button_name, save_button_name)
 
     ~H"""
     <div id={"edit-"<>@id} style={@show_task_edit} class="text-left">
@@ -120,7 +121,7 @@ defmodule PmToolWeb.TaskComponents do
                 JS.toggle(to: "#show-"<>@id)
                 |> JS.toggle(to: "#edit-#{@id}")
               }>Cancel</button>
-            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold px-2 py-1 ml-1 rounded"><%= save_button_name %></button>
+            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold px-2 py-1 ml-1 rounded"><%= @save_button_name %></button>
           </div>
         </form>
       </div>
