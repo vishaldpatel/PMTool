@@ -60,33 +60,54 @@ defmodule PmToolWeb.TasksLive do
       </script>
 
       <script>
-        function dragstartHandler(ev) {
-          // Add the target element's id to the data transfer object
-          ev.dataTransfer.setData("text/plain", ev.target.id);
+        var _el;
+
+        function dragEndHandler() {
+          event.preventDefault();
         }
 
-        function dragoverHandler(ev) {
-          ev.preventDefault();
-          ev.dataTransfer.dropEffect = "move";
+        function dropHandler(e) {
+          event.preventDefault();
         }
 
-        function dropHandler(ev) {
-          ev.preventDefault();
-          // Get the id of the target and add the moved element to the target's DOM
-          const data = ev.dataTransfer.getData("text/plain");
-          ev.target.appendChild(document.getElementById(data));
+        function dragEnterHandler(e) {
+          event.preventDefault();
+        }
+
+        function dragOverHandler(e) {
+          if (e.target.parentNode.getAttribute("draggable") == "true") {
+            let li_node = e.target.parentNode;
+            if (li_node !== _el) {
+              if (isBefore(_el, li_node)) {
+                li_node.parentNode.insertBefore(_el, li_node);
+              } else {
+                li_node.parentNode.insertBefore(_el, li_node.nextElementSibling);
+              }
+            }
+          }
+        }
+
+        function dragStartHandler(e) {
+          e.dataTransfer.effectAllowed = "move";
+          e.dataTransfer.setData("text/plain", null); // Thanks to bqlou for their comment.
+          _el = e.target;
+        }
+
+        function isBefore(el1, el2) {
+          if (el2.parentNode === el1.parentNode)
+            for (var cur = el1.previousSibling; cur && cur.nodeType !== Node.DOCUMENT_NODE; cur = cur.previousSibling)
+              if (cur === el2)
+                return true;
+          return false;
         }
       </script>
 
       <%= if @tasks do %>
-        <%= for task <- @tasks do %>
-          <div class="text-left"
-            ondragover="dragoverHandler(event)"
-            ondrop="dropHandler(event)"
-            id={"taskContainer-"<>task.slug}>
+        <ul>
+          <%= for task <- @tasks do %>
             <.live_component module={PmToolWeb.TaskComponents} id={"task-"<>task.slug} task={task} />
-          </div>
-        <% end %>
+          <% end %>
+        </ul>
       <% end %>
       <.live_component module={PmToolWeb.TaskComponents} id="new_task" current_user={@current_user} />
 

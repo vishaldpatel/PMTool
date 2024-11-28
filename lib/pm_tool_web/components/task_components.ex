@@ -61,31 +61,32 @@ defmodule PmToolWeb.TaskComponents do
   
   defp show_task(assigns) do
     ~H"""
-    <div
+    <li
       class="text-left"
       draggable="true"
-      class="Task"
-      ondragstart="dragstartHandler(event)"
-      >
+      ondragover="dragOverHandler(event)"
+      ondrop="dropHandler(event)"
+      ondragstart="dragStartHandler(event)"
+      ondragend="dragEndHandler(event)">
       <div
         style={@show_task}
         id={"show-#{@id}"}
-        class="align-top w-full pl-1 pr-1 cursor-pointer border text-left bg-yellow-100 inline-block"
-        phx-click={
-          JS.toggle(to: "#show-"<>@id)
-          |> JS.toggle(to: "#edit-#{@id}")
-        }>
-        <span class="just_title text-left"><%= @task.name %></span>
+        class="align-top w-full pl-1 pr-1 cursor-pointer border text-left text-md rounded bold bg-gray-600 text-gray-100 inline-block">
+        <span class="inline-block just_title text-left w-11/12"
+          phx-click={
+            JS.toggle(to: "#show-#{@id}")
+            |> JS.toggle(to: "#edit-#{@id}")
+          }><%= @task.name %></span>
         <input 
           type="checkbox" 
           name="batch_task_slugs[]" 
-          class="float-right align-top mt-1 mr-1" 
+          class="float-right align-top mt-1 rounded" 
           phx-click={
             JS.dispatch("task_checkbox_clicked", detail: %{slug: @task.slug})
           }/>
       </div>
       <.task_form task={@task} id={@id} action="update_task" myself={@myself} show_task_edit={@show_task_edit} />
-    </div>
+    </li>
     """
   end
 
@@ -108,11 +109,11 @@ defmodule PmToolWeb.TaskComponents do
 
     ~H"""
     <div id={"edit-"<>@id} style={@show_task_edit} class="text-left">
-      <div class="inline-block w-full bg-gray-100 border border-gray-400 text-left p-1">
+      <div class="inline-block w-full bg-gray-200 text-left border border-white p-1 rounded">
         <form phx-submit={@action} phx-target={@myself}> 
-          <input placeholder="Task Name" name="task[name]" type="text" value={@task.name} class="w-full py-0 px-1 mb-1"/><br/>
-          <textarea placeholder="Task Description" name="task[description]" type="text" class="w-full py-0 px-1 mb-1"><%= @task.description %></textarea><br/>
-          <select name="task[status]" class="w-full py-0 px-2 mb-1" value={@task.status}>
+          <input placeholder="Task Name" name="task[name]" type="text" value={@task.name} class="rounded-sm w-full py-0 px-1 mb-1"/><br/>
+          <textarea placeholder="Task Description" name="task[description]" type="text" class="rounded-sm w-full py-0 px-1 mb-1"><%= @task.description %></textarea><br/>
+          <select name="task[status]" class="w-full py-0 px-2 mb-1 rounded-sm" value={@task.status}>
             <%= for status <- Tasks.Task.statuses() do %>
               <option value={status} selected={@task.status == status}><%= status %></option>
             <% end %>
