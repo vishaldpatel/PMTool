@@ -62,9 +62,11 @@ defmodule PmToolWeb.TaskComponents do
   defp show_task(assigns) do
     ~H"""
     <li
-      class="text-left"
+      class="text-left drop_target"
       draggable="true"
+      ondragenter="dragEnterHandler(event)"
       ondragover="dragOverHandler(event)"
+      ondragleave="dragLeaveHandler(event)"
       ondrop="dropHandler(event)"
       ondragstart="dragStartHandler(event)"
       ondragend="dragEndHandler(event)">
@@ -77,6 +79,7 @@ defmodule PmToolWeb.TaskComponents do
             JS.toggle(to: "#show-#{@id}")
             |> JS.toggle(to: "#edit-#{@id}")
           }><%= @task.name %></span>
+        <input type="hidden" class="task_slug" value={@task.slug}/>
         <input 
           type="checkbox" 
           name="batch_task_slugs[]" 

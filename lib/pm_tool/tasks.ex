@@ -45,6 +45,51 @@ defmodule PmTool.Tasks do
   # Get Task by slug
   def get_task_by_slug!(slug), do: Repo.get_by!(Task, slug: slug)
 
+  def move_task_above(%Task{} = task, %Task{} = above_task) do
+    prev_order = task.task_order
+    new_order = above_task.task_order
+
+    query = from t in Task,
+      where: t.creator_id == ^above_task.creator_id 
+        and t.team_id == ^above_task.team_id
+        and t.stage == ^above_task.stage
+        and t.task_order >= ^new_order
+    query = 
+      if task.creator_id == above_task.creator_id and task.team_id == above_task.team_id and task.stage == above_task.stage do
+        where(query, [t], t.task_order <= ^prev_order)
+      else
+        query
+      end
+    Repo.update_all(query, [inc: [order: 1]])
+    update_task(task, %{"task_order" => new_order, "creator_id" => above_task.creator_id, "team_id" => above_task.team_id, "stage" => above_task.stage})
+  end
+
+  def move_task_below(%Task{} = task, %Task{} = below_task) do
+    new_order = below_task.task_order + 1
+
+    query = from t in Task,
+      where: t.creator_id == ^below_task.creator_id 
+        and t.team_id == ^below_task.team_id
+        and t.stage == ^below_task.stage
+        and t.task_order >= ^new_order
+    Repo.update_all(query, [inc: [order: 1]])
+    update_task(task, %{"task_order" => new_order, "creator_id" => below_task.creator_id, "team_id" => below_task.team_id, "stage" => below_task.stage})
+  end
+
+  def get_max_task_order_for(%User{} = creator, stage) do
+    query = from t in Task,
+      where: t.creator_id == ^creator.id and t.stage == ^stage,
+      select: max(t.task_order)
+    Repo.one(query)
+  end
+
+  def get_max_task_order_for(%Team{} = team, stage) do
+    query = from t in Task,
+      where: t.team_id == ^team.id and t.stage == ^stage,
+      select: max(t.task_order)
+    Repo.one(query)
+  end
+
   # Be able to update a Task
   def update_task(%Task{} = task, attrs) do
     task

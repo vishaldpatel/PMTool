@@ -29,6 +29,7 @@ defmodule PmToolWeb.TasksLive do
         </svg>
       </button>
 
+      <form id="move_task_enabler_form" style="display: none;" phx-submit="move_task"></form>
       <form id="batch_task_options" style="display: none;" phx-submit="delete_tasks">
         <button class="font-bold rounded">
           <svg class="h-6 w-6 text-red-500"  width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <line x1="4" y1="7" x2="20" y2="7" />  <line x1="10" y1="11" x2="10" y2="17" />  <line x1="14" y1="11" x2="14" y2="17" />  <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />  <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg> 
@@ -41,8 +42,7 @@ defmodule PmToolWeb.TasksLive do
 
         document.addEventListener("task_checkbox_clicked", (event) => {
           task_container = document.getElementById("show-task-"+event.detail.slug);
-          task_container.classList.toggle('bg-yellow-100');
-          task_container.classList.toggle('bg-gray-100');
+          task_container.classList.toggle('bg-orange-500');
 
           if (document.querySelectorAll('input[name="batch_task_slugs[]"]:checked').length > 0) {
             document.getElementById("batch_task_options").style.display = "inline-block";
@@ -61,6 +61,16 @@ defmodule PmToolWeb.TasksLive do
 
       <script>
         var _el;
+        var _task_slug;
+        var _above_slug;
+        var _noq = 0;
+
+        function shrink_targets() {
+          let targets = document.querySelectorAll(".drop_target");
+          targets.forEach((target) => {
+            target.classList.remove("py-1");
+          })
+        }
 
         function dragEndHandler() {
           event.preventDefault();
@@ -68,23 +78,39 @@ defmodule PmToolWeb.TasksLive do
 
         function dropHandler(e) {
           event.preventDefault();
+          shrink_targets();
+          console.log(_task_slug, _above_slug, _noq);
         }
 
-        function dragEnterHandler(e) {
-          event.preventDefault();
-        }
-
-        function dragOverHandler(e) {
-          if (e.target.parentNode.getAttribute("draggable") == "true") {
-            let li_node = e.target.parentNode;
+        function move_target(target) {
+          if (target.parentNode.getAttribute("draggable") == "true") {
+            let li_node = target.parentNode;
             if (li_node !== _el) {
               if (isBefore(_el, li_node)) {
                 li_node.parentNode.insertBefore(_el, li_node);
+                _task_slug = _el.querySelector(".task_slug").value;
+                _above_slug = li_node.querySelector(".task_slug").value;
+                _noq = "move_above";
               } else {
                 li_node.parentNode.insertBefore(_el, li_node.nextElementSibling);
+                _task_slug = _el.querySelector(".task_slug").value;
+                _above_slug = li_node.querySelector(".task_slug").value;
+                _noq = "move_below";
               }
             }
           }
+        }
+
+        function dragLeaveHandler(e) {
+          e.preventDefault();
+        }
+
+        function dragEnterHandler(e) {
+          move_target(e.target);
+        }
+
+        function dragOverHandler(e) {
+          move_target(e.target);
         }
 
         function dragStartHandler(e) {
@@ -128,6 +154,13 @@ defmodule PmToolWeb.TasksLive do
     task_slugs = params["task_slugs"]
     Tasks.delete_tasks_with_slugs(current_user, task_slugs)
     socket = maybe_get_tasks_for_current_user(socket)
+    {:noreply, socket}
+  end
+
+  def handle_event("move_tasks_above", params, socket) do
+    task = Tasks.get_task_by_slug!(params["task_slug"])
+    above_task = Tasks.get_task_by_slug!(params["above_task_slug"])
+    Tasks.move_tasks_above(task, above_task)
     {:noreply, socket}
   end
 
