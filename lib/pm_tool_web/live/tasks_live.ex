@@ -35,99 +35,6 @@ defmodule PmToolWeb.TasksLive do
           <svg class="h-6 w-6 text-red-500"  width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <line x1="4" y1="7" x2="20" y2="7" />  <line x1="10" y1="11" x2="10" y2="17" />  <line x1="14" y1="11" x2="14" y2="17" />  <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />  <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg> 
         </button>
       </form>
-
-      <script>
-        selected_tasks = {};
-        batch_task_options = document.getElementById("batch_task_options");
-
-        document.addEventListener("task_checkbox_clicked", (event) => {
-          task_container = document.getElementById("show-task-"+event.detail.slug);
-          task_container.classList.toggle('bg-orange-500');
-
-          if (document.querySelectorAll('input[name="batch_task_slugs[]"]:checked').length > 0) {
-            document.getElementById("batch_task_options").style.display = "inline-block";
-          } else {
-            document.getElementById("batch_task_options").style.display = "none";
-          }
-
-          if (event.target.checked) {
-            batch_task_options.innerHTML += `<input type="hidden" name="task_slugs[]" value="${event.detail.slug}" id="chk-${event.detail.slug}">`;
-          } else {
-            // Remove element with id of chk-id
-            document.getElementById(`chk-${event.detail.slug}`).remove();
-          }
-        });
-      </script>
-
-      <script>
-        var _el;
-        var _task_slug;
-        var _above_slug;
-        var _noq = 0;
-
-        function shrink_targets() {
-          let targets = document.querySelectorAll(".drop_target");
-          targets.forEach((target) => {
-            target.classList.remove("py-1");
-          })
-        }
-
-        function dragEndHandler() {
-          event.preventDefault();
-        }
-
-        function dropHandler(e) {
-          event.preventDefault();
-          shrink_targets();
-          console.log(_task_slug, _above_slug, _noq);
-        }
-
-        function move_target(target) {
-          if (target.parentNode.getAttribute("draggable") == "true") {
-            let li_node = target.parentNode;
-            if (li_node !== _el) {
-              if (isBefore(_el, li_node)) {
-                li_node.parentNode.insertBefore(_el, li_node);
-                _task_slug = _el.querySelector(".task_slug").value;
-                _above_slug = li_node.querySelector(".task_slug").value;
-                _noq = "move_above";
-              } else {
-                li_node.parentNode.insertBefore(_el, li_node.nextElementSibling);
-                _task_slug = _el.querySelector(".task_slug").value;
-                _above_slug = li_node.querySelector(".task_slug").value;
-                _noq = "move_below";
-              }
-            }
-          }
-        }
-
-        function dragLeaveHandler(e) {
-          e.preventDefault();
-        }
-
-        function dragEnterHandler(e) {
-          move_target(e.target);
-        }
-
-        function dragOverHandler(e) {
-          move_target(e.target);
-        }
-
-        function dragStartHandler(e) {
-          e.dataTransfer.effectAllowed = "move";
-          e.dataTransfer.setData("text/plain", null); // Thanks to bqlou for their comment.
-          _el = e.target;
-        }
-
-        function isBefore(el1, el2) {
-          if (el2.parentNode === el1.parentNode)
-            for (var cur = el1.previousSibling; cur && cur.nodeType !== Node.DOCUMENT_NODE; cur = cur.previousSibling)
-              if (cur === el2)
-                return true;
-          return false;
-        }
-      </script>
-
       <%= if @tasks do %>
         <ul>
           <%= for task <- @tasks do %>
@@ -157,10 +64,10 @@ defmodule PmToolWeb.TasksLive do
     {:noreply, socket}
   end
 
-  def handle_event("move_tasks_above", params, socket) do
+  def handle_event("move_task_above", params, socket) do
     task = Tasks.get_task_by_slug!(params["task_slug"])
     above_task = Tasks.get_task_by_slug!(params["above_task_slug"])
-    Tasks.move_tasks_above(task, above_task)
+    Tasks.move_task_above(task, above_task)
     {:noreply, socket}
   end
 
