@@ -64,7 +64,7 @@ defmodule PmToolWeb.TasksLive do
     {:noreply, socket}
   end
 
-  def handle_event("move_task", %{"action" => action, "active_task_slug" => active_task_slug, "affected_task_slug" => affected_task_slug} = params, socket) do
+  def handle_event("move_task", %{"action" => action, "active_task_slug" => active_task_slug, "affected_task_slug" => affected_task_slug} = _params, socket) do
     task = Tasks.get_task_by_slug!(active_task_slug)
     affected_task = Tasks.get_task_by_slug!(affected_task_slug)
     case action do
