@@ -25,84 +25,122 @@ export default class TaskView {
   }
 
   setup_drag_and_drop() {
-    var _el = null
+    var _move_element = null
     var _task_slug = null
     var _above_slug = null
     var _noq = 0
-
-    function shrink_targets() {
-      let targets = document.querySelectorAll(".draggable_task_item")
-
-      targets.forEach((target) => {
-        target.classList.remove("py-1")
-      })
-    }
+    var _move_target = null
+    var _target_parent_node = null
 
     function dragEndHandler(event) {
       event.preventDefault()
+      console.log("dragEndHandler")
     }
 
     function dropHandler(event) {
       event.preventDefault()
-      shrink_targets()
+      move_target(event.target.parentNode)
       let move_task_event = new CustomEvent("move_task", {detail: {active_task_slug: _task_slug, affected_task_slug: _above_slug, action: _noq}})
       window.dispatchEvent(move_task_event)
     }
 
     function move_target(target) {
-      if (target.parentNode.getAttribute("draggable") == "true") {
-        let li_node = target.parentNode
-        if (li_node !== _el) {
-          if (isBefore(_el, li_node)) {
-            li_node.parentNode.insertBefore(_el, li_node)
-            _task_slug = _el.querySelector(".task_slug").value
-            _above_slug = li_node.querySelector(".task_slug").value
-            _noq = "move_above"
-          } else {
-            li_node.parentNode.insertBefore(_el, li_node.nextElementSibling)
-            _task_slug = _el.querySelector(".task_slug").value
-            _above_slug = li_node.querySelector(".task_slug").value
-            _noq = "move_below"
-          }
+      if (target !== _move_element) {
+        if (isBefore(_move_element, target)) {
+          target.parentNode.insertBefore(_move_element, target)
+          _task_slug = _move_element.querySelector(".task_slug").value
+          _above_slug = target.querySelector(".task_slug").value
+          _noq = "move_above"
+        } else {
+          target.parentNode.insertBefore(_move_element, target.nextElementSibling)
+          _task_slug = _move_element.querySelector(".task_slug").value
+          _above_slug = target.querySelector(".task_slug").value
+          _noq = "move_below"
         }
       }
     }
 
+    function unset_placeholder(target) {
+      target.innerHTML = _move_target.innerHTML
+      target.id = _move_target.id
+      reset_drag_handlers_for_placeholder(target)
+    }
+
+    function set_placeholder(target) {
+      // Copy target into _move_target
+      _move_target = target.cloneNode(true)
+      _target_parent_node = target.parentNode
+      let div = document.createElement("div")
+
+      target.id = "placeholder-for-move"
+      remove_drag_handlers_for_placeholder(target)
+      target.innerHTML = ""
+
+      target.appendChild(div)
+      div.classList.add("align-top", "w-full", "pl-1", "pr-1", "cursor-pointer", "border", "text-left", "text-md", "rounded", "bold", "bg-gray-600", "text-gray-100", "inline-block")
+      div.innerHTML = "&nbsp;"
+    }
+
     function dragLeaveHandler(e) {
-      e.preventDefault()
+      if (e.target.parentNode.getAttribute("draggable") == "true") {
+        console.log("dragLeaveHandler")
+        unset_placeholder(e.target.parentNode)
+      }
     }
 
     function dragEnterHandler(e) {
-      move_target(e.target)
+      e.preventDefault()
+      console.log("dragEnterHandler")
+      if (e.target.parentNode.getAttribute("draggable") == "true") {
+        set_placeholder(e.target.parentNode)
+      }
     }
 
     function dragOverHandler(e) {
-      move_target(e.target)
+      e.preventDefault()
     }
 
     function dragStartHandler(e) {
       e.dataTransfer.effectAllowed = "move"
       e.dataTransfer.setData("text/plain", null) // Thanks to bqlou for their comment.
-      _el = e.target
+      _move_element = e.target
     }
 
     function isBefore(el1, el2) {
-      if (el2.parentNode === el1.parentNode)
+      if ((el2 !== null) && (el2.parentNode === el1.parentNode))
         for (var cur = el1.previousSibling; cur && cur.nodeType !== Node.DOCUMENT_NODE; cur = cur.previousSibling)
           if (cur === el2)
             return true
       return false
     }
 
+    function remove_drag_handlers_for_placeholder(target) {
+      target.removeEventListener("dragstart", dragStartHandler)
+      target.removeEventListener("dragenter", dragEnterHandler)
+      target.removeEventListener("dragover", dragOverHandler)
+      target.removeEventListener("dragend", dragEndHandler)
+    }
+
+    function reset_drag_handlers_for_placeholder(target) {
+      target.addEventListener("dragstart", dragStartHandler)
+      target.addEventListener("dragenter", dragEnterHandler)
+      target.addEventListener("dragover", dragOverHandler)
+      target.addEventListener("dragend", dragEndHandler)
+    }
+
+    function attach_drag_handlers(target) {
+      target.addEventListener("dragstart", dragStartHandler)
+      target.addEventListener("dragenter", dragEnterHandler)
+      target.addEventListener("dragover", dragOverHandler)
+      target.addEventListener("dragleave", dragLeaveHandler)
+      target.addEventListener("drop", dropHandler)
+      target.addEventListener("dragend", dragEndHandler)
+    }
+
     // for each drop_target, add event listeners
     let draggable_task_items = document.querySelectorAll(".draggable_task_item")
     draggable_task_items.forEach((item) => {
-      item.addEventListener("dragstart", dragStartHandler)
-      item.addEventListener("dragenter", dragEnterHandler)
-      item.addEventListener("dragover", dragOverHandler)
-      item.addEventListener("dragleave", dragLeaveHandler)
-      item.addEventListener("drop", dropHandler)
-      item.addEventListener("dragend", dragEndHandler)
+      attach_drag_handlers(item)
     })
 
   }
