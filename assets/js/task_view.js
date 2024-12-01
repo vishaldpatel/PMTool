@@ -38,14 +38,15 @@ export default class TaskView {
       })
     }
 
-    function dragEndHandler() {
+    function dragEndHandler(event) {
       event.preventDefault()
     }
 
-    function dropHandler(e) {
+    function dropHandler(event) {
       event.preventDefault()
       shrink_targets()
-      console.log(_task_slug, _above_slug, _noq)
+      let move_task_event = new CustomEvent("move_task", {detail: {active_task_slug: _task_slug, affected_task_slug: _above_slug, action: _noq}})
+      window.dispatchEvent(move_task_event)
     }
 
     function move_target(target) {
@@ -103,6 +104,7 @@ export default class TaskView {
       item.addEventListener("drop", dropHandler)
       item.addEventListener("dragend", dragEndHandler)
     })
+
   }
 
   mount() {

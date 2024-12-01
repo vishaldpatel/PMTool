@@ -53,30 +53,40 @@ defmodule PmTool.Tasks do
     new_order = above_task.task_order
 
     query = from t in Task,
-      where: t.creator_id == ^above_task.creator_id 
-        and t.team_id == ^above_task.team_id
-        and t.stage == ^above_task.stage
+      where: t.stage == ^above_task.stage
         and t.task_order >= ^new_order
     query = 
-      if task.creator_id == above_task.creator_id and task.team_id == above_task.team_id and task.stage == above_task.stage do
+    if not is_nil(above_task.team_id) do
+      where(query, [t], t.team_id == ^above_task.team_id)
+    else
+      where(query, [t], t.creator_id == ^above_task.creator_id)
+    end
+
+    query = 
+      if task.stage == above_task.stage do
         where(query, [t], t.task_order <= ^prev_order)
       else
         query
       end
-    Repo.update_all(query, [inc: [order: 1]])
-    update_task(task, %{"task_order" => new_order, "creator_id" => above_task.creator_id, "team_id" => above_task.team_id, "stage" => above_task.stage})
+    Repo.update_all(query, [inc: [task_order: 1]])
+    update_task(task, %{"task_order" => new_order, "stage" => above_task.stage})
   end
 
   def move_task_below(%Task{} = task, %Task{} = below_task) do
     new_order = below_task.task_order + 1
 
     query = from t in Task,
-      where: t.creator_id == ^below_task.creator_id 
-        and t.team_id == ^below_task.team_id
-        and t.stage == ^below_task.stage
+      where: t.stage == ^below_task.stage
         and t.task_order >= ^new_order
-    Repo.update_all(query, [inc: [order: 1]])
-    update_task(task, %{"task_order" => new_order, "creator_id" => below_task.creator_id, "team_id" => below_task.team_id, "stage" => below_task.stage})
+    query = 
+    if not is_nil(below_task.team_id) do
+      where(query, [t], t.team_id == ^below_task.team_id)
+    else
+      where(query, [t], t.creator_id == ^below_task.creator_id) 
+    end
+    Repo.update_all(query, [inc: [task_order: 1]])
+
+    update_task(task, %{"task_order" => new_order, "stage" => below_task.stage})
   end
 
   def get_max_task_order_for(%User{} = creator, stage) do

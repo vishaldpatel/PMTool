@@ -29,14 +29,13 @@ defmodule PmToolWeb.TasksLive do
         </svg>
       </button>
 
-      <form id="move_task_enabler_form" style="display: none;" phx-submit="move_task"></form>
       <form id="batch_task_options" style="display: none;" phx-submit="delete_tasks">
         <button class="font-bold rounded">
           <svg class="h-6 w-6 text-red-500"  width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <line x1="4" y1="7" x2="20" y2="7" />  <line x1="10" y1="11" x2="10" y2="17" />  <line x1="14" y1="11" x2="14" y2="17" />  <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />  <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg> 
         </button>
       </form>
       <%= if @tasks do %>
-        <ul>
+        <ul phx-hook="Sortable" id={@id}>
           <%= for task <- @tasks do %>
             <.live_component module={PmToolWeb.TaskComponents} id={"task-"<>task.slug} task={task} />
           <% end %>
@@ -50,7 +49,8 @@ defmodule PmToolWeb.TasksLive do
 
   def mount(params, _session, socket) do
     socket =
-      assign(socket, new_task_id: "new_task")
+      assign(socket, id: "tasks")
+      |> assign(new_task_id: "new_task")
       |> maybe_get_current_task(params)
       |> maybe_get_tasks_for_current_user()
     {:ok, socket}
@@ -64,10 +64,14 @@ defmodule PmToolWeb.TasksLive do
     {:noreply, socket}
   end
 
-  def handle_event("move_task_above", params, socket) do
-    task = Tasks.get_task_by_slug!(params["task_slug"])
-    above_task = Tasks.get_task_by_slug!(params["above_task_slug"])
-    Tasks.move_task_above(task, above_task)
+  def handle_event("move_task", %{"action" => action, "active_task_slug" => active_task_slug, "affected_task_slug" => affected_task_slug} = params, socket) do
+    task = Tasks.get_task_by_slug!(active_task_slug)
+    affected_task = Tasks.get_task_by_slug!(affected_task_slug)
+    case action do
+      "move_above" -> Tasks.move_task_above(task, affected_task)
+      "move_below" -> Tasks.move_task_below(task, affected_task)
+    end
+    socket = maybe_get_tasks_for_current_user(socket)
     {:noreply, socket}
   end
 
