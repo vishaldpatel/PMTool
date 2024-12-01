@@ -8,7 +8,7 @@ defmodule PmTool.URLs do
   end
 
   def slugify(changeset) do
-    if get_field(changeset, :url_slug) == nil do
+    if get_field(changeset, :slug) == nil do
       url_slug = get_field(changeset, :name) || ""
 
       url_slug = String.downcase(url_slug)
