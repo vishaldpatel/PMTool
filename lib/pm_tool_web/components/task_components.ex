@@ -62,14 +62,8 @@ defmodule PmToolWeb.TaskComponents do
   defp show_task(assigns) do
     ~H"""
     <li
-      class="text-left drop_target"
-      draggable="true"
-      ondragenter="dragEnterHandler(event)"
-      ondragover="dragOverHandler(event)"
-      ondragleave="dragLeaveHandler(event)"
-      ondrop="dropHandler(event)"
-      ondragstart="dragStartHandler(event)"
-      ondragend="dragEndHandler(event)">
+      class="text-left draggable_task_item"
+      draggable="true">
       <div
         style={@show_task}
         id={"show-#{@id}"}

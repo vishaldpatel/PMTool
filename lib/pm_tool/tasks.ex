@@ -13,21 +13,24 @@ defmodule PmTool.Tasks do
   # Get all tasks for team and stage
   def list_tasks_for(%Team{} = team) do
     query = from t in Task,
-      where: t.team_id == ^team.id and t.status != "done"
+      where: t.team_id == ^team.id and t.status != "done",
+      order_by: t.task_order
     Repo.all(query)
   end
 
   # Get all tasks for project
   def list_tasks_for(%Project{} = project) do
     query = from t in Task,
-      where: t.project_id == ^project.id
+      where: t.project_id == ^project.id,
+      order_by: t.task_order
     Repo.all(query)
   end
 
   # Get all tasks for a user that are not "Done"
   def list_tasks_for(%User{} = user) do
     query = from t in Task,
-      where: t.creator_id == ^user.id and is_nil(t.team_id)
+      where: t.creator_id == ^user.id and is_nil(t.team_id),
+      order_by: t.task_order
 
     Repo.all(query)
   end 

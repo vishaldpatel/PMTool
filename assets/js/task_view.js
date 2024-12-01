@@ -1,10 +1,10 @@
-export default TaskView = function() {
-  function setup_batch_tasks() {
-    selected_tasks = {}
-    batch_task_options = document.getElementById("batch_task_options")
+export default class TaskView {
+  setup_batch_tasks() {
+    let selected_tasks = {}
+    let batch_task_options = document.getElementById("batch_task_options")
 
     function checkbox_clicked_handler(event) {
-      task_container = document.getElementById("show-task-"+event.detail.slug)
+      let task_container = document.getElementById("show-task-"+event.detail.slug)
       task_container.classList.toggle('bg-orange-500')
 
       if (document.querySelectorAll('input[name="batch_task_slugs[]"]:checked').length > 0) {
@@ -24,14 +24,14 @@ export default TaskView = function() {
     document.addEventListener("task_checkbox_clicked", checkbox_clicked_handler)
   }
 
-  let _el = null
-  let _task_slug = null
-  let _above_slug = null
-  let _noq = 0
+  setup_drag_and_drop() {
+    var _el = null
+    var _task_slug = null
+    var _above_slug = null
+    var _noq = 0
 
-  function setup_drag_and_drop() {
     function shrink_targets() {
-      let targets = document.querySelectorAll(".drop_target")
+      let targets = document.querySelectorAll(".draggable_task_item")
 
       targets.forEach((target) => {
         target.classList.remove("py-1")
@@ -92,14 +92,25 @@ export default TaskView = function() {
             return true
       return false
     }
+
+    // for each drop_target, add event listeners
+    let draggable_task_items = document.querySelectorAll(".draggable_task_item")
+    draggable_task_items.forEach((item) => {
+      item.addEventListener("dragstart", dragStartHandler)
+      item.addEventListener("dragenter", dragEnterHandler)
+      item.addEventListener("dragover", dragOverHandler)
+      item.addEventListener("dragleave", dragLeaveHandler)
+      item.addEventListener("drop", dropHandler)
+      item.addEventListener("dragend", dragEndHandler)
+    })
   }
 
-  function mount() {
-    setup_batch_tasks()
-    setup_drag_and_drop()
+  mount() {
+    this.setup_batch_tasks()
+    this.setup_drag_and_drop()
   }
 
-  function unmount() {
+  unmount() {
     console.log('TaskView unmounted')
   }
 }

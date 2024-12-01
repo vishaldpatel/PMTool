@@ -29,7 +29,11 @@ let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToke
 // Show progress bar on live navigation and form submits
 topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
 window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
-window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
+window.addEventListener("phx:page-loading-stop", _info => { 
+  topbar.hide()
+  let taskView = new TaskView 
+  taskView.mount()
+})
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()
@@ -40,15 +44,3 @@ liveSocket.connect()
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
 
-
-window.addEventListener("DOMContentLoaded", function(event) {
-  const taskView = new TaskView()
-  taskView.mount()
-  console.log("done done done done done")
-})
-
-window.addEventListener("unload", function(event) {
-  taskview.unmount()
-  liveSocket.disconnect()
-  console.log("okay...")
-})
