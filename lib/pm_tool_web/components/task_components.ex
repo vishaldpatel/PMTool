@@ -62,12 +62,12 @@ defmodule PmToolWeb.TaskComponents do
   defp show_task(assigns) do
     ~H"""
     <li
-      class="text-left draggable_task_item"
-      draggable="true">
+      class="text-left">
       <div
         style={@show_task}
+        draggable="true"
         id={"show-#{@id}"}
-        class="align-top w-full pl-1 pr-1 cursor-pointer border text-left text-md rounded bold bg-gray-600 text-gray-100 inline-block">
+        class="draggable_task_item align-top w-full pl-1 pr-1 cursor-pointer border text-left text-md rounded bold bg-gray-600 text-gray-100 inline-block">
         <span class="inline-block just_title text-left w-11/12"
           phx-click={
             JS.toggle(to: "#show-#{@id}")

@@ -29,9 +29,6 @@ export default class TaskView {
     var _task_slug = null
     var _above_slug = null
     var _noq = 0
-    var _current_spot = null
-    var _current_element = null
-    var _target_parent_node = null
 
     function move_element_to(target) {
       if (target !== _move_element) {
@@ -50,15 +47,13 @@ export default class TaskView {
     }
 
     function unset_placeholder(target) {
-      let div = target.querySelectorAll("div").item(0)
-      div.classList.remove("bg-orange-500")
-      div.classList.add("bg-gray-600")
+      target.classList.remove("bg-orange-500")
+      target.classList.add("bg-gray-600")
     }
 
     function setPlaceholder(target) {
-      let div = target.querySelectorAll("div").item(0)
-      div.classList.remove("bg-gray-600")
-      div.classList.add("bg-orange-500")
+      target.classList.remove("bg-gray-600")
+      target.classList.add("bg-orange-500")
     }
 
     function dragEndHandler(e) {
@@ -74,32 +69,25 @@ export default class TaskView {
 
     function dragLeaveHandler(e) {
       e.preventDefault()
-      if (e.target.parentNode.getAttribute("draggable") == "true") {
-        unset_placeholder(e.target.parentNode)
+      if (e.target.getAttribute("draggable") == "true") {
+        unset_placeholder(e.target)
       }
     }
 
     function dragEnterHandler(e) {
       e.preventDefault()
-      if (e.target.parentNode.getAttribute("draggable") == "true") {
+      if (e.target.getAttribute("draggable") == "true") {
         console.log("dragEnterHandler")
-        setPlaceholder(e.target.parentNode)
-        move_element_to(e.target.parentNode)
+        setPlaceholder(e.target)
+        move_element_to(e.target)
       }
     }
 
     function dragOverHandler(e) {
       e.preventDefault()
-      if (e.target.parentNode.getAttribute("draggable") == "true") {
-        console.log("dragOverHandler ")
-        console.log(e.target.parentNode)
-        setPlaceholder(e.target.parentNode)
-        move_element_to(e.target.parentNode)
-      }
     }
 
     function dragStartHandler(e) {
-      console.log("dragStartHandler")
       e.dataTransfer.effectAllowed = "move"
       e.dataTransfer.setData("text/plain", null) // Thanks to bqlou for their comment.
       _move_element = e.target
