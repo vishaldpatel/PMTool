@@ -37,7 +37,7 @@ defmodule PmToolWeb.TasksLive do
       <%= if @tasks do %>
         <ul phx-hook="Sortable" id={@id}>
           <%= for task <- @tasks do %>
-            <.live_component module={PmToolWeb.TaskComponents} id={"task-"<>task.slug} task={task} />
+            <.live_component module={PmToolWeb.TaskComponents} id={"task-#{task.slug}#{@timestamp}"} task={task} />
           <% end %>
         </ul>
       <% end %>
@@ -50,6 +50,7 @@ defmodule PmToolWeb.TasksLive do
   def mount(params, _session, socket) do
     socket =
       assign(socket, id: "tasks")
+      |> assign(timestamp: DateTime.to_unix(DateTime.utc_now()))
       |> assign(new_task_id: "new_task")
       |> maybe_get_current_task(params)
       |> maybe_get_tasks_for_current_user()

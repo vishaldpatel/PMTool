@@ -24,13 +24,14 @@ defmodule PmToolWeb.TaskComponents do
 
   def handle_event("update_task", %{"task" => task_params}, socket) do
     if task_params["slug"] == socket.assigns.task.slug do
+      timestamp = DateTime.to_unix(DateTime.utc_now())
       case Tasks.update_task(socket.assigns.task, task_params) do
         {:ok, %Task{} = updated_task} ->
           {:noreply, assign(socket, 
             task: updated_task, 
-            id: "task-"<>updated_task.slug,
+            id: "task-#{updated_task.slug}#{timestamp}",
             show_task: "", 
-            show_taskV_edit: "display: none;")}
+            show_task_edit: "display: none;")}
         {:error, _changeset} ->
           {:noreply, assign(socket, 
             show_task: "display: none;", 
