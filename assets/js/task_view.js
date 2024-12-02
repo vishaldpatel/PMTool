@@ -67,6 +67,7 @@ export default class TaskView {
 
     function dropHandler(e) {
       e.preventDefault()
+      unset_placeholder(e.target)
       let move_task_event = new CustomEvent("move_task", {detail: {active_task_slug: _task_slug, affected_task_slug: _above_slug, action: _noq}})
       window.dispatchEvent(move_task_event)
     }
@@ -80,14 +81,14 @@ export default class TaskView {
 
     function dragEnterHandler(e) {
       e.preventDefault()
-      if (e.target.getAttribute("draggable") == "true") {
-        setPlaceholder(e.target)
-        move_element_to(e.target)
-      }
     }
 
     function dragOverHandler(e) {
       e.preventDefault()
+      if (e.target.getAttribute("draggable") == "true") {
+        setPlaceholder(e.target)
+        move_element_to(e.target)
+      }
     }
 
     function dragStartHandler(e) {
@@ -111,6 +112,7 @@ export default class TaskView {
       target.ondragover = dragOverHandler
       target.ondragleave = dragLeaveHandler
       target.ondragend = dragEndHandler
+      target.ondrop = dropHandler
     }
 
     // for each drop_target, add event listeners

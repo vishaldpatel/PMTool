@@ -70,7 +70,7 @@ defmodule PmToolWeb.TaskComponents do
         draggable="true"
         id={"show-#{@id}"}
         class="draggable_task_item align-top w-full pl-1 pr-1 cursor-pointer border text-left text-md rounded bold bg-gray-600 text-gray-100 inline-block">
-        <span class="inline-block just_title text-left w-11/12"
+        <span class="just_title text-left w-11/12"
           phx-click={
             JS.toggle(to: "#show-#{@id}")
             |> JS.toggle(to: "#edit-#{@id}")
