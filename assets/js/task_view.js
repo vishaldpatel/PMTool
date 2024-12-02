@@ -4,7 +4,7 @@ export default class TaskView {
     let batch_task_options = document.getElementById("batch_task_options")
 
     function checkbox_clicked_handler(event) {
-      let task_container = document.getElementById("show-task-"+event.detail.slug)
+      let task_container = document.getElementById("show-"+event.detail.id)
       task_container.classList.toggle('bg-orange-500')
 
       if (document.querySelectorAll('input[name="batch_task_slugs[]"]:checked').length > 0) {
@@ -21,7 +21,10 @@ export default class TaskView {
       }
     }
 
-    document.addEventListener("task_checkbox_clicked", checkbox_clicked_handler)
+    if (! document.task_checkbox_clicked) {
+      document.addEventListener("task_checkbox_clicked", checkbox_clicked_handler)
+      document.task_checkbox_clicked = true
+    }
   }
 
   setup_drag_and_drop() {
@@ -58,7 +61,8 @@ export default class TaskView {
 
     function dragEndHandler(e) {
       e.preventDefault()
-      console.log("dragEndHandler")
+      unset_placeholder(_move_element)
+      _move_element = null
     }
 
     function dropHandler(e) {
@@ -77,7 +81,6 @@ export default class TaskView {
     function dragEnterHandler(e) {
       e.preventDefault()
       if (e.target.getAttribute("draggable") == "true") {
-        console.log("dragEnterHandler")
         setPlaceholder(e.target)
         move_element_to(e.target)
       }
@@ -103,12 +106,11 @@ export default class TaskView {
     }
 
     function attach_drag_handlers(target) {
-      target.addEventListener("dragstart", dragStartHandler)
-      target.addEventListener("dragenter", dragEnterHandler)
-      target.addEventListener("dragover", dragOverHandler)
-      target.addEventListener("dragleave", dragLeaveHandler)
-      target.addEventListener("drop", dropHandler)
-      target.addEventListener("dragend", dragEndHandler)
+      target.ondragstart = dragStartHandler
+      target.ondragenter = dragEnterHandler
+      target.ondragover = dragOverHandler
+      target.ondragleave = dragLeaveHandler
+      target.ondragend = dragEndHandler
     }
 
     // for each drop_target, add event listeners
@@ -122,9 +124,5 @@ export default class TaskView {
   mount() {
     this.setup_batch_tasks()
     this.setup_drag_and_drop()
-  }
-
-  unmount() {
-    console.log('TaskView unmounted')
   }
 }

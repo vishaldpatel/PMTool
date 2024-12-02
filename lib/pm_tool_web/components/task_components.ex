@@ -47,7 +47,8 @@ defmodule PmToolWeb.TaskComponents do
     case Tasks.create_task(task_params) do
       {:ok, _task} ->
         pid = self()
-        new_task_id = "new-task-#{DateTime.to_unix(DateTime.utc_now())}"
+        timestamp = DateTime.to_unix(DateTime.utc_now())
+        new_task_id = "new-task-#{timestamp}"
         send(pid, {:new_task_created, new_task_id})
         {:noreply, assign(socket, 
           id: new_task_id,
@@ -80,7 +81,7 @@ defmodule PmToolWeb.TaskComponents do
           name="batch_task_slugs[]" 
           class="float-right align-top mt-1 rounded" 
           phx-click={
-            JS.dispatch("task_checkbox_clicked", detail: %{slug: @task.slug})
+            JS.dispatch("task_checkbox_clicked", detail: %{id: @id, slug: @task.slug})
           }/>
       </div>
       <.task_form task={@task} id={@id} action="update_task" myself={@myself} show_task_edit={@show_task_edit} />
