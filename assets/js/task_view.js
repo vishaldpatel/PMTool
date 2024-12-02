@@ -29,22 +29,11 @@ export default class TaskView {
     var _task_slug = null
     var _above_slug = null
     var _noq = 0
-    var _move_target = null
+    var _current_spot = null
+    var _current_element = null
     var _target_parent_node = null
 
-    function dragEndHandler(event) {
-      event.preventDefault()
-      console.log("dragEndHandler")
-    }
-
-    function dropHandler(event) {
-      event.preventDefault()
-      move_target(event.target.parentNode)
-      let move_task_event = new CustomEvent("move_task", {detail: {active_task_slug: _task_slug, affected_task_slug: _above_slug, action: _noq}})
-      window.dispatchEvent(move_task_event)
-    }
-
-    function move_target(target) {
+    function move_element_to(target) {
       if (target !== _move_element) {
         if (isBefore(_move_element, target)) {
           target.parentNode.insertBefore(_move_element, target)
@@ -61,49 +50,60 @@ export default class TaskView {
     }
 
     function unset_placeholder(target) {
-      target.innerHTML = _move_target.innerHTML
-      target.id = _move_target.id
-      reset_drag_handlers_for_placeholder(target)
+      let div = target.querySelectorAll("div").item(0)
+      div.classList.remove("bg-orange-500")
+      div.classList.add("bg-gray-600")
     }
 
-    function set_placeholder(target) {
-      // Copy target into _move_target
-      _move_target = target.cloneNode(true)
-      _target_parent_node = target.parentNode
-      let div = document.createElement("div")
+    function setPlaceholder(target) {
+      let div = target.querySelectorAll("div").item(0)
+      div.classList.remove("bg-gray-600")
+      div.classList.add("bg-orange-500")
+    }
 
-      target.id = "placeholder-for-move"
-      remove_drag_handlers_for_placeholder(target)
-      target.innerHTML = ""
+    function dragEndHandler(e) {
+      e.preventDefault()
+      console.log("dragEndHandler")
+    }
 
-      target.appendChild(div)
-      div.classList.add("align-top", "w-full", "pl-1", "pr-1", "cursor-pointer", "border", "text-left", "text-md", "rounded", "bold", "bg-gray-600", "text-gray-100", "inline-block")
-      div.innerHTML = "&nbsp;"
+    function dropHandler(e) {
+      e.preventDefault()
+      let move_task_event = new CustomEvent("move_task", {detail: {active_task_slug: _task_slug, affected_task_slug: _above_slug, action: _noq}})
+      window.dispatchEvent(move_task_event)
     }
 
     function dragLeaveHandler(e) {
+      e.preventDefault()
       if (e.target.parentNode.getAttribute("draggable") == "true") {
-        console.log("dragLeaveHandler")
         unset_placeholder(e.target.parentNode)
       }
     }
 
     function dragEnterHandler(e) {
       e.preventDefault()
-      console.log("dragEnterHandler")
       if (e.target.parentNode.getAttribute("draggable") == "true") {
-        set_placeholder(e.target.parentNode)
+        console.log("dragEnterHandler")
+        setPlaceholder(e.target.parentNode)
+        move_element_to(e.target.parentNode)
       }
     }
 
     function dragOverHandler(e) {
       e.preventDefault()
+      if (e.target.parentNode.getAttribute("draggable") == "true") {
+        console.log("dragOverHandler ")
+        console.log(e.target.parentNode)
+        setPlaceholder(e.target.parentNode)
+        move_element_to(e.target.parentNode)
+      }
     }
 
     function dragStartHandler(e) {
+      console.log("dragStartHandler")
       e.dataTransfer.effectAllowed = "move"
       e.dataTransfer.setData("text/plain", null) // Thanks to bqlou for their comment.
       _move_element = e.target
+      setPlaceholder(e.target)
     }
 
     function isBefore(el1, el2) {
@@ -112,20 +112,6 @@ export default class TaskView {
           if (cur === el2)
             return true
       return false
-    }
-
-    function remove_drag_handlers_for_placeholder(target) {
-      target.removeEventListener("dragstart", dragStartHandler)
-      target.removeEventListener("dragenter", dragEnterHandler)
-      target.removeEventListener("dragover", dragOverHandler)
-      target.removeEventListener("dragend", dragEndHandler)
-    }
-
-    function reset_drag_handlers_for_placeholder(target) {
-      target.addEventListener("dragstart", dragStartHandler)
-      target.addEventListener("dragenter", dragEnterHandler)
-      target.addEventListener("dragover", dragOverHandler)
-      target.addEventListener("dragend", dragEndHandler)
     }
 
     function attach_drag_handlers(target) {
