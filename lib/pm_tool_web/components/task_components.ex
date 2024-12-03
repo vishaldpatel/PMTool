@@ -117,6 +117,11 @@ defmodule PmToolWeb.TaskComponents do
               <option value={status} selected={@task.status == status}><%= status %></option>
             <% end %>
           </select><br />
+          <select name="task[stage]" class="w-full py-0 px-2 mb-1 rounded-sm" value={@task.stage}>
+            <%= for stage <- Tasks.Task.stages() do %>
+              <option value={stage} selected={@task.stage == stage}><%= stage %></option>
+            <% end %>
+          </select><br />
           <input type="hidden" name="task[slug]" value={@task.slug} />
           <div class="w-full text-right">
             <button type="reset"

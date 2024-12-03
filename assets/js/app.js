@@ -27,7 +27,7 @@ let Hooks = {}
 Hooks.Sortable = {
   mounted() {
     window.addEventListener("move_task", event => {
-      this.pushEvent("move_task", event.detail, (reply, ref) => {
+      this.pushEventTo("#backlog", "move_task", event.detail, (reply, ref) => {
       })
     })
   }
