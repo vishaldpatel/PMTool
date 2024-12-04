@@ -14,10 +14,7 @@ defmodule PmToolWeb.BacklogComponent do
 
     ## Placeholder:
     ~H"""
-    <div class="text-left w-80">
-      <%= if @task do %>
-        <.live_component module={PmToolWeb.TaskComponents} task={@task} id={"task-"<>@task.slug} expanded={true} />
-      <% end %>
+    <div class="float-left text-left w-80 flex-shrink-0">
       <span class="font-semibold uppercase float-right text-gray-400">Backlog</span>
 
       <button 
@@ -42,7 +39,7 @@ defmodule PmToolWeb.BacklogComponent do
           <% end %>
         </ul>
       <% end %>
-      <.live_component module={PmToolWeb.TaskComponents} id="new_task" current_user={@current_user} />
+      <.live_component module={PmToolWeb.TaskComponents} id={@new_task_id} current_user={@current_user} />
     </div>
     """
   end
@@ -52,40 +49,21 @@ defmodule PmToolWeb.BacklogComponent do
   end
 
   def update(assigns, socket) do
+    timestamp = DateTime.to_unix(DateTime.utc_now())
+    new_task_id = "new-backlog-task-#{timestamp}"
+
     socket =
       socket
       |> assign(assigns)
       |> assign(timestamp: DateTime.to_unix(DateTime.utc_now()))
-      |> assign(new_task_id: "new_task")
+      |> assign(new_task_id: new_task_id)
       |> maybe_get_current_task()
-      |> maybe_get_tasks_for_current_user()
+      |> assign(tasks: assigns.tasks)
     {:ok, socket}
   end
 
-  def handle_event("delete_tasks", params, socket) do
-    current_user = socket.assigns.current_user
-    task_slugs = params["task_slugs"]
-    Tasks.delete_tasks_with_slugs(current_user, task_slugs)
-    socket = maybe_get_tasks_for_current_user(socket)
-    {:noreply, socket}
-  end
-
-  def handle_event("move_task", %{"action" => action, "active_task_slug" => active_task_slug, "affected_task_slug" => affected_task_slug} = _params, socket) do
-    task = Tasks.get_task_by_slug!(active_task_slug)
-    affected_task = Tasks.get_task_by_slug!(affected_task_slug)
-    case action do
-      "move_above" -> Tasks.move_task_above(task, affected_task)
-      "move_below" -> Tasks.move_task_below(task, affected_task)
-    end
-    socket = maybe_get_tasks_for_current_user(socket)
-    {:noreply, socket}
-  end
-
-  def handle_info({:new_task_created, new_task_id}, socket) do
-    socket = 
-      assign(socket, new_task_id: new_task_id) 
-      |> maybe_get_tasks_for_current_user()
-    {:noreply, socket}
+  def get_backlog_tasks(socket) do
+    assign(socket, tasks: Tasks.list_tasks_for(socket.assigns.current_user, "backlog"))
   end
 
   defp maybe_get_current_task(socket) do
@@ -94,11 +72,5 @@ defmodule PmToolWeb.BacklogComponent do
       slug -> task = Tasks.get_task_by_slug!(slug)
               assign(socket, task: task)
     end
-  end
-
-  defp maybe_get_tasks_for_current_user(socket) do
-    current_user = socket.assigns.current_user
-    tasks = PmTool.Tasks.list_tasks_for(current_user)
-    assign(socket, tasks: tasks)
   end
 end

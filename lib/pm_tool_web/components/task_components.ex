@@ -17,6 +17,11 @@ defmodule PmToolWeb.TaskComponents do
   end
 
   def mount(socket) do
+    {:ok, socket}
+  end
+
+  def update(assigns, socket) do
+    socket = assign(socket, assigns)
     {:ok, assign(socket, 
       show_task: "", 
       show_task_edit: "display: none;")}
@@ -27,6 +32,7 @@ defmodule PmToolWeb.TaskComponents do
       timestamp = DateTime.to_unix(DateTime.utc_now())
       case Tasks.update_task(socket.assigns.task, task_params) do
         {:ok, %Task{} = updated_task} ->
+          send(self(), {:task_updated, updated_task})
           {:noreply, assign(socket, 
             task: updated_task, 
             id: "task-#{updated_task.slug}#{timestamp}",
@@ -46,12 +52,8 @@ defmodule PmToolWeb.TaskComponents do
       |> Enum.into(task_params)
     case Tasks.create_task(task_params) do
       {:ok, _task} ->
-        pid = self()
-        timestamp = DateTime.to_unix(DateTime.utc_now())
-        new_task_id = "new-task-#{timestamp}"
-        send(pid, {:new_task_created, new_task_id})
+        send(self(), {:new_task_created})
         {:noreply, assign(socket, 
-          id: new_task_id,
           show_task: "", 
           show_task_edit: "display: none;")}
       {:error, _changeset} ->
