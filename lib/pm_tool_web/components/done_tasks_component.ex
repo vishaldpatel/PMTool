@@ -1,8 +1,6 @@
 defmodule PmToolWeb.DoneTasksComponent do
   use PmToolWeb, :live_component
 
-  alias PmTool.Tasks
-
   def render(assigns) do
     ~H"""
     <div class="mr-2 float-left text-left w-80 flex-col">
