@@ -27,7 +27,7 @@ let Hooks = {}
 Hooks.Sortable = {
   mounted() {
     window.addEventListener("move_task", event => {
-      this.pushEventTo("#backlog", "move_task", event.detail, (reply, ref) => {
+      this.pushEventTo("#tasks", "move_task", event.detail, (reply, ref) => {
       })
     })
   }
@@ -35,13 +35,16 @@ Hooks.Sortable = {
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: Hooks})
+let taskView = new TaskView 
 
 // Show progress bar on live navigation and form submits
 topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
 window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
 window.addEventListener("phx:page-loading-stop", _info => { 
   topbar.hide()
-  let taskView = new TaskView 
+  taskView.mount()
+})
+window.addEventListener("phx:update", _info => {
   taskView.mount()
 })
 

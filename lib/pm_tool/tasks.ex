@@ -14,7 +14,7 @@ defmodule PmTool.Tasks do
   def list_tasks_for(%Team{} = team) do
     query = from t in Task,
       where: t.team_id == ^team.id and t.status != "done",
-      order_by: t.task_order
+      order_by: [t.stage, t.task_order]
     Repo.all(query)
   end
 
@@ -22,7 +22,7 @@ defmodule PmTool.Tasks do
   def list_tasks_for(%Project{} = project) do
     query = from t in Task,
       where: t.project_id == ^project.id,
-      order_by: t.task_order
+      order_by: [t.stage, t.task_order]
     Repo.all(query)
   end
 
@@ -30,10 +30,23 @@ defmodule PmTool.Tasks do
   def list_tasks_for(%User{} = user) do
     query = from t in Task,
       where: t.creator_id == ^user.id and is_nil(t.team_id),
-      order_by: t.task_order
-
+      order_by: [t.stage, t.task_order]
     Repo.all(query)
-  end 
+  end
+
+  def list_tasks_for(%Team{} = team, stage) do
+    query = from t in Task,
+      where: t.team_id == ^team.id and t.stage == ^stage,
+      order_by: [t.task_order]
+    Repo.all(query)
+  end
+
+  def list_tasks_for(%User{} = user, stage) do
+    query = from t in Task,
+      where: t.creator_id == ^user.id and t.stage == ^stage and is_nil(t.team_id),
+      order_by: [t.task_order]
+    Repo.all(query)
+  end
 
   # Be able to create a Task
   def create_task(attrs \\ %{}) do
