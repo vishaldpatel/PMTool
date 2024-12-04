@@ -5,7 +5,7 @@ defmodule PmToolWeb.UpcomingTasksComponent do
 
   def render(assigns) do
     ~H"""
-    <div class="float-left text-left w-80 flex-shrink-0">
+    <div class="mr-2 float-left text-left w-80 flex-shrink-0">
       <span class="font-semibold uppercase float-right text-gray-400">Upcoming</span>
       <button 
         class="font-bold rounded" 

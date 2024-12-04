@@ -5,8 +5,25 @@ defmodule PmToolWeb.DoneTasksComponent do
 
   def render(assigns) do
     ~H"""
-    <div class="float-left text-left w-80">
+    <div class="mr-2 float-left text-left w-80 flex-col">
       <span class="font-semibold uppercase float-right text-gray-400">Done</span>
+      <button 
+        class="font-bold rounded">
+        <svg class="h-6 w-6 text-orange-500"  width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <rect x="3" y="4" width="18" height="4" rx="2" />  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />  <line x1="10" y1="12" x2="14" y2="12" /></svg>
+      </button>
+
+      <form id="batch_task_options" style="display: none;" phx-submit="delete_tasks" phx-target={@myself}>
+        <button class="font-bold rounded">
+          <svg class="h-6 w-6 text-red-500"  width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <line x1="4" y1="7" x2="20" y2="7" />  <line x1="10" y1="11" x2="10" y2="17" />  <line x1="14" y1="11" x2="14" y2="17" />  <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />  <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg> 
+        </button>
+      </form>
+      <%= if @tasks do %>
+        <ul phx-hook="Sortable" id={@id}>
+          <%= for task <- @tasks do %>
+            <.live_component module={PmToolWeb.TaskComponents} id={"task-#{task.slug}#{@timestamp}"} task={task} />
+          <% end %>
+        </ul>
+      <% end %>
     </div>
     """
   end
@@ -16,6 +33,11 @@ defmodule PmToolWeb.DoneTasksComponent do
   end
 
   def update(assigns, socket) do
+    socket =
+      socket
+      |> assign(assigns)
+      |> assign(timestamp: DateTime.to_unix(DateTime.utc_now()))
+      |> assign(tasks: assigns.tasks)
     {:ok, socket}
   end
 end
