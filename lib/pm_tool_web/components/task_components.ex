@@ -6,10 +6,7 @@ defmodule PmToolWeb.TaskComponents do
   alias PmTool.Tasks.Task
 
   def render(assigns) do
-    # If assigns.task is nil, show new task
-    # If assigns.task is not nil, show edit task
-    # If assigns has a key named task
-    if Map.has_key?(assigns, :task) do
+    if assigns.task.id do
       show_task(assigns)
     else
       new_task(assigns)
@@ -17,7 +14,8 @@ defmodule PmToolWeb.TaskComponents do
   end
 
   def mount(socket) do
-    {:ok, assign(socket, 
+    {:ok, assign(socket,
+      task: if Map.has_key?(socket.assigns, :task) do socket.assigns.task else %Task{} end,
       no_check: false,
       no_move: false
     )}
@@ -84,7 +82,7 @@ defmodule PmToolWeb.TaskComponents do
         <%= if @no_check == false do %>
           <input 
             type="checkbox" 
-            name="batch_task_slugs[]" 
+            name={"#{@task.stage}_task_slugs[]"} 
             class="float-right align-top mt-1 rounded" 
             phx-click={
               JS.dispatch("task_checkbox_clicked", detail: %{id: @id, slug: @task.slug})
@@ -99,7 +97,7 @@ defmodule PmToolWeb.TaskComponents do
   defp new_task(assigns) do
     ~H"""
     <div>
-      <.task_form task={%Task{}} id={@id} action="create_task" myself={@myself} show_task_edit={@show_task_edit} />
+      <.task_form task={@task} id={@id} action="create_task" myself={@myself} show_task_edit={@show_task_edit} />
     </div>
     """
   end

@@ -1,13 +1,14 @@
-defmodule PmToolWeb.CurrentTasksComponent do
+defmodule PmToolWeb.NowAndNextTasksComponent do
   use PmToolWeb, :live_component
 
   alias Phoenix.LiveView.JS
   alias PmTool.Tasks
+  alias PmTool.Tasks.Task
 
   def render(assigns) do
     ~H"""
     <div class="mr-2 text-left w-80 flex-shrink-0">
-      <span class="font-semibold uppercase float-right text-gray-400">Current</span>
+      <span class="font-semibold uppercase float-right text-gray-400">Now+Next</span>
       <button 
         class="font-bold rounded" 
         phx-click={
@@ -18,14 +19,21 @@ defmodule PmToolWeb.CurrentTasksComponent do
         </svg>
       </button>
 
-      <button 
-        class="font-bold rounded" 
-        phx-click={"merge_current_and_upcoming_tasks"}>
-      <svg class="h-6 w-6 text-red-500"  width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <path d="M3 12h7l-3 -3m0 6l3 -3" />  <path d="M21 12h-7l3 -3m0 6l-3 -3" />  <path d="M9 6v-3h6v3" />  <path d="M9 18v3h6v-3" /></svg>
+      <%= if @merge_now_and_next_tasks == true do %>
+        <button 
+          class="font-bold rounded" 
+          phx-click={"separate_now_and_next_tasks"}
+          phx-target={@myself}>
+        <svg class="h-6 w-6 text-red-500" <svg  viewBox="0 0 24 24"  width="24"  height="24"  xmlns="http://www.w3.org/2000/svg"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round">  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />  <rect x="7" y="7" width="3" height="9" />  <rect x="14" y="7" width="3" height="5" /></svg>
+        </button>
+      <% else %>
+        <button 
+          class="font-bold rounded" 
+          phx-click={"merge_now_and_next_tasks"}
+          phx-target={@myself}><svg class="h-6 w-6 text-red-500"  width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <path d="M3 12h7l-3 -3m0 6l3 -3" />  <path d="M21 12h-7l3 -3m0 6l-3 -3" />  <path d="M9 6v-3h6v3" />  <path d="M9 18v3h6v-3" /></svg></button>
+      <% end %>
 
-      </button>
-
-      <form id="batch_task_options" style="display: none;" phx-submit="delete_tasks" phx-target={@myself}>
+      <form id="now_task_options" style="display: none;" phx-submit="delete_tasks">
         <button class="font-bold rounded">
           <svg class="h-6 w-6 text-red-500"  width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <line x1="4" y1="7" x2="20" y2="7" />  <line x1="10" y1="11" x2="10" y2="17" />  <line x1="14" y1="11" x2="14" y2="17" />  <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />  <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg> 
         </button>
@@ -37,18 +45,18 @@ defmodule PmToolWeb.CurrentTasksComponent do
           <% end %>
         </ul>
       <% end %>
-      <.live_component module={PmToolWeb.TaskComponents} id={@new_task_id} current_user={@current_user} />
+      <.live_component module={PmToolWeb.TaskComponents} id={@new_task_id} current_user={@current_user} task={%Task{stage: "Now"}} />
     </div>
     """
   end
 
   def mount(socket) do
-    {:ok, socket}
+    {:ok, assign(socket, merge_now_and_next_tasks: true)}
   end
 
   def update(assigns, socket) do
     timestamp = DateTime.to_unix(DateTime.utc_now())
-    new_task_id = "new-current-task-#{timestamp}"
+    new_task_id = "new-now-task-#{timestamp}"
 
     socket =
       socket
@@ -58,6 +66,15 @@ defmodule PmToolWeb.CurrentTasksComponent do
       |> maybe_get_current_task()
     {:ok, socket}
   end
+
+  def handle_event("separate_now_and_next_tasks", _params, socket) do
+    {:noreply, assign(socket, merge_now_and_next_tasks: false)}
+  end
+
+  def handle_event("merge_now_and_next_tasks", _params, socket) do
+    {:noreply, assign(socket, merge_now_and_next_tasks: true)}
+  end
+
 
   defp maybe_get_current_task(socket) do
     case socket.assigns["slug"] do

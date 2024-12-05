@@ -6,8 +6,8 @@ defmodule PmTool.Tasks.Task do
   alias PmTool.Accounts.User
   alias PmTool.Teams.Team
 
-  @stages ["backlog", "upcoming", "current", "done"]
-  @statuses ["unstarted", "started", "finished", "delivered", "rejected", "acceped"]
+  @stages ["Later", "Now", "Done"]
+  @statuses ["Unstarted", "Started", "Finished", "Delivered", "Rejected", "Acceped"]
   def statuses, do: @statuses
   def stages, do: @stages
 
@@ -49,7 +49,7 @@ defmodule PmTool.Tasks.Task do
     if get_field(changeset, :task_order) == nil do
       team_id = get_field(changeset, :team_id)
       stage = case get_field(changeset, :stage) do
-        nil -> "backlog"
+        nil -> "Later"
         stage -> stage
       end
       creator_id = get_field(changeset, :creator_id)
@@ -82,7 +82,7 @@ defmodule PmTool.Tasks.Task do
 
   defp maybe_set_stage(changeset) do
     if get_field(changeset, :stage) == nil do
-      put_change(changeset, :stage, "backlog")
+      put_change(changeset, :stage, "Later")
     else
       changeset
     end

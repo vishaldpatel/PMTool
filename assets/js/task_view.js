@@ -1,20 +1,34 @@
 export default class TaskView {
   setup_batch_tasks() {
     let selected_tasks = {}
-    let batch_task_options = document.getElementById("batch_task_options")
+    let now_task_options = document.getElementById("now_task_options")
+    let later_task_options = document.getElementById("later_task_options")
 
     function checkbox_clicked_handler(event) {
       let task_container = document.getElementById("show-"+event.detail.id)
       task_container.classList.toggle('bg-orange-500')
 
-      if (document.querySelectorAll('input[name="batch_task_slugs[]"]:checked').length > 0) {
-        document.getElementById("batch_task_options").style.display = "inline-block"
+      if (document.querySelectorAll('input[name="Now_task_slugs[]"]:checked').length > 0) {
+        now_task_options.style.display = "inline-block"
       } else {
-        document.getElementById("batch_task_options").style.display = "none"
+        now_task_options.style.display = "none"
       }
 
       if (event.target.checked) {
-        batch_task_options.innerHTML += `<input type="hidden" name="task_slugs[]" value="${event.detail.slug}" id="chk-${event.detail.slug}">`
+        now_task_options.innerHTML += `<input type="hidden" name="task_slugs[]" value="${event.detail.slug}" id="chk-${event.detail.slug}">`
+      } else {
+        // Remove element with id of chk-id
+        document.getElementById(`chk-${event.detail.slug}`).remove()
+      }
+
+      if (document.querySelectorAll('input[name="Later_task_slugs[]"]:checked').length > 0) {
+        later_task_options.style.display = "inline-block"
+      } else {
+        later_task_options.style.display = "none"
+      }
+
+      if (event.target.checked) {
+        later_task_options.innerHTML += `<input type="hidden" name="task_slugs[]" value="${event.detail.slug}" id="chk-${event.detail.slug}">`
       } else {
         // Remove element with id of chk-id
         document.getElementById(`chk-${event.detail.slug}`).remove()
