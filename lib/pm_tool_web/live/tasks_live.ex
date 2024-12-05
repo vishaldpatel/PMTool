@@ -13,11 +13,15 @@ defmodule PmToolWeb.TasksLive do
 
     ## Placeholder:
     ~H"""
-    <div id="tasks" class="flex overflow-x-auto flex-l h-screen">
-      <.live_component module={PmToolWeb.BacklogComponent} id="backlog" current_user={@current_user}, tasks={@backlog_tasks} />
-      <.live_component module={PmToolWeb.UpcomingTasksComponent} id="upcoming" current_user={@current_user}, tasks={@upcoming_tasks} />
-      <.live_component module={PmToolWeb.CurrentTasksComponent} id="current" current_user={@current_user}, tasks={@current_tasks} />
-      <.live_component module={PmToolWeb.DoneTasksComponent} id="done" current_user={@current_user}, tasks={@done_tasks} />
+    <div id="tasks" class="flex overflow-x-auto h-screen">
+      <.live_component module={PmToolWeb.DoneTasksComponent} id="done" current_user={@current_user} tasks={@done_tasks} />
+      <%= if @merge_current_and_upcoming_tasks do %>
+        <.live_component module={PmToolWeb.CurrentAndUpcomingTasksComponent} id="upcoming" current_user={@current_user} tasks={@current_and_upcoming_tasks} />
+      <% else %>
+        <.live_component module={PmToolWeb.CurrentTasksComponent} id="current" current_user={@current_user} tasks={@current_tasks} />
+        <.live_component module={PmToolWeb.UpcomingTasksComponent} id="upcoming" current_user={@current_user} tasks={@upcoming_tasks} />
+      <% end %>
+      <.live_component module={PmToolWeb.BacklogComponent} id="backlog" current_user={@current_user} tasks={@backlog_tasks} />
     </div>
     """
   end
@@ -31,6 +35,7 @@ defmodule PmToolWeb.TasksLive do
            slug -> task = Tasks.get_task_by_slug!(slug)
                    assign(socket, task: task)
          end
+    socket = assign(socket, merge_current_and_upcoming_tasks: false)
     {:ok, socket}
   end
 
@@ -40,6 +45,7 @@ defmodule PmToolWeb.TasksLive do
       backlog_tasks: Enum.filter(tasks, fn task -> task.stage == "backlog" end),
       current_tasks: Enum.filter(tasks, fn task -> task.stage == "current" end),
       upcoming_tasks: Enum.filter(tasks, fn task -> task.stage == "upcoming" end),
+      current_and_upcoming_tasks: Enum.filter(tasks, fn task -> task.stage == "upcoming" || task.stage == "current" end),
       done_tasks: Enum.filter(tasks, fn task -> task.stage == "done" end)
     )
   end
@@ -54,6 +60,14 @@ defmodule PmToolWeb.TasksLive do
       assign(socket, task: task) 
       |> get_tasks()
     {:noreply, socket}
+  end
+
+  def handle_event("separate_current_and_upcoming_tasks", _params, socket) do
+    {:noreply, assign(socket, merge_current_and_upcoming_tasks: false)}
+  end
+
+  def handle_event("merge_current_and_upcoming_tasks", _params, socket) do
+    {:noreply, assign(socket, merge_current_and_upcoming_tasks: true)}
   end
 
   def handle_event("delete_tasks", params, socket) do

@@ -14,7 +14,7 @@ defmodule PmToolWeb.BacklogComponent do
 
     ## Placeholder:
     ~H"""
-    <div class="mr-2 float-left text-left w-80 flex-shrink-0">
+    <div class="mr-2 text-left w-80 flex-shrink-0">
       <span class="font-semibold uppercase float-right text-gray-400">Backlog</span>
 
       <button 
@@ -58,7 +58,6 @@ defmodule PmToolWeb.BacklogComponent do
       |> assign(timestamp: DateTime.to_unix(DateTime.utc_now()))
       |> assign(new_task_id: new_task_id)
       |> maybe_get_current_task()
-      |> assign(tasks: assigns.tasks)
     {:ok, socket}
   end
 

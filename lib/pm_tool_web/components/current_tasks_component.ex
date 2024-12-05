@@ -1,11 +1,12 @@
 defmodule PmToolWeb.CurrentTasksComponent do
   use PmToolWeb, :live_component
 
+  alias Phoenix.LiveView.JS
   alias PmTool.Tasks
 
   def render(assigns) do
     ~H"""
-    <div class="mr-2 float-left text-left w-80 flex-shrink-0">
+    <div class="mr-2 text-left w-80 flex-shrink-0">
       <span class="font-semibold uppercase float-right text-gray-400">Current</span>
       <button 
         class="font-bold rounded" 
@@ -15,6 +16,13 @@ defmodule PmToolWeb.CurrentTasksComponent do
         <svg class="h-6 w-6 text-cyan-500"  fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
         </svg>
+      </button>
+
+      <button 
+        class="font-bold rounded" 
+        phx-click={"merge_current_and_upcoming_tasks"}>
+      <svg class="h-6 w-6 text-red-500"  width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <path d="M3 12h7l-3 -3m0 6l3 -3" />  <path d="M21 12h-7l3 -3m0 6l-3 -3" />  <path d="M9 6v-3h6v3" />  <path d="M9 18v3h6v-3" /></svg>
+
       </button>
 
       <form id="batch_task_options" style="display: none;" phx-submit="delete_tasks" phx-target={@myself}>
@@ -48,7 +56,6 @@ defmodule PmToolWeb.CurrentTasksComponent do
       |> assign(timestamp: DateTime.to_unix(DateTime.utc_now()))
       |> assign(new_task_id: new_task_id)
       |> maybe_get_current_task()
-      |> assign(tasks: assigns.tasks)
     {:ok, socket}
   end
 

@@ -17,7 +17,10 @@ defmodule PmToolWeb.TaskComponents do
   end
 
   def mount(socket) do
-    {:ok, socket}
+    {:ok, assign(socket, 
+      no_check: false,
+      no_move: false
+    )}
   end
 
   def update(assigns, socket) do
@@ -69,7 +72,7 @@ defmodule PmToolWeb.TaskComponents do
       class="text-left">
       <div
         style={@show_task}
-        draggable="true"
+        draggable={if @no_move == true do "false" else "true" end}
         phx-click={
           JS.toggle(to: "#show-#{@id}")
           |> JS.toggle(to: "#edit-#{@id}")
@@ -78,13 +81,15 @@ defmodule PmToolWeb.TaskComponents do
         class="draggable_task_item align-top w-full pl-1 pr-1 cursor-pointer border text-left text-md rounded bold bg-gray-600 text-gray-100 inline-block">
         <span class="just_title text-left w-11/12"><%= @task.name %></span>
         <input type="hidden" class="task_slug" value={@task.slug}/>
-        <input 
-          type="checkbox" 
-          name="batch_task_slugs[]" 
-          class="float-right align-top mt-1 rounded" 
-          phx-click={
-            JS.dispatch("task_checkbox_clicked", detail: %{id: @id, slug: @task.slug})
-          }/>
+        <%= if @no_check == false do %>
+          <input 
+            type="checkbox" 
+            name="batch_task_slugs[]" 
+            class="float-right align-top mt-1 rounded" 
+            phx-click={
+              JS.dispatch("task_checkbox_clicked", detail: %{id: @id, slug: @task.slug})
+            }/>
+        <% end %>
       </div>
       <.task_form task={@task} id={@id} action="update_task" myself={@myself} show_task_edit={@show_task_edit} />
     </li>

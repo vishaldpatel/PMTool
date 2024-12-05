@@ -1,11 +1,12 @@
 defmodule PmToolWeb.UpcomingTasksComponent do
   use PmToolWeb, :live_component
 
+  alias Phoenix.LiveView.JS
   alias PmTool.Tasks
 
   def render(assigns) do
     ~H"""
-    <div class="mr-2 float-left text-left w-80 flex-shrink-0">
+    <div class="mr-2 text-left w-80 flex-shrink-0">
       <span class="font-semibold uppercase float-right text-gray-400">Upcoming</span>
       <button 
         class="font-bold rounded" 
@@ -48,7 +49,6 @@ defmodule PmToolWeb.UpcomingTasksComponent do
       |> assign(timestamp: DateTime.to_unix(DateTime.utc_now()))
       |> assign(new_task_id: new_task_id)
       |> maybe_get_current_task()
-      |> assign(tasks: assigns.tasks)
     {:ok, socket}
   end
 
