@@ -5,6 +5,12 @@ defmodule PmToolWeb.TaskComponents do
   alias PmTool.Tasks
   alias PmTool.Tasks.Task
 
+  @status_colors %{"Unstarted" => "bg-gray-600", "Started" => "bg-yellow-700", "Finished" => "bg-lime-700", "Delivered" => "bg-emerald-800", "Rejected" => "bg-red-900", "Accepted" => "bg-sky-600"}
+
+  defp status_colors(status) do 
+    @status_colors[status]
+  end
+
   def render(assigns) do
     if assigns.task.id do
       show_task(assigns)
@@ -76,7 +82,7 @@ defmodule PmToolWeb.TaskComponents do
           |> JS.toggle(to: "#edit-#{@id}")
         }
         id={"show-#{@id}"}
-        class="draggable_task_item align-top w-full pl-1 pr-1 cursor-pointer border text-left text-md rounded bold bg-gray-600 text-gray-100 inline-block">
+        class={"draggable_task_item align-top w-full pl-1 pr-1 cursor-pointer border text-left text-md rounded bold #{status_colors(@task.status)} text-gray-100 inline-block"}>
         <span class="just_title text-left w-11/12"><%= @task.name %></span>
         <input type="hidden" class="task_slug" value={@task.slug}/>
         <%= if @no_check == false do %>
