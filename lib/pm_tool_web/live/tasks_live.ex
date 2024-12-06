@@ -71,7 +71,6 @@ defmodule PmToolWeb.TasksLive do
 
   def handle_event("separate_now_and_next_tasks", _params, socket) do
     socket = get_tasks(socket)
-    IO.inspect("Got here...")
     {:noreply, assign(socket, merge_now_and_next_tasks: false)}
   end
 
