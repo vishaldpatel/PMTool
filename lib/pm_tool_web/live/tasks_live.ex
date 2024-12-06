@@ -56,8 +56,6 @@ defmodule PmToolWeb.TasksLive do
   end
 
   def handle_info({:new_task_created}, socket) do
-    timestamp = DateTime.to_unix(DateTime.utc_now())
-
     {:noreply, 
       get_tasks(socket)
       |> assign_new_task_ids()

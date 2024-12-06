@@ -26,10 +26,44 @@ defmodule PmTool.Tasks do
     Repo.all(query)
   end
 
+  # Get all tasks for project
+  def list_tasks_for(%Project{} = project) do
+    query = from t in Task,
+      where: t.project_id == ^project.id,
+      order_by: [t.stage, t.task_order]
+    Repo.all(query)
+  end
+
+  def list_tasks_for(%User{} = user, stage) do
+    case stage do
+      "Later+Done" -> 
+        query = from t in Task,
+          where: t.creator_id == ^user.id and is_nil(t.team_id),
+          order_by: [t.stage, t.task_order]
+        
+        where(query, [t], t.stage == "Done" or t.stage == "Later")
+        |> Repo.all()
+      "Now" ->
+        [_last_now_id, tasks] = list_now_tasks_for_next(user)
+        tasks
+      "Next" ->
+        [last_now_id, _now_results] = list_now_tasks_for_next(user)
+        list_tasks_for(user, "Next", last_now_id)
+    end
+  end
+
   def list_tasks_for(%Team{} = team, stage) do
     query = from t in Task,
       where: t.team_id == ^team.id and t.stage == ^stage,
       order_by: [t.task_order]
+    Repo.all(query)
+  end
+
+  def list_tasks_for(%User{} = user, "Next", last_now_id) do
+    query = 
+      from t in Task,
+        where: t.creator_id == ^user.id and is_nil(t.team_id) and t.stage == "Now" and t.id > ^last_now_id,
+        order_by: [t.task_order]
     Repo.all(query)
   end
 
@@ -57,42 +91,6 @@ defmodule PmTool.Tasks do
       )
     [last_now_id, tasks]
   end
-
-  def list_tasks_for(%User{} = user, "Next", last_now_id) do
-    query = 
-      from t in Task,
-        where: t.creator_id == ^user.id and is_nil(t.team_id) and t.stage == "Now" and t.id > ^last_now_id,
-        order_by: [t.task_order]
-    Repo.all(query)
-  end
-
-  def list_tasks_for(%User{} = user, stage) do
-    case stage do
-      "Later+Done" -> 
-        query = from t in Task,
-          where: t.creator_id == ^user.id and is_nil(t.team_id),
-          order_by: [t.stage, t.task_order]
-        
-        where(query, [t], t.stage == "Done" or t.stage == "Later")
-        |> Repo.all()
-      "Now" ->
-        [_last_now_id, tasks] = list_now_tasks_for_next(user)
-        tasks
-      "Next" ->
-        [last_now_id, _now_results] = list_now_tasks_for_next(user)
-        list_tasks_for(user, "Next", last_now_id)
-    end
-  end
-
-  # Get all tasks for project
-  def list_tasks_for(%Project{} = project) do
-    query = from t in Task,
-      where: t.project_id == ^project.id,
-      order_by: [t.stage, t.task_order]
-    Repo.all(query)
-  end
-
-
 
   # Be able to create a Task
   def create_task(attrs \\ %{}) do
