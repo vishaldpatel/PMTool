@@ -33,8 +33,8 @@ defmodule PmToolWeb.TasksLive do
   end
 
   defp get_tasks(socket) do
-    [last_now_id, now_tasks] = Tasks.list_now_tasks_for_next(socket.assigns.current_user) 
-    next_tasks = Tasks.list_tasks_for(socket.assigns.current_user, "Next", last_now_id)
+    [last_task_order, now_tasks] = Tasks.list_now_tasks_for_next(socket.assigns.current_user) 
+    next_tasks = Tasks.list_tasks_for(socket.assigns.current_user, "Next", last_task_order)
     later_and_done_tasks = Tasks.list_tasks_for(socket.assigns.current_user, "Later+Done")
     assign(socket,
       done_tasks: Enum.filter(later_and_done_tasks, fn task -> task.stage == "Done" end),

@@ -51,7 +51,7 @@ defmodule PmTool.Tasks.Task do
   end
 
   defp maybe_set_task_order(changeset) do
-    if get_field(changeset, :task_order) == nil do
+    if get_field(changeset, :task_order) == nil or changed?(changeset, :stage) do
       team_id = get_field(changeset, :team_id)
       stage = case get_field(changeset, :stage) do
         nil -> "Later"

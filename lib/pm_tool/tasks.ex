@@ -44,11 +44,11 @@ defmodule PmTool.Tasks do
         where(query, [t], t.stage == "Done" or t.stage == "Later")
         |> Repo.all()
       "Now" ->
-        [_last_now_id, tasks] = list_now_tasks_for_next(user)
+        [_last_task_order, tasks] = list_now_tasks_for_next(user)
         tasks
       "Next" ->
-        [last_now_id, _now_results] = list_now_tasks_for_next(user)
-        list_tasks_for(user, "Next", last_now_id)
+        [last_task_order, _now_results] = list_now_tasks_for_next(user)
+        list_tasks_for(user, "Next", last_task_order)
     end
   end
 
@@ -59,10 +59,10 @@ defmodule PmTool.Tasks do
     Repo.all(query)
   end
 
-  def list_tasks_for(%User{} = user, "Next", last_now_id) do
+  def list_tasks_for(%User{} = user, "Next", last_task_order) do
     query = 
       from t in Task,
-        where: t.creator_id == ^user.id and is_nil(t.team_id) and t.stage == "Now" and t.id > ^last_now_id,
+        where: t.creator_id == ^user.id and is_nil(t.team_id) and t.stage == "Now" and t.task_order > ^last_task_order,
         order_by: [t.task_order]
     Repo.all(query)
   end
@@ -76,20 +76,20 @@ defmodule PmTool.Tasks do
     results = Repo.all(query)
 
     # Limit the results until the estimate adds up to 30
-    [_now_estimate, last_now_id, tasks] =
+    [_now_estimate, last_task_order, tasks] =
       Enum.reduce_while(
         results, 
         [0,  0, []], 
         fn task, acc ->
-          [total_estimate, last_now_id, tasks] = acc
+          [total_estimate, last_task_order, tasks] = acc
           if total_estimate + task.estimate <= 30 do
-            {:cont, [total_estimate + task.estimate, task.id, tasks ++ [task]]}
+            {:cont, [total_estimate + task.estimate, task.task_order, tasks ++ [task]]}
           else
-            {:halt, [total_estimate, last_now_id, tasks]}
+            {:halt, [total_estimate, last_task_order, tasks]}
           end
         end
       )
-    [last_now_id, tasks]
+    [last_task_order, tasks]
   end
 
   # Be able to create a Task
