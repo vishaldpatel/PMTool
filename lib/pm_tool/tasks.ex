@@ -48,10 +48,10 @@ defmodule PmTool.Tasks do
         [0,  0, []], 
         fn task, acc ->
           [total_estimate, last_now_id, tasks] = acc
-          if total_estimate <= 30 do
+          if total_estimate + task.estimate <= 30 do
             {:cont, [total_estimate + task.estimate, task.id, tasks ++ [task]]}
           else
-            {:halt, [total_estimate, task.id, tasks ++ [task]]}
+            {:halt, [total_estimate, last_now_id, tasks]}
           end
         end
       )

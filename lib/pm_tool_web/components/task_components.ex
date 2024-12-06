@@ -117,6 +117,11 @@ defmodule PmToolWeb.TaskComponents do
         <form phx-submit={@action} phx-target={@myself}> 
           <input placeholder="Task Name" name="task[name]" type="text" value={@task.name} class="rounded-sm w-full py-0 px-1 mb-1"/><br/>
           <textarea placeholder="Task Description" name="task[description]" type="text" class="rounded-sm w-full py-0 px-1 mb-1"><%= @task.description %></textarea><br/>
+          <select name="task[estimate]" class="w-full py-0 px-2 mb-1 rounded-sm" value={@task.estimate}>
+            <%= for estimate <- Tasks.Task.estimates() do %>
+              <option value={estimate} selected={@task.estimate == estimate}><%= estimate %></option>
+            <% end %>
+          </select><br />
           <select name="task[status]" class="w-full py-0 px-2 mb-1 rounded-sm" value={@task.status}>
             <%= for status <- Tasks.Task.statuses() do %>
               <option value={status} selected={@task.status == status}><%= status %></option>
