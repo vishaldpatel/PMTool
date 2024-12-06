@@ -19,19 +19,11 @@ defmodule PmToolWeb.NowAndNextTasksComponent do
         </svg>
       </button>
 
-      <%= if @merge_now_and_next_tasks == true do %>
-        <button 
-          class="font-bold rounded" 
-          phx-click={"separate_now_and_next_tasks"}
-          phx-target={@myself}>
+      <button 
+        class="font-bold rounded" 
+        phx-click={"separate_now_and_next_tasks"}>
         <svg class="h-6 w-6 text-red-500" <svg  viewBox="0 0 24 24"  width="24"  height="24"  xmlns="http://www.w3.org/2000/svg"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round">  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />  <rect x="7" y="7" width="3" height="9" />  <rect x="14" y="7" width="3" height="5" /></svg>
-        </button>
-      <% else %>
-        <button 
-          class="font-bold rounded" 
-          phx-click={"merge_now_and_next_tasks"}
-          phx-target={@myself}><svg class="h-6 w-6 text-red-500"  width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z"/>  <path d="M3 12h7l-3 -3m0 6l3 -3" />  <path d="M21 12h-7l3 -3m0 6l-3 -3" />  <path d="M9 6v-3h6v3" />  <path d="M9 18v3h6v-3" /></svg></button>
-      <% end %>
+      </button>
 
       <form id="now_task_options" style="display: none;" phx-submit="delete_tasks">
         <button class="font-bold rounded">
@@ -55,26 +47,13 @@ defmodule PmToolWeb.NowAndNextTasksComponent do
   end
 
   def update(assigns, socket) do
-    timestamp = DateTime.to_unix(DateTime.utc_now())
-    new_task_id = "new-now-task-#{timestamp}"
-
     socket =
       socket
       |> assign(assigns)
-      |> assign(timestamp: DateTime.to_unix(DateTime.utc_now()))
-      |> assign(new_task_id: new_task_id)
+      |> assign(tasks: [] ++ assigns.now_tasks ++ assigns.next_tasks)
       |> maybe_get_current_task()
     {:ok, socket}
   end
-
-  def handle_event("separate_now_and_next_tasks", _params, socket) do
-    {:noreply, assign(socket, merge_now_and_next_tasks: false)}
-  end
-
-  def handle_event("merge_now_and_next_tasks", _params, socket) do
-    {:noreply, assign(socket, merge_now_and_next_tasks: true)}
-  end
-
 
   defp maybe_get_current_task(socket) do
     case socket.assigns["slug"] do

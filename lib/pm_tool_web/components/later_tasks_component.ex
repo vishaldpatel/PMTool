@@ -41,14 +41,9 @@ defmodule PmToolWeb.LaterTasksComponent do
   end
 
   def update(assigns, socket) do
-    timestamp = DateTime.to_unix(DateTime.utc_now())
-    new_task_id = "new-later-task-#{timestamp}"
-
     socket =
       socket
       |> assign(assigns)
-      |> assign(timestamp: DateTime.to_unix(DateTime.utc_now()))
-      |> assign(new_task_id: new_task_id)
       |> maybe_get_current_task()
     {:ok, socket}
   end

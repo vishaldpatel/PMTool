@@ -7,7 +7,10 @@ defmodule PmTool.Tasks.Task do
   alias PmTool.Teams.Team
 
   @stages ["Later", "Now", "Done"]
-  @statuses ["Unstarted", "Started", "Finished", "Delivered", "Rejected", "Acceped"]
+  @statuses ["Unstarted", "Started", "Finished", "Delivered", "Rejected", "Accepted"]
+  @estimates [1, 2, 4, 6, 8, 12, 16, 24, 60]
+
+  def estimates, do: @estimates
   def statuses, do: @statuses
   def stages, do: @stages
 
@@ -18,6 +21,7 @@ defmodule PmTool.Tasks.Task do
     field :status, :string
     field :slug, :string
     field :task_order, :integer
+    field :estimate, :integer
 
     belongs_to :creator, PmTool.Accounts.User
     belongs_to :owner, PmTool.Accounts.User
@@ -33,7 +37,7 @@ defmodule PmTool.Tasks.Task do
   @doc false
   def changeset(task, attrs) do
     task
-    |> cast(attrs, [:name, :description, :stage, :status, :creator_id, :owner_id, :team_id, :project_id, :task_order])
+    |> cast(attrs, [:name, :description, :stage, :status, :creator_id, :owner_id, :team_id, :project_id, :task_order, :estimate])
     |> validate_required([:name, :creator_id])
     |> slugify()
     |> unique_constraint(:slug)
@@ -41,6 +45,7 @@ defmodule PmTool.Tasks.Task do
     |> maybe_set_status()
     |> validate_inclusion(:stage, @stages)
     |> validate_inclusion(:status, @statuses)
+    |> validate_inclusion(:estimate, @estimates)
     |> maybe_set_task_order()
     |> validate_required([:stage, :status, :task_order])
   end
