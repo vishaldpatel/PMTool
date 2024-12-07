@@ -62,7 +62,7 @@ defmodule PmTool.Tasks do
   def list_tasks_for(%User{} = user, "Next", last_task_order) do
     query = 
       from t in Task,
-        where: t.creator_id == ^user.id and is_nil(t.team_id) and t.stage == "Now" and t.task_order > ^last_task_order,
+        where: t.creator_id == ^user.id and is_nil(t.team_id) and t.stage == "Now" and t.status == "Unstarted" and t.task_order > ^last_task_order,
         order_by: [t.task_order]
     Repo.all(query)
   end
@@ -71,7 +71,15 @@ defmodule PmTool.Tasks do
   def list_now_tasks_for_next(%User{} = user) do
     query = from t in Task,
       where: t.creator_id == ^user.id and is_nil(t.team_id) and t.stage == "Now",
-      order_by: [t.task_order],
+      order_by: [fragment("CASE
+          WHEN ? = 'Accepted' THEN 1
+          WHEN ? = 'Delivered' THEN 2
+          WHEN ? = 'Finished' THEN 3
+          WHEN ? = 'Started' THEN 4
+          WHEN ? = 'Rejected' THEN 5
+          WHEN ? = 'Unstarted' THEN 6
+          ELSE 7 END", t.status, t.status, t.status, t.status, t.status, t.status), 
+        t.task_order],
       limit: 30 # For an individual, we won't need more than 30 tasks
     results = Repo.all(query)
 
@@ -82,7 +90,7 @@ defmodule PmTool.Tasks do
         [0,  0, []], 
         fn task, acc ->
           [total_estimate, last_task_order, tasks] = acc
-          if total_estimate + task.estimate <= 30 do
+          if total_estimate + task.estimate <= 30 or task.status != "Unstarted" do
             {:cont, [total_estimate + task.estimate, task.task_order, tasks ++ [task]]}
           else
             {:halt, [total_estimate, last_task_order, tasks]}

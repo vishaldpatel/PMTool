@@ -32,7 +32,7 @@ defmodule PmToolWeb.NowTasksComponent do
       <%= if @tasks do %>
         <ul phx-hook="Sortable" id={@id}>
           <%= for task <- @tasks do %>
-            <.live_component module={PmToolWeb.TaskComponents} id={"task-#{task.slug}#{@timestamp}"} task={task} />
+            <.live_component module={PmToolWeb.TaskComponents} no_move={task.status != "Unstarted"} id={"task-#{task.slug}#{@timestamp}"} task={task} />
           <% end %>
         </ul>
       <% end %>
