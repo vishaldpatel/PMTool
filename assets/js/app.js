@@ -26,6 +26,8 @@ import TaskView from "./task_view"
 let Hooks = {}
 Hooks.Sortable = {
   mounted() {
+    if (window.move_task_event_listened_to) return // Ensure we don't setup duplicate listeners
+    window.move_task_event_listened_to = true
     window.addEventListener("move_task", event => {
       this.pushEventTo("#tasks", "move_task", event.detail, (reply, ref) => {
       })
