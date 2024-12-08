@@ -27,7 +27,7 @@ defmodule PmToolWeb.LaterTasksComponent do
       <%= if @tasks do %>
         <ul phx-hook="Sortable" id={@id}>
           <%= for task <- @tasks do %>
-            <.live_component module={PmToolWeb.TaskComponents} id={"task-#{task.slug}#{@timestamp}"} task={task} />
+            <.live_component module={PmToolWeb.TaskComponents} id={"task-#{task.slug}#{@timestamp}"} task={task} actions={false} />
           <% end %>
         </ul>
       <% end %>

@@ -23,7 +23,8 @@ defmodule PmToolWeb.TaskComponents do
     {:ok, assign(socket,
       task: if Map.has_key?(socket.assigns, :task) do socket.assigns.task else %Task{} end,
       no_check: false,
-      no_move: false
+      no_move: false,
+      actions: true
     )}
   end
 
@@ -85,14 +86,54 @@ defmodule PmToolWeb.TaskComponents do
         class={"draggable_task_item align-top w-full pl-1 pr-1 cursor-pointer border text-left text-md rounded bold #{status_colors(@task.status)} text-gray-100 inline-block"}>
         <span class="just_title text-left w-11/12"><%= @task.name %></span>
         <input type="hidden" class="task_slug" value={@task.slug}/>
-        <%= if @no_check == false do %>
-          <input 
-            type="checkbox" 
-            name={"#{@task.stage}_task_slugs[]"} 
-            class="float-right align-top mt-1 rounded" 
-            phx-click={
-              JS.dispatch("task_checkbox_clicked", detail: %{id: @id, slug: @task.slug})
-            }/>
+        <%= if @actions == true do %>
+          <%= if @no_check == false do %>
+            <input 
+              type="checkbox" 
+              name={"#{@task.stage}_task_slugs[]"} 
+              class="float-right align-top mt-1 ml-1 rounded" 
+              phx-click={
+                JS.dispatch("task_checkbox_clicked", detail: %{id: @id, slug: @task.slug})
+              }/>
+          <% end %>
+          <%= if @task.status == "Delivered" do %>
+            <button 
+              phx-click="task_action"
+              phx-value-action="accept_task"
+              phx-value-task_slug={@task.slug}
+              class="float-right bg-sky-600 hover:bg-sky-500 text-white text-xs px-1 mt-1 rounded"
+            >Accept</button>
+            <button 
+              phx-click="task_action"
+              phx-value-action="reject_task"
+              phx-value-task_slug={@task.slug}
+              class="float-right bg-red-600 hover:bg-red-500 text-white text-xs px-1 mt-1 rounded"
+            >Reject</button>
+          <% end %>
+          <%= if @task.status == "Finished" do %>
+            <button 
+              phx-click="task_action"
+              phx-value-action="deliver_task"
+              phx-value-task_slug={@task.slug}
+              class="float-right bg-emerald-800 hover:bg-emerald-600 text-white text-xs px-1 mt-1 rounded"
+            >Deliver</button>
+          <% end %>
+          <%= if @task.status == "Started" do %>
+            <button 
+              phx-click="task_action"
+              phx-value-action="finish_task"
+              phx-value-task_slug={@task.slug}
+              class="float-right bg-lime-700 hover:bg-lime-500 text-white text-xs px-1 mt-1 rounded"
+            >Finish</button>
+          <% end %>
+          <%= if @task.status == "Unstarted" or @task.status == "Rejected" do %>
+            <button 
+              phx-click="task_action" 
+              phx-value-action="start_task"
+              phx-value-task_slug={@task.slug}
+              class="float-right bg-yellow-700 hover:bg-yellow-500 text-white text-xs px-1 mt-1 rounded"
+            >Start</button>
+          <% end %>
         <% end %>
       </div>
       <.task_form task={@task} id={@id} action="update_task" myself={@myself} show_task_edit={@show_task_edit} />

@@ -175,6 +175,26 @@ defmodule PmTool.Tasks do
     |> Repo.update()
   end
 
+  def start_task(%Task{} = task) do
+    update_task(task, %{"status" => "Started", "stage" => "Now"})
+  end
+
+  def finish_task(%Task{} = task) do
+    update_task(task, %{"status" => "Finished"})
+  end
+
+  def deliver_task(%Task{} = task) do
+    update_task(task, %{"status" => "Delivered"})
+  end
+
+  def accept_task(%Task{} = task) do
+    update_task(task, %{"status" => "Accepted"})
+  end
+
+  def reject_task(%Task{} = task) do
+    update_task(task, %{"status" => "Rejected"})
+  end
+
   # Be able to delete a Task
   def delete_task(%Task{} = task) do
     Repo.delete(task)

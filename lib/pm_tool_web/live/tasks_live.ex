@@ -79,13 +79,26 @@ defmodule PmToolWeb.TasksLive do
     {:noreply, assign(socket, merge_now_and_next_tasks: true)}
   end
 
+  def handle_event("task_action", params, socket) do
+    current_user = socket.assigns.current_user
+    task_slug = params["task_slug"]
+    task = Tasks.get_task_by_slug!(task_slug)
+    case params["action"] do
+      "start_task" -> Tasks.start_task(task)
+      "finish_task" -> Tasks.finish_task(task)
+      "deliver_task" -> Tasks.deliver_task(task)
+      "accept_task" -> Tasks.accept_task(task)
+      "reject_task" -> Tasks.reject_task(task)
+    end
+    {:noreply, get_tasks(socket)}
+  end
+
   def handle_event("delete_tasks", params, socket) do
     current_user = socket.assigns.current_user
     task_slugs = params["task_slugs"]
     Tasks.delete_tasks_with_slugs(current_user, task_slugs)
 
-    socket = get_tasks(socket)
-    {:noreply, socket}
+    {:noreply, get_tasks(socket)}
   end
 
   def handle_event("move_task", %{"action" => action, "active_task_slug" => active_task_slug, "affected_task_slug" => affected_task_slug} = _params, socket) do
@@ -95,6 +108,7 @@ defmodule PmToolWeb.TasksLive do
       "move_above" -> Tasks.move_task_above(task, affected_task)
       "move_below" -> Tasks.move_task_below(task, affected_task)
     end
-    {:noreply, socket}
+
+    {:noreply, get_tasks(socket)}
   end
 end
