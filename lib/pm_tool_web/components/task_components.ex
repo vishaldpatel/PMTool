@@ -22,7 +22,6 @@ defmodule PmToolWeb.TaskComponents do
   def mount(socket) do
     {:ok, assign(socket,
       task: if Map.has_key?(socket.assigns, :task) do socket.assigns.task else %Task{} end,
-      no_check: false,
       no_move: false,
       actions: true
     )}
@@ -86,16 +85,14 @@ defmodule PmToolWeb.TaskComponents do
         class={"draggable_task_item align-top w-full pl-1 pr-1 cursor-pointer border text-left text-md rounded bold #{status_colors(@task.status)} text-gray-100 inline-block"}>
         <span class="just_title text-left w-11/12"><%= @task.name %></span>
         <input type="hidden" class="task_slug" value={@task.slug}/>
+        <input 
+          type="checkbox" 
+          name={"#{@task.stage}_task_slugs[]"} 
+          class="float-right align-top mt-1 ml-1 rounded" 
+          phx-click={
+            JS.dispatch("task_checkbox_clicked", detail: %{id: @id, slug: @task.slug, stage: @task.stage})
+          }/>
         <%= if @actions == true do %>
-          <%= if @no_check == false do %>
-            <input 
-              type="checkbox" 
-              name={"#{@task.stage}_task_slugs[]"} 
-              class="float-right align-top mt-1 ml-1 rounded" 
-              phx-click={
-                JS.dispatch("task_checkbox_clicked", detail: %{id: @id, slug: @task.slug})
-              }/>
-          <% end %>
           <%= if @task.status == "Delivered" do %>
             <button 
               phx-click="task_action"
