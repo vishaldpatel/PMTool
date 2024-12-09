@@ -1,17 +1,25 @@
 export default class TaskView {
+  let now_task_options = document.getElementById("now_task_options")
+  let next_task_options = document.getElementById("next_task_options")
+  let done_task_options = document.getElementById("done_task_options")
+  let later_task_options = document.getElementById("later_task_options")
+
+  task_options_for_stage(stage) {
+    if (stage === "Now") {
+      return now_task_options
+    } else if (stage === "Next") {
+      return next_task_options
+    } else if (stage === "Done") {
+      return done_task_options
+    } else if (stage === "Later") {
+      return later_task_options
+    }
+  }
+
   setup_batch_tasks() {
     function checkbox_clicked_handler(event) {
       let stage = event.detail.stage
-      let task_options = null
-
-      if (stage === "Now") {
-        task_options = document.getElementById("now_task_options")
-      } else if (stage === "Done") {
-        task_options = document.getElementById("done_task_options")
-      } else if (stage === "Later") {
-        task_options = document.getElementById("later_task_options")
-      }
-
+      let task_options = task_options_for_stage(stage)
       let task_container = document.getElementById("show-"+event.detail.id)
       task_container.classList.toggle('bg-orange-500')
 
@@ -36,10 +44,10 @@ export default class TaskView {
   }
 
   setup_drag_and_drop() {
-    var _move_element = null
-    var _task_slug = null
-    var _above_slug = null
-    var _noq = 0
+    let _move_element = null
+    let _task_slug = null
+    let _above_slug = null
+    let _noq = 0
 
     function move_element_to(target) {
       if (target !== _move_element) {
