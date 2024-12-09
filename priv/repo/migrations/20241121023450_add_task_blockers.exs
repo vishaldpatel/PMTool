@@ -9,6 +9,7 @@ defmodule PmTool.Repo.Migrations.AddTaskBlockers do
 
       timestamps()
     end
+
     create index(:blockers, [:task_id])
   end
 end

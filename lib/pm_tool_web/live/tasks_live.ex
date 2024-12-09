@@ -6,14 +6,49 @@ defmodule PmToolWeb.TasksLive do
   def render(assigns) do
     ~H"""
     <div id="tasks" class="flex overflow-x-auto h-screen">
-      <.live_component module={PmToolWeb.DoneTasksComponent} id="done" current_user={@current_user} tasks={@done_tasks} timestamp={@timestamp} />
+      <.live_component
+        module={PmToolWeb.DoneTasksComponent}
+        id="done"
+        current_user={@current_user}
+        tasks={@done_tasks}
+        timestamp={@timestamp}
+      />
       <%= if @merge_now_and_next_tasks do %>
-        <.live_component module={PmToolWeb.NowAndNextTasksComponent} id="now_and_next" current_user={@current_user} now_tasks={@now_tasks} next_tasks={@next_tasks} new_task_id={@new_now_next_task_id} timestamp={@timestamp} />
+        <.live_component
+          module={PmToolWeb.NowAndNextTasksComponent}
+          id="now_and_next"
+          current_user={@current_user}
+          now_tasks={@now_tasks}
+          next_tasks={@next_tasks}
+          new_task_id={@new_now_next_task_id}
+          timestamp={@timestamp}
+        />
       <% else %>
-        <.live_component module={PmToolWeb.NowTasksComponent} id="now" current_user={@current_user} tasks={@now_tasks} new_task_id={@new_now_task_id} timestamp={@timestamp} />
-        <.live_component module={PmToolWeb.NextTasksComponent} id="next" current_user={@current_user} tasks={@next_tasks} new_task_id={@new_next_task_id} timestamp={@timestamp} />
+        <.live_component
+          module={PmToolWeb.NowTasksComponent}
+          id="now"
+          current_user={@current_user}
+          tasks={@now_tasks}
+          new_task_id={@new_now_task_id}
+          timestamp={@timestamp}
+        />
+        <.live_component
+          module={PmToolWeb.NextTasksComponent}
+          id="next"
+          current_user={@current_user}
+          tasks={@next_tasks}
+          new_task_id={@new_next_task_id}
+          timestamp={@timestamp}
+        />
       <% end %>
-      <.live_component module={PmToolWeb.LaterTasksComponent} id="later" current_user={@current_user} tasks={@later_tasks} new_task_id={@new_later_task_id} timestamp={@timestamp} />
+      <.live_component
+        module={PmToolWeb.LaterTasksComponent}
+        id="later"
+        current_user={@current_user}
+        tasks={@later_tasks}
+        new_task_id={@new_later_task_id}
+        timestamp={@timestamp}
+      />
     </div>
     """
   end
@@ -22,20 +57,26 @@ defmodule PmToolWeb.TasksLive do
     socket =
       get_tasks(socket)
       |> assign_new_task_ids()
+
     socket =
       case params["slug"] do
-           nil -> assign(socket, task: nil)
-           slug -> task = Tasks.get_task_by_slug!(slug)
-                   assign(socket, task: task)
-         end
+        nil ->
+          assign(socket, task: nil)
+
+        slug ->
+          task = Tasks.get_task_by_slug!(slug)
+          assign(socket, task: task)
+      end
+
     socket = assign(socket, merge_now_and_next_tasks: true)
     {:ok, socket}
   end
 
   defp get_tasks(socket) do
-    [last_task_order, now_tasks] = Tasks.list_now_tasks_for_next(socket.assigns.current_user) 
+    [last_task_order, now_tasks] = Tasks.list_now_tasks_for_next(socket.assigns.current_user)
     next_tasks = Tasks.list_tasks_for(socket.assigns.current_user, "Next", last_task_order)
     later_and_done_tasks = Tasks.list_tasks_for(socket.assigns.current_user, "Later+Done")
+
     assign(socket,
       done_tasks: Enum.filter(later_and_done_tasks, fn task -> task.stage == "Done" end),
       now_tasks: now_tasks,
@@ -46,6 +87,7 @@ defmodule PmToolWeb.TasksLive do
 
   def assign_new_task_ids(socket) do
     timestamp = DateTime.to_unix(DateTime.utc_now())
+
     assign(socket,
       timestamp: timestamp,
       new_now_task_id: "new-now-task-#{timestamp}",
@@ -56,16 +98,16 @@ defmodule PmToolWeb.TasksLive do
   end
 
   def handle_info({:new_task_created}, socket) do
-    {:noreply, 
-      get_tasks(socket)
-      |> assign_new_task_ids()
-    }
+    {:noreply,
+     get_tasks(socket)
+     |> assign_new_task_ids()}
   end
 
   def handle_info({:task_updated, task}, socket) do
-    socket = 
-      assign(socket, task: task) 
+    socket =
+      assign(socket, task: task)
       |> get_tasks()
+
     {:noreply, socket}
   end
 
@@ -80,9 +122,9 @@ defmodule PmToolWeb.TasksLive do
   end
 
   def handle_event("task_action", params, socket) do
-    current_user = socket.assigns.current_user
     task_slug = params["task_slug"]
     task = Tasks.get_task_by_slug!(task_slug)
+
     case params["action"] do
       "start_task" -> Tasks.start_task(task)
       "finish_task" -> Tasks.finish_task(task)
@@ -90,6 +132,7 @@ defmodule PmToolWeb.TasksLive do
       "accept_task" -> Tasks.accept_task(task)
       "reject_task" -> Tasks.reject_task(task)
     end
+
     {:noreply, get_tasks(socket)}
   end
 
@@ -101,9 +144,18 @@ defmodule PmToolWeb.TasksLive do
     {:noreply, get_tasks(socket)}
   end
 
-  def handle_event("move_task", %{"action" => action, "active_task_slug" => active_task_slug, "affected_task_slug" => affected_task_slug} = _params, socket) do
+  def handle_event(
+        "move_task",
+        %{
+          "action" => action,
+          "active_task_slug" => active_task_slug,
+          "affected_task_slug" => affected_task_slug
+        } = _params,
+        socket
+      ) do
     task = Tasks.get_task_by_slug!(active_task_slug)
     affected_task = Tasks.get_task_by_slug!(affected_task_slug)
+
     case action do
       "move_above" -> Tasks.move_task_above(task, affected_task)
       "move_below" -> Tasks.move_task_below(task, affected_task)

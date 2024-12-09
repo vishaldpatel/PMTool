@@ -9,30 +9,33 @@ defmodule PmTool.Teams do
   alias PmTool.Teams.Team
   alias PmTool.Teams.TeamMember
   alias PmTool.Accounts.User
-  
+
   # Be able to find teams for which
   # the current uesr has a membership
   # and also load their role
   def list_teams_for(%User{} = user) do
-    query = from t in Team,
-      join: tm in TeamMember,
-      on: tm.team_id == t.id,
-      join: u in User,
-      on: u.id == tm.user_id,
-      where: u.id == ^user.id
+    query =
+      from t in Team,
+        join: tm in TeamMember,
+        on: tm.team_id == t.id,
+        join: u in User,
+        on: u.id == tm.user_id,
+        where: u.id == ^user.id
+
     Repo.all(query)
   end
-
 
   # List team members for a team along with their roles
   def list_members_for(%Team{} = team) do
-    query = from tm in TeamMember,
-      join: u in User,
-      on: u.id == tm.user_id,
-      where: tm.team_id == ^team.id
+    query =
+      from tm in TeamMember,
+        join: u in User,
+        on: u.id == tm.user_id,
+        where: tm.team_id == ^team.id
+
     Repo.all(query)
   end
-  
+
   # Be able to create a Team
   def create_team(attrs \\ %{}) do
     %Team{}

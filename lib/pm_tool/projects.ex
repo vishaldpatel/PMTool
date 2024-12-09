@@ -11,9 +11,11 @@ defmodule PmTool.Projects do
   alias PmTool.Teams.Team
 
   def list_projects_for(%Team{} = team) do
-    query = from p in Project,
-      join: t in assoc(p, :team_projects),
-      where: t.team_id == ^team.id
+    query =
+      from p in Project,
+        join: t in assoc(p, :team_projects),
+        where: t.team_id == ^team.id
+
     Repo.all(query)
   end
 

@@ -19,5 +19,4 @@ defmodule PmTool.Projects.Project do
     |> slugify()
     |> unique_constraint(:slug)
   end
-
 end

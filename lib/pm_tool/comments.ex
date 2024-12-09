@@ -23,9 +23,11 @@ defmodule PmTool.Comments do
 
   # Get comments for task order by created_at
   def get_comments_for_task(task) do
-    query = from c in TaskComment,
-      where: c.task_id == ^task.id,
-      order_by: [desc: c.inserted_at]
+    query =
+      from c in TaskComment,
+        where: c.task_id == ^task.id,
+        order_by: [desc: c.inserted_at]
+
     Repo.all(query)
   end
 

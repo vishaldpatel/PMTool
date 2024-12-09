@@ -7,6 +7,7 @@ defmodule PmTool.Repo.Migrations.AddTaskStages do
       add :stage, :string, null: false, default: "backlog"
       timestamps()
     end
+
     create index(:stages, [:task_id])
     create index(:stages, [:stage])
 

@@ -7,6 +7,7 @@ defmodule PmTool.Repo.Migrations.AddTaskStatus do
       add :status, :string, null: false, default: "unstarted"
       timestamps()
     end
+
     create index(:task_status, [:task_id])
 
     alter table(:tasks) do
