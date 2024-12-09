@@ -184,10 +184,10 @@ defmodule PmToolWeb.TaskComponents do
           <div class="w-full text-right">
             <button type="reset"
               phx-click={
-                JS.toggle_class("hidden", to: "#show-"<>@id)
-                |> JS.toggle_class("flex", to: "#show-#{@id}")
-                |> JS.toggle_class("flex", to: "#edit-#{@id}")
+                JS.toggle_class("flex", to: "#edit-#{@id}")
                 |> JS.toggle_class("hidden", to: "#edit-#{@id}")
+                |> JS.toggle_class("hidden", to: "#show-"<>@id)
+                |> JS.toggle_class("flex", to: "#show-#{@id}")
               }>Cancel</button>
             <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold px-2 py-1 ml-1 rounded"><%= @save_button_name %></button>
           </div>
