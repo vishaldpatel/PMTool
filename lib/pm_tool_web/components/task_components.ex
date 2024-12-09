@@ -85,7 +85,7 @@ defmodule PmToolWeb.TaskComponents do
         id={"show-#{@id}"}
         class={"draggable_task_item w-full pl-1 pr-1 cursor-pointer border text-right text-md rounded bold #{status_colors(@task.status)} text-gray-100 inline-block flex #{@show_task}"}>
         <div class="inline-block just_title text-left flex flex-auto"><%= @task.name %></div>
-        <div class="inline-block inline-block flex-none" onclick="event.stopPropagation()">
+        <div class="inline-block inline-block flex-none">
           <%= if @actions == true do %>
             <%= if @task.status == "Delivered" do %>
               <button 
