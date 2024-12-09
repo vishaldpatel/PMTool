@@ -52,6 +52,7 @@ defmodule PmToolWeb.DoneTasksComponent do
               id={"task-#{task.slug}#{@timestamp}"}
               task={task}
               no_move={true}
+              actions={false}
             />
           <% end %>
         </ul>
