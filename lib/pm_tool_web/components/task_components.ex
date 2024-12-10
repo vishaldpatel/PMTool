@@ -105,7 +105,7 @@ defmodule PmToolWeb.TaskComponents do
 
   defp show_task(assigns) do
     ~H"""
-    <li class="text-left flex-auto">
+    <li class={"text-left"}>
       <div
         draggable={
           if @no_move == true do
@@ -114,88 +114,92 @@ defmodule PmToolWeb.TaskComponents do
             "true"
           end
         }
-        phx-click={
-          JS.toggle_class("flex", to: "#show-#{@id}")
-          |> JS.toggle_class("hidden", to: "#show-#{@id}")
-          |> JS.toggle_class("hidden", to: "#edit-#{@id}")
-          |> JS.toggle_class("flex", to: "#edit-#{@id}")
-        }
-        id={"show-#{@id}"}
-        class={"draggable_task_item w-full pl-1 pr-1 cursor-pointer border text-right text-md rounded bold #{status_colors(@task.status)} text-gray-100 inline-block flex #{@show_task}"}
+        class={"inline-block draggable_task_item cursor-pointer border text-right rounded bold flex #{status_colors(@task.status)}"}
       >
-        <div class="inline-block just_title text-left flex flex-auto">{@task.name}</div>
-        <div class="inline-block inline-block flex-none">
-          <%= if @actions == true do %>
-            <%= if @task.status == "Delivered" do %>
-              <button
-                phx-click="task_action"
-                phx-value-action="accept_task"
-                phx-value-task_slug={@task.slug}
-                class="bg-sky-600 hover:bg-sky-500 text-white text-xs px-1 my-1 rounded"
-              >
-                Accept
-              </button>
-              <button
-                phx-click="task_action"
-                phx-value-action="reject_task"
-                phx-value-task_slug={@task.slug}
-                class="bg-red-600 hover:bg-red-500 text-white text-xs px-1 my-1 rounded"
-              >
-                Reject
-              </button>
+        <div 
+          id={"show-#{@id}"}
+          phx-click={
+            JS.toggle_class("flex", to: "#show-#{@id}")
+            |> JS.toggle_class("hidden", to: "#show-#{@id}")
+            |> JS.toggle_class("hidden", to: "#edit-#{@id}")
+            |> JS.toggle_class("flex", to: "#edit-#{@id}")
+          }
+          class={"inline-block text-md w-full pl-1 pr-1 text-gray-100 #{@show_task}"}
+        >
+          <div class="inline-block just_title text-left flex-auto">{@task.name}</div>
+          <div class="inline-block flex-none">
+            <%= if @actions == true do %>
+              <%= if @task.status == "Delivered" do %>
+                <button
+                  phx-click="task_action"
+                  phx-value-action="accept_task"
+                  phx-value-task_slug={@task.slug}
+                  class="bg-sky-600 hover:bg-sky-500 text-white text-xs px-1 my-1 rounded"
+                >
+                  Accept
+                </button>
+                <button
+                  phx-click="task_action"
+                  phx-value-action="reject_task"
+                  phx-value-task_slug={@task.slug}
+                  class="bg-red-600 hover:bg-red-500 text-white text-xs px-1 my-1 rounded"
+                >
+                  Reject
+                </button>
+              <% end %>
+              <%= if @task.status == "Finished" do %>
+                <button
+                  phx-click="task_action"
+                  phx-value-action="deliver_task"
+                  phx-value-task_slug={@task.slug}
+                  class="bg-emerald-800 hover:bg-emerald-600 text-white text-xs px-1 my-1 rounded"
+                >
+                  Deliver
+                </button>
+              <% end %>
+              <%= if @task.status == "Started" do %>
+                <button
+                  phx-click="task_action"
+                  phx-value-action="finish_task"
+                  phx-value-task_slug={@task.slug}
+                  class="bg-lime-700 hover:bg-lime-500 text-white text-xs px-1 my-1 rounded"
+                >
+                  Finish
+                </button>
+              <% end %>
+              <%= if @task.status == "Unstarted" or @task.status == "Rejected" do %>
+                <button
+                  phx-click="task_action"
+                  phx-value-action="start_task"
+                  phx-value-task_slug={@task.slug}
+                  class="bg-yellow-700 hover:bg-yellow-500 text-white text-xs px-1 my-1 rounded"
+                >
+                  Start
+                </button>
+              <% end %>
             <% end %>
-            <%= if @task.status == "Finished" do %>
-              <button
-                phx-click="task_action"
-                phx-value-action="deliver_task"
-                phx-value-task_slug={@task.slug}
-                class="bg-emerald-800 hover:bg-emerald-600 text-white text-xs px-1 my-1 rounded"
-              >
-                Deliver
-              </button>
-            <% end %>
-            <%= if @task.status == "Started" do %>
-              <button
-                phx-click="task_action"
-                phx-value-action="finish_task"
-                phx-value-task_slug={@task.slug}
-                class="bg-lime-700 hover:bg-lime-500 text-white text-xs px-1 my-1 rounded"
-              >
-                Finish
-              </button>
-            <% end %>
-            <%= if @task.status == "Unstarted" or @task.status == "Rejected" do %>
-              <button
-                phx-click="task_action"
-                phx-value-action="start_task"
-                phx-value-task_slug={@task.slug}
-                class="bg-yellow-700 hover:bg-yellow-500 text-white text-xs px-1 my-1 rounded"
-              >
-                Start
-              </button>
-            <% end %>
-          <% end %>
-          <input type="hidden" class="task_slug" value={@task.slug} />
-          <input
-            type="checkbox"
-            name={"#{@task.stage}_task_slugs[]"}
-            class="rounded"
-            style="margin-bottom: 1px;"
-            phx-click={
-              JS.dispatch("task_checkbox_clicked",
-                detail: %{id: @id, slug: @task.slug, stage: @task.stage}
-              )
-            }
-          />
+            <input type="hidden" class="task_slug" value={@task.slug} />
+            <input
+              type="checkbox"
+              name={"#{@task.stage}_task_slugs[]"}
+              class="rounded"
+              style="margin-bottom: 1px;"
+              phx-click={
+                JS.dispatch("task_checkbox_clicked",
+                  detail: %{id: @id, slug: @task.slug, stage: @task.stage}
+                )
+              }
+            />
+          </div>
         </div>
+        <.task_form
+          task={@task}
+          id={@id}
+          action="update_task"
+          myself={@myself}
+          show_task_edit={@show_task_edit}
+        />
       </div>
-      <.task_form
-        task={@task}
-        id={@id}
-        action="update_task"
-        myself={@myself}
-        show_task_edit={@show_task_edit}
-      />
     </li>
     """
   end
@@ -225,7 +229,7 @@ defmodule PmToolWeb.TaskComponents do
     assigns = assign(assigns, :save_button_name, save_button_name)
 
     ~H"""
-    <div id={"edit-"<>@id} class={"text-left #{@show_task_edit}"}>
+    <div id={"edit-"<>@id} class={"text-left w-full #{@show_task_edit}"}>
       <div class="inline-block w-full bg-gray-200 text-left border border-white p-1 rounded">
         <form phx-submit={@action} phx-target={@myself}>
           <input
