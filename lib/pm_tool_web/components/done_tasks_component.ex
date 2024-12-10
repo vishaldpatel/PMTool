@@ -3,7 +3,7 @@ defmodule PmToolWeb.DoneTasksComponent do
 
   def render(assigns) do
     ~H"""
-    <div class="mr-2 text-left w-80">
+    <div class="mr-2 text-left w-80 flex-shrink-0">
       <form id="done_task_options" style="display: none;" phx-submit="delete_tasks">
         <button class="font-bold rounded">
           <svg

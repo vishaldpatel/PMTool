@@ -9,6 +9,7 @@ defmodule PmTool.Teams.Team do
 
     belongs_to :owner, PmTool.Accounts.User, foreign_key: :owner_id
     has_many :team_members, PmTool.Teams.TeamMember
+    many_to_many :projects, PmTool.Projects.Project, join_through: PmTool.Projects.TeamProject
 
     timestamps()
   end

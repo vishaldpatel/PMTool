@@ -2,10 +2,17 @@ defmodule PmToolWeb.TasksLive do
   use PmToolWeb, :live_view
 
   alias PmTool.Tasks
+  alias PmTool.Projects
 
   def render(assigns) do
     ~H"""
     <div id="tasks" class="flex overflow-x-auto h-screen">
+      <.live_component
+        module={PmToolWeb.ProjectsComponent}
+        id="projects"
+        current_user={@current_user}
+        projects={@projects}
+      />
       <.live_component
         module={PmToolWeb.DoneTasksComponent}
         id="done"
@@ -57,6 +64,8 @@ defmodule PmToolWeb.TasksLive do
     socket =
       get_tasks(socket)
       |> assign_new_task_ids()
+      |> assign(merge_now_and_next_tasks: true)
+      |> assign(projects: Projects.list_projects_for(socket.assigns.current_user))
 
     socket =
       case params["slug"] do
@@ -68,7 +77,6 @@ defmodule PmToolWeb.TasksLive do
           assign(socket, task: task)
       end
 
-    socket = assign(socket, merge_now_and_next_tasks: true)
     {:ok, socket}
   end
 
