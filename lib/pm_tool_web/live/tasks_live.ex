@@ -11,14 +11,8 @@ defmodule PmToolWeb.TasksLive do
         module={PmToolWeb.ProjectsComponent}
         id="projects"
         current_user={@current_user}
+        new_project_id={@new_project_id}
         projects={@projects}
-      />
-      <.live_component
-        module={PmToolWeb.DoneTasksComponent}
-        id="done"
-        current_user={@current_user}
-        tasks={@done_tasks}
-        timestamp={@timestamp}
       />
       <%= if @merge_now_and_next_tasks do %>
         <.live_component
@@ -56,6 +50,13 @@ defmodule PmToolWeb.TasksLive do
         new_task_id={@new_later_task_id}
         timestamp={@timestamp}
       />
+      <.live_component
+        module={PmToolWeb.DoneTasksComponent}
+        id="done"
+        current_user={@current_user}
+        tasks={@done_tasks}
+        timestamp={@timestamp}
+      />
     </div>
     """
   end
@@ -65,7 +66,8 @@ defmodule PmToolWeb.TasksLive do
       get_tasks(socket)
       |> assign_new_task_ids()
       |> assign(merge_now_and_next_tasks: true)
-      |> assign(projects: Projects.list_projects_for(socket.assigns.current_user))
+      |> get_projects()
+      |> assign_new_project_id()
 
     socket =
       case params["slug"] do
@@ -78,6 +80,10 @@ defmodule PmToolWeb.TasksLive do
       end
 
     {:ok, socket}
+  end
+
+  defp get_projects(socket) do
+    assign(socket, projects: Projects.list_projects_for(socket.assigns.current_user))
   end
 
   defp get_tasks(socket) do
@@ -93,6 +99,15 @@ defmodule PmToolWeb.TasksLive do
     )
   end
 
+  def assign_new_project_id(socket) do
+    timestamp = DateTime.to_unix(DateTime.utc_now())
+
+    assign(socket,
+      timestamp: timestamp,
+      new_project_id: "new-project-#{timestamp}"
+    )
+  end
+
   def assign_new_task_ids(socket) do
     timestamp = DateTime.to_unix(DateTime.utc_now())
 
@@ -105,10 +120,24 @@ defmodule PmToolWeb.TasksLive do
     )
   end
 
+  def handle_info({:new_project_created}, socket) do
+    {:noreply,
+     get_projects(socket)
+     |> assign_new_project_id()}
+  end
+
+  def handle_info({:project_updated, project}, socket) do
+    socket =
+      assign(socket, project: project)
+      |> get_projects()
+
+    {:noreply, socket}
+  end
+
   def handle_info({:new_task_created}, socket) do
     {:noreply,
      get_tasks(socket)
-     |> assign_new_task_ids()}
+     |> assign_new_project_id()}
   end
 
   def handle_info({:task_updated, task}, socket) do

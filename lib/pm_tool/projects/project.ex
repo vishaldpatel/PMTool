@@ -9,8 +9,8 @@ defmodule PmTool.Projects.Project do
     field :slug, :string
 
     belongs_to :creator, PmTool.Accounts.User
-    many_to_many :teams, PmTool.Projects.Team, join_through: PmTool.Projects.TeamProject
-    has_many :tasks, PmTool.Tasks.Task
+    many_to_many :teams, PmTool.Teams.Team, join_through: PmTool.Projects.TeamProject
+    many_to_many :tasks, PmTool.Tasks.Task, join_through: PmTool.Projects.ProjectTask
 
     timestamps()
   end

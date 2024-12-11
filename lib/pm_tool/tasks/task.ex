@@ -26,10 +26,10 @@ defmodule PmTool.Tasks.Task do
     belongs_to :creator, PmTool.Accounts.User
     belongs_to :owner, PmTool.Accounts.User
     belongs_to :team, PmTool.Teams.Team
-    belongs_to :project, PmTool.Projects.Project
 
     has_many :blockers, PmTool.Tasks.Blocker
     has_many :comments, PmTool.Comments.TaskComment
+    many_to_many :projects, PmTool.Projects.Project, join_through: PmTool.Projects.ProjectTask
 
     timestamps()
   end
@@ -45,7 +45,6 @@ defmodule PmTool.Tasks.Task do
       :creator_id,
       :owner_id,
       :team_id,
-      :project_id,
       :task_order,
       :estimate
     ])
