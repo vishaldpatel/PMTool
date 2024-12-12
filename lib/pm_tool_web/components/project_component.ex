@@ -106,7 +106,7 @@ defmodule PmToolWeb.ProjectComponent do
             |> JS.toggle_class("hidden", to: "#edit-#{@id}")
             |> JS.toggle_class("flex", to: "#edit-#{@id}")
           }
-          class={"inline-block text-md w-full pl-1 pr-1 text-gray-100 #{@show_project}"}
+          class={"inline-block text-md w-full pl-1 pr-1 pt-0.5 text-gray-100 #{@show_project}"}
         >
           <div class="inline-block just_title text-left flex-auto">{@project.name}</div>
           <div class="inline-block flex-none">
@@ -117,7 +117,7 @@ defmodule PmToolWeb.ProjectComponent do
                 class="font-bold rounded my-1"
               >
                 <svg
-                  class="h-4 w-4 text-red-500 bg-white rounded border-0"
+                  class="h-4 w-4 text-orange-500 bg-white rounded border-0"
                   <svg
                   viewBox="0 0 24 24"
                   width="24"
