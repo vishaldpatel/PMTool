@@ -13,6 +13,7 @@ defmodule PmToolWeb.TasksLive do
         current_user={@current_user}
         new_project_id={@new_project_id}
         projects={@projects}
+        open_projects={@open_projects}
       />
       <%= for project <- Projects.get_projects!(@open_projects) do %>
         <.live_component

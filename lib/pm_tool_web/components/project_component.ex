@@ -15,24 +15,16 @@ defmodule PmToolWeb.ProjectComponent do
   def mount(socket) do
     {:ok,
      assign(socket,
-       project:
-         if Map.has_key?(socket.assigns, :project) do
-           socket.assigns.project
-         else
-           %Project{}
-         end,
-       actions: true
+       project: %Project{},
+       open_projects: [],
+       actions: true,
+       show_project: "flex",
+       show_project_edit: "hidden"
      )}
   end
 
   def update(assigns, socket) do
-    socket = assign(socket, assigns)
-
-    {:ok,
-     assign(socket,
-       show_project: "flex",
-       show_project_edit: "hidden"
-     )}
+    {:ok, assign(socket, assigns)}
   end
 
   def handle_event("update_project", %{"project" => project_params}, socket) do
@@ -118,28 +110,30 @@ defmodule PmToolWeb.ProjectComponent do
         >
           <div class="inline-block just_title text-left flex-auto">{@project.name}</div>
           <div class="inline-block flex-none">
-            <button
-              phx-click="show_project_tasks"
-              phx-value-project_slug={@project.slug}
-              class="font-bold rounded my-1"
-            >
-              <svg
-                class="h-4 w-4 text-red-500 bg-white rounded border-0"
-                <svg
-                viewBox="0 0 24 24"
-                width="24"
-                height="24"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+            <%= unless Enum.member?(@open_projects, @project.slug) do %>
+              <button
+                phx-click="show_project_tasks"
+                phx-value-project_slug={@project.slug}
+                class="font-bold rounded my-1"
               >
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                <rect x="7" y="7" width="3" height="9" /> <rect x="14" y="7" width="3" height="5" />
-              </svg>
-            </button>
+                <svg
+                  class="h-4 w-4 text-red-500 bg-white rounded border-0"
+                  <svg
+                  viewBox="0 0 24 24"
+                  width="24"
+                  height="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <rect x="7" y="7" width="3" height="9" /> <rect x="14" y="7" width="3" height="5" />
+                </svg>
+              </button>
+            <% end %>
           </div>
         </div>
         <.project_form
