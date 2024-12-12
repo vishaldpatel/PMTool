@@ -29,6 +29,23 @@ export default class TaskView {
         task_options.style.display = "none"
       }
 
+      if (event.detail.project_slug) {
+        let project_panel = document.getElementById("project-tasks-"+event.detail.project_slug)
+        let project_task_options = document.getElementById("project_task_options_"+event.detail.project_slug)
+        if (project_panel.querySelectorAll(`input[type="checkbox"]:checked`).length > 0) {
+          project_task_options.style.display = "inline-block"
+        } else {
+          project_task_options.style.display = "none"
+        }
+
+        if (event.target.checked) {
+          project_task_options.innerHTML += `<input type="hidden" name="task_slugs[]" value="${event.detail.slug}" id="chk-${event.detail.slug}">`
+        } else {
+          // Remove element with id of chk-id
+          document.getElementById(`chk-${event.detail.slug}`).remove()
+        }
+      }
+
       if (event.target.checked) {
         task_options.innerHTML += `<input type="hidden" name="task_slugs[]" value="${event.detail.slug}" id="chk-${event.detail.slug}">`
       } else {

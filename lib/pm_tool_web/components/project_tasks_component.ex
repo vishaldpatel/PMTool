@@ -23,6 +23,26 @@ defmodule PmToolWeb.ProjectTasksComponent do
           <line x1="15" y1="9" x2="9" y2="15" /> <line x1="9" y1="9" x2="15" y2="15" />
         </svg>
       </button>
+      <form id={"project_task_options_#{@project.slug}"} class="project_task_options" type="submit" style="display: none;" phx-submit="remove_tasks_from_project" phx-value-project_slug={@project.slug} >
+        <button class="font-bold rounded">
+          <svg
+            class="h-6 w-6 text-orange-400"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            stroke-width="2"
+            stroke="currentColor"
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path stroke="none" d="M0 0h24v24H0z" /> <line x1="4" y1="7" x2="20" y2="7" />
+            <line x1="10" y1="11" x2="10" y2="17" /> <line x1="14" y1="11" x2="14" y2="17" />
+            <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+            <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+          </svg>
+        </button>
+      </form>
       <div droppable="true" id={"project-tasks-#{@project.slug}"} class="droppable_project_target">
         <input type="hidden" name="project_slug" class="project_slug" value={@project.slug} />
         <h3 class="font-bold text-right">Done</h3>
@@ -31,6 +51,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
             <.live_component
               module={PmToolWeb.TaskComponents}
               id={"project-#{@project.slug}-task-#{task.slug}#{@timestamp}"}
+              project={@project}
               task={task}
               no_move={true}
               actions={false}
@@ -44,6 +65,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
               module={PmToolWeb.TaskComponents}
               no_move={task.status != "Unstarted"}
               id={"project-#{@project.slug}-task-#{task.slug}#{@timestamp}"}
+              project={@project}
               task={task}
               actions={true}
             />
@@ -53,6 +75,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
               module={PmToolWeb.TaskComponents}
               no_move={task.status != "Unstarted"}
               id={"project-#{@project.slug}-task-#{task.slug}#{@timestamp}"}
+              project={@project}
               task={task}
               actions={true}
             />
@@ -64,6 +87,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
             <.live_component
               module={PmToolWeb.TaskComponents}
               id={"project-#{@project.slug}-task-#{task.slug}#{@timestamp}"}
+              project={@project}
               task={task}
               no_move={false}
               actions={false}

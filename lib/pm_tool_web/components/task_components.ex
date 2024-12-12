@@ -4,6 +4,7 @@ defmodule PmToolWeb.TaskComponents do
   alias Phoenix.LiveView.JS
   alias PmTool.Tasks
   alias PmTool.Tasks.Task
+  alias PmTool.Projects.Project
 
   @status_colors %{
     "Unstarted" => "bg-gray-600 hover:bg-gray-500",
@@ -28,16 +29,12 @@ defmodule PmToolWeb.TaskComponents do
 
   def mount(socket) do
     {:ok,
-     assign(socket,
-       task:
-         if Map.has_key?(socket.assigns, :task) do
-           socket.assigns.task
-         else
-           %Task{}
-         end,
-       no_move: false,
-       actions: true
-     )}
+      assign(socket,
+        task: %Task{},
+        project: %Project{slug: nil},
+        no_move: false,
+        actions: true
+      )}
   end
 
   def update(assigns, socket) do
@@ -186,7 +183,7 @@ defmodule PmToolWeb.TaskComponents do
               style="margin-bottom: 1px;"
               phx-click={
                 JS.dispatch("task_checkbox_clicked",
-                  detail: %{id: @id, slug: @task.slug, stage: @task.stage}
+                  detail: %{id: @id, slug: @task.slug, stage: @task.stage, project_slug: @project.slug}
                 )
               }
             />

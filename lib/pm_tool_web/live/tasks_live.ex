@@ -227,6 +227,14 @@ defmodule PmToolWeb.TasksLive do
     {:noreply, get_tasks(socket)}
   end
 
+  def handle_event("remove_tasks_from_project", params, socket) do
+    project = Projects.get_project_by_slug!(params["project_slug"])
+    task_slugs = params["task_slugs"]
+    Projects.remove_tasks_from_project(project, task_slugs)
+
+    {:noreply, get_tasks(socket)} 
+  end
+
   def handle_event(
         "move_task",
         %{
@@ -237,6 +245,7 @@ defmodule PmToolWeb.TasksLive do
       ) do
     task = Tasks.get_task_by_slug!(task_slug)
     project = Projects.get_project_by_slug!(project_slug)
+
     Projects.add_task_to_project(project, task)
 
     {:noreply, get_tasks(socket)}

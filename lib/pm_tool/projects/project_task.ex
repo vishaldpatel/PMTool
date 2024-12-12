@@ -12,5 +12,6 @@ defmodule PmTool.Projects.ProjectTask do
     project_task
     |> cast(attrs, [:task_id, :project_id])
     |> validate_required([:task_id, :project_id])
+    |> unique_constraint([:project_id, :task_id], name: :project_tasks_project_id_task_id_index)
   end
 end
