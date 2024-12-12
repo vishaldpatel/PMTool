@@ -78,10 +78,6 @@ defmodule PmToolWeb.LaterTasksComponent do
     {:ok, socket}
   end
 
-  def get_later_tasks(socket) do
-    assign(socket, tasks: Tasks.list_tasks_for(socket.assigns.current_user, "Later"))
-  end
-
   defp maybe_get_current_task(socket) do
     case socket.assigns["slug"] do
       nil ->

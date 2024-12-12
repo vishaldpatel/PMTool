@@ -14,6 +14,16 @@ defmodule PmToolWeb.TasksLive do
         new_project_id={@new_project_id}
         projects={@projects}
       />
+      <%= for project <- Projects.get_projects!(@open_projects) do %>
+        <.live_component
+          module={PmToolWeb.ProjectTasksComponent}
+          id={"project-#{project.slug}"}
+          current_user={@current_user}
+          project={project}
+          tasks={@open_project_tasks[project.slug]}
+          timestamp={@timestamp}
+        />
+      <% end %>
       <%= if @merge_now_and_next_tasks do %>
         <.live_component
           module={PmToolWeb.NowAndNextTasksComponent}
@@ -63,7 +73,10 @@ defmodule PmToolWeb.TasksLive do
 
   def mount(params, _session, socket) do
     socket =
-      get_tasks(socket)
+      socket
+      |> assign(open_projects: [])
+      |> assign(open_project_tasks: %{})
+      |> get_tasks()
       |> assign_new_task_ids()
       |> assign(merge_now_and_next_tasks: true)
       |> get_projects()
@@ -87,15 +100,23 @@ defmodule PmToolWeb.TasksLive do
   end
 
   defp get_tasks(socket) do
-    [last_task_order, now_tasks] = Tasks.list_now_tasks_for_next(socket.assigns.current_user)
-    next_tasks = Tasks.list_tasks_for(socket.assigns.current_user, "Next", last_task_order)
-    later_and_done_tasks = Tasks.list_tasks_for(socket.assigns.current_user, "Later+Done")
+    tasks = Tasks.list_tasks(socket.assigns.current_user)
+    now_tasks = tasks[:Now]
+    next_tasks = tasks[:Next]
+    later_tasks = tasks[:Later]
+    done_tasks = tasks[:Done]
+
+    socket =
+    Enum.reduce(socket.assigns.open_projects, socket, fn project_slug, socket -> 
+      project_tasks = Tasks.list_tasks(socket.assigns.current_user, project_slug)
+      assign(socket, open_project_tasks: Map.put(socket.assigns.open_project_tasks, project_slug, project_tasks))
+    end)
 
     assign(socket,
-      done_tasks: Enum.filter(later_and_done_tasks, fn task -> task.stage == "Done" end),
+      done_tasks: done_tasks,
       now_tasks: now_tasks,
       next_tasks: next_tasks,
-      later_tasks: Enum.filter(later_and_done_tasks, fn task -> task.stage == "Later" end)
+      later_tasks: later_tasks
     )
   end
 
@@ -123,39 +144,66 @@ defmodule PmToolWeb.TasksLive do
   def handle_info({:new_project_created}, socket) do
     {:noreply,
      get_projects(socket)
-     |> assign_new_project_id()}
+     |> assign_new_project_id()
+    }
   end
 
   def handle_info({:project_updated, project}, socket) do
-    socket =
-      assign(socket, project: project)
+    {:noreply, 
+      socket
+      |> assign(project: project)
       |> get_projects()
-
-    {:noreply, socket}
+    }
   end
 
   def handle_info({:new_task_created}, socket) do
     {:noreply,
-     get_tasks(socket)
-     |> assign_new_project_id()}
+      socket
+      |> get_tasks()
+      |> assign_new_project_id()
+    }
   end
 
   def handle_info({:task_updated, task}, socket) do
-    socket =
-      assign(socket, task: task)
+    {:noreply, 
+      socket
+      |> assign(task: task)
       |> get_tasks()
+    }
+  end
 
-    {:noreply, socket}
+  def handle_event("show_project_tasks", params, socket) do
+    unless Enum.member?(socket.assigns.open_projects, params["project_slug"]) do
+      {:noreply, 
+        socket
+        |> assign(open_projects: [params["project_slug"] | socket.assigns.open_projects])
+        |> get_tasks()
+      }
+    end
+  end
+
+  def handle_event("hide_project_tasks", params, socket) do
+    {:noreply, 
+      socket
+      |> assign(open_projects: List.delete(socket.assigns.open_projects, params["project_slug"]))
+      |> assign(open_project_tasks: Map.delete(socket.assigns.open_project_tasks, params["project_slug"]))
+    }
   end
 
   def handle_event("separate_now_and_next_tasks", _params, socket) do
-    socket = get_tasks(socket)
-    {:noreply, assign(socket, merge_now_and_next_tasks: false)}
+    {:noreply,
+      socket
+      |> get_tasks()
+      |> assign(merge_now_and_next_tasks: false)
+    }
   end
 
   def handle_event("merge_now_and_next_tasks", _params, socket) do
-    socket = get_tasks(socket)
-    {:noreply, assign(socket, merge_now_and_next_tasks: true)}
+    {:noreply, 
+      socket
+      |> get_tasks()
+      |> assign(merge_now_and_next_tasks: true)
+    }
   end
 
   def handle_event("task_action", params, socket) do
@@ -180,6 +228,22 @@ defmodule PmToolWeb.TasksLive do
 
     {:noreply, get_tasks(socket)}
   end
+
+  def handle_event(
+        "move_task",
+        %{
+          "task_slug" => task_slug,
+          "target_project_slug" => project_slug
+        } = _params,
+        socket
+      ) do
+    task = Tasks.get_task_by_slug!(task_slug)
+    project = Projects.get_project_by_slug!(project_slug)
+    Projects.add_task_to_project(project, task)
+
+    {:noreply, get_tasks(socket)}
+  end
+        
 
   def handle_event(
         "move_task",

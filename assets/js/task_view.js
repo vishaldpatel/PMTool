@@ -85,46 +85,83 @@ export default class TaskView {
 
     function dropHandler(e) {
       e.preventDefault()
-      let p = e.target.parentNode.parentNode
-      unsetPlaceholder(p)
-      let move_task_event = new CustomEvent("move_task", {detail: {active_task_slug: _task_slug, affected_task_slug: _above_slug, action: _noq}})
-      window.dispatchEvent(move_task_event)
+      let project_element = e.target.closest(".droppable_project_target")
+      if (project_element) {
+        let _target_project_slug = project_element.querySelector(".project_slug").value
+        project_element.classList.remove("bg-orange-200")
+        _task_slug = _move_element.querySelector(".task_slug").value
+        window.dispatchEvent(
+          new CustomEvent("move_task", {
+            detail: {
+              task_slug: _task_slug, 
+              target_project_slug: _target_project_slug 
+            }
+          })
+        )
+      } else {
+        let p = e.target.parentNode.parentNode
+        unsetPlaceholder(p)
+        window.dispatchEvent(
+          new CustomEvent("move_task", {
+            detail: {
+              active_task_slug: _task_slug, 
+              affected_task_slug: _above_slug, 
+              action: _noq
+            }
+          })
+        )
+      }
     }
 
     function dragLeaveHandler(e) {
       e.preventDefault()
-      let p = e.target.parentNode.parentNode
-      if (p.getAttribute("draggable") == "true") {
-        unsetPlaceholder(p)
-      }
-      else if (e.target.getAttribute("draggable") == "true") {
-        unsetPlaceholder(e.target)
+      let project_element = e.target.closest(".droppable_project_target")
+      if (project_element) {
+        project_element.classList.remove("bg-orange-200")
+      } else {
+        let p = e.target.parentNode.parentNode
+        if (p.getAttribute("draggable") == "true") {
+          unsetPlaceholder(p)
+        }
+        else if (e.target.getAttribute("draggable") == "true") {
+          unsetPlaceholder(e.target)
+        }
       }
     }
 
     function dragEnterHandler(e) {
       e.preventDefault()
-      let p = e.target.parentNode.parentNode
-      if (p.getAttribute("draggable") == "true") {
-        setPlaceholder(p)
-        move_element_to(p)
-      }
-      else if (e.target.getAttribute("draggable") == "true") {
-        setPlaceholder(e.target)
-        move_element_to(e.target)
+      let project_element = e.target.closest(".droppable_project_target")
+      if (project_element) {
+        project_element.classList.add("bg-orange-200")
+      } else {
+        let p = e.target.parentNode.parentNode
+        if (p.getAttribute("draggable") == "true") {
+          setPlaceholder(p)
+          move_element_to(p)
+        }
+        else if (e.target.getAttribute("draggable") == "true") {
+          setPlaceholder(e.target)
+          move_element_to(e.target)
+        }
       }
     }
 
     function dragOverHandler(e) {
       e.preventDefault()
-      let p = e.target.parentNode.parentNode
-      if (p.getAttribute("draggable") == "true") {
-        setPlaceholder(p)
-        move_element_to(p)
-      }
-      else if (e.target.getAttribute("draggable") == "true") {
-        setPlaceholder(e.target)
-        move_element_to(e.target)
+      let project_element = e.target.closest(".droppable_project_target")
+      if (project_element) {
+        project_element.classList.add("bg-orange-200")
+      } else {
+        let p = e.target.parentNode.parentNode
+        if (p.getAttribute("draggable") == "true") {
+          setPlaceholder(p)
+          move_element_to(p)
+        }
+        else if (e.target.getAttribute("draggable") == "true") {
+          setPlaceholder(e.target)
+          move_element_to(e.target)
+        }
       }
     }
 
@@ -152,12 +189,23 @@ export default class TaskView {
       target.ondrop = dropHandler
     }
 
+    function attach_drop_handlers(target) {
+      target.ondrop = dropHandler
+      target.ondragover = dragOverHandler
+      target.ondragenter = dragEnterHandler
+      target.ondragleave = dragLeaveHandler
+    }
+
     // for each drop_target, add event listeners
     let draggable_task_items = document.querySelectorAll(".draggable_task_item")
     draggable_task_items.forEach((item) => {
       attach_drag_handlers(item)
     })
 
+    let droppable_project_targets = document.querySelectorAll(".droppable_project_target")
+    droppable_project_targets.forEach((item) => {
+      attach_drop_handlers(item)
+    })
   }
 
   mount() {

@@ -8,23 +8,14 @@ defmodule PmTool.Tasks do
   alias PmTool.Tasks.Task
   alias PmTool.Teams.Team
   alias PmTool.Accounts.User
+  alias PmTool.Projects
   alias PmTool.Projects.Project
+  alias PmTool.Projects.ProjectTask
 
-  # Get all tasks for team and stage
   def list_tasks_for(%Team{} = team) do
     query =
       from t in Task,
         where: t.team_id == ^team.id and t.status != "done",
-        order_by: [t.stage, t.task_order]
-
-    Repo.all(query)
-  end
-
-  # Get all tasks for a user that are not "Done"
-  def list_tasks_for(%User{} = user) do
-    query =
-      from t in Task,
-        where: t.creator_id == ^user.id and is_nil(t.team_id),
         order_by: [t.stage, t.task_order]
 
     Repo.all(query)
@@ -40,82 +31,59 @@ defmodule PmTool.Tasks do
     Repo.all(query)
   end
 
-  def list_tasks_for(%User{} = user, stage) do
-    case stage do
-      "Later+Done" ->
-        query =
-          from t in Task,
-            where: t.creator_id == ^user.id and is_nil(t.team_id),
-            order_by: [t.stage, t.task_order]
-
-        where(query, [t], t.stage == "Done" or t.stage == "Later")
-        |> Repo.all()
-
-      "Now" ->
-        [_last_task_order, tasks] = list_now_tasks_for_next(user)
-        tasks
-
-      "Next" ->
-        [last_task_order, _now_results] = list_now_tasks_for_next(user)
-        list_tasks_for(user, "Next", last_task_order)
-    end
+  def list_tasks(%User{} = user) do
+    Repo.all(base_list_tasks_query(user))
+    |> separate_tasks_into_stages()
   end
 
-  def list_tasks_for(%Team{} = team, stage) do
-    query =
-      from t in Task,
-        where: t.team_id == ^team.id and t.stage == ^stage,
-        order_by: [t.task_order]
-
-    Repo.all(query)
+  def list_tasks(%User{} = user, project_slug) do
+    project = Projects.get_project_by_slug!(project_slug)
+    query = from t in base_list_tasks_query(user),
+      join: pt in ProjectTask, on: pt.task_id == t.id and pt.project_id == ^project.id
+    unsorted_tasks = Repo.all(query)
+    tasks = separate_tasks_into_stages(unsorted_tasks)
+    tasks
   end
 
-  def list_tasks_for(%User{} = user, "Next", last_task_order) do
-    query =
-      from t in Task,
-        where:
-          t.creator_id == ^user.id and is_nil(t.team_id) and t.stage == "Now" and
-            t.status == "Unstarted" and t.task_order > ^last_task_order,
-        order_by: [t.task_order]
-
-    Repo.all(query)
+  defp base_list_tasks_query(user) do
+    from t in Task,
+      where: t.creator_id == ^user.id and is_nil(t.team_id),
+      order_by: [fragment("CASE
+        WHEN ? = 'Accepted' THEN 1
+        WHEN ? = 'Delivered' THEN 2
+        WHEN ? = 'Finished' THEN 3
+        WHEN ? = 'Started' THEN 4
+        WHEN ? = 'Rejected' THEN 5
+        WHEN ? = 'Unstarted' THEN 6
+        ELSE 7 END", t.status, t.status, t.status, t.status, t.status, t.status), t.task_order]
+      # For an individual, we won't need more than 30 tasks
   end
 
-  def list_now_tasks_for_next(%User{} = user) do
-    query =
-      from t in Task,
-        where: t.creator_id == ^user.id and is_nil(t.team_id) and t.stage == "Now",
-        order_by: [fragment("CASE
-          WHEN ? = 'Accepted' THEN 1
-          WHEN ? = 'Delivered' THEN 2
-          WHEN ? = 'Finished' THEN 3
-          WHEN ? = 'Started' THEN 4
-          WHEN ? = 'Rejected' THEN 5
-          WHEN ? = 'Unstarted' THEN 6
-          ELSE 7 END", t.status, t.status, t.status, t.status, t.status, t.status), t.task_order],
-        # For an individual, we won't need more than 30 tasks
-        limit: 30
-
-    results = Repo.all(query)
-
+  defp separate_tasks_into_stages(unsorted_tasks) do
     # Limit the results until the estimate adds up to 30
-    [_now_estimate, last_task_order, tasks] =
+    [_now_estimate, tasks] =
       Enum.reduce_while(
-        results,
-        [0, 0, []],
+        unsorted_tasks,
+        [0, %{Now: [], Next: [], Done: [], Later: []}],
         fn task, acc ->
-          [total_estimate, last_task_order, tasks] = acc
+          [total_estimate, tasks] = acc
 
-          if total_estimate + task.estimate <= 30 or task.status != "Unstarted" do
-            {:cont, [total_estimate + task.estimate, task.task_order, tasks ++ [task]]}
-          else
-            {:halt, [total_estimate, last_task_order, tasks]}
+          cond do
+            task.stage == "Done" ->
+              {:cont, [total_estimate, %{tasks | Done: tasks[:Done] ++ [task]}]}
+            task.stage == "Later" ->
+              {:cont, [total_estimate, %{tasks | Later: tasks[:Later] ++ [task]}]}
+            total_estimate + task.estimate <= 30 or task.status != "Unstarted" ->
+              {:cont, [total_estimate + task.estimate, %{tasks | Now: tasks[:Now] ++ [task]}]}
+            true ->
+              {:cont, [total_estimate + task.estimate, %{tasks | Next: tasks[:Next] ++ [task]}]}
           end
         end
       )
-
-    [last_task_order, tasks]
+    tasks
   end
+
+
 
   # Be able to create a Task
   def create_task(attrs \\ %{}) do

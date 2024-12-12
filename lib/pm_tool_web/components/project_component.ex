@@ -120,6 +120,31 @@ defmodule PmToolWeb.ProjectComponent do
           class={"inline-block text-md w-full pl-1 pr-1 text-gray-100 #{@show_project}"}
         >
           <div class="inline-block just_title text-left flex-auto">{@project.name}</div>
+          <div class="inline-block flex-none">
+            <button
+              phx-click="show_project_tasks"
+              phx-value-project_slug={@project.slug}
+              class="font-bold rounded my-1"
+            >
+              <svg
+                class="h-4 w-4 text-red-500 bg-white rounded border-0"
+                <svg
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <rect x="7" y="7" width="3" height="9" /> <rect x="14" y="7" width="3" height="5" />
+              </svg>
+              
+            </button>
+          </div>
         </div>
         <.project_form
           project={@project}
