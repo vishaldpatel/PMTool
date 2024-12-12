@@ -105,7 +105,7 @@ defmodule PmToolWeb.TaskComponents do
 
   defp show_task(assigns) do
     ~H"""
-    <li class={"text-left"}>
+    <li class="text-left">
       <div
         draggable={
           if @no_move == true do
@@ -116,7 +116,7 @@ defmodule PmToolWeb.TaskComponents do
         }
         class={"inline-block draggable_task_item cursor-pointer border text-right rounded bold flex #{status_colors(@task.status)}"}
       >
-        <div 
+        <div
           id={"show-#{@id}"}
           phx-click={
             JS.toggle_class("flex", to: "#show-#{@id}")

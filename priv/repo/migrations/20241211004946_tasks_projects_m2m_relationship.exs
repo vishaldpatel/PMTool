@@ -5,7 +5,7 @@ defmodule PmTool.Repo.Migrations.TasksProjectsM2mRelationship do
     # Remove project_id from tasks
     # Remove index from tasks for project_id
     drop index(:tasks, [:project_id])
-    
+
     alter table(:tasks) do
       remove :project_id
     end
@@ -18,6 +18,5 @@ defmodule PmTool.Repo.Migrations.TasksProjectsM2mRelationship do
     create unique_index(:project_tasks, [:project_id, :task_id])
     create index(:project_tasks, [:project_id])
     create index(:project_tasks, [:task_id])
-
   end
 end

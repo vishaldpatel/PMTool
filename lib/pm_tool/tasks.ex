@@ -38,8 +38,12 @@ defmodule PmTool.Tasks do
 
   def list_tasks(%User{} = user, project_slug) do
     project = Projects.get_project_by_slug!(project_slug)
-    query = from t in base_list_tasks_query(user),
-      join: pt in ProjectTask, on: pt.task_id == t.id and pt.project_id == ^project.id
+
+    query =
+      from t in base_list_tasks_query(user),
+        join: pt in ProjectTask,
+        on: pt.task_id == t.id and pt.project_id == ^project.id
+
     unsorted_tasks = Repo.all(query)
     tasks = separate_tasks_into_stages(unsorted_tasks)
     tasks
@@ -56,7 +60,8 @@ defmodule PmTool.Tasks do
         WHEN ? = 'Rejected' THEN 5
         WHEN ? = 'Unstarted' THEN 6
         ELSE 7 END", t.status, t.status, t.status, t.status, t.status, t.status), t.task_order]
-      # For an individual, we won't need more than 30 tasks
+
+    # For an individual, we won't need more than 30 tasks
   end
 
   defp separate_tasks_into_stages(unsorted_tasks) do
@@ -71,19 +76,21 @@ defmodule PmTool.Tasks do
           cond do
             task.stage == "Done" ->
               {:cont, [total_estimate, %{tasks | Done: tasks[:Done] ++ [task]}]}
+
             task.stage == "Later" ->
               {:cont, [total_estimate, %{tasks | Later: tasks[:Later] ++ [task]}]}
+
             total_estimate + task.estimate <= 30 or task.status != "Unstarted" ->
               {:cont, [total_estimate + task.estimate, %{tasks | Now: tasks[:Now] ++ [task]}]}
+
             true ->
               {:cont, [total_estimate + task.estimate, %{tasks | Next: tasks[:Next] ++ [task]}]}
           end
         end
       )
+
     tasks
   end
-
-
 
   # Be able to create a Task
   def create_task(attrs \\ %{}) do

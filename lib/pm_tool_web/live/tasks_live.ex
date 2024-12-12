@@ -107,10 +107,14 @@ defmodule PmToolWeb.TasksLive do
     done_tasks = tasks[:Done]
 
     socket =
-    Enum.reduce(socket.assigns.open_projects, socket, fn project_slug, socket -> 
-      project_tasks = Tasks.list_tasks(socket.assigns.current_user, project_slug)
-      assign(socket, open_project_tasks: Map.put(socket.assigns.open_project_tasks, project_slug, project_tasks))
-    end)
+      Enum.reduce(socket.assigns.open_projects, socket, fn project_slug, socket ->
+        project_tasks = Tasks.list_tasks(socket.assigns.current_user, project_slug)
+
+        assign(socket,
+          open_project_tasks:
+            Map.put(socket.assigns.open_project_tasks, project_slug, project_tasks)
+        )
+      end)
 
     assign(socket,
       done_tasks: done_tasks,
@@ -144,66 +148,60 @@ defmodule PmToolWeb.TasksLive do
   def handle_info({:new_project_created}, socket) do
     {:noreply,
      get_projects(socket)
-     |> assign_new_project_id()
-    }
+     |> assign_new_project_id()}
   end
 
   def handle_info({:project_updated, project}, socket) do
-    {:noreply, 
-      socket
-      |> assign(project: project)
-      |> get_projects()
-    }
+    {:noreply,
+     socket
+     |> assign(project: project)
+     |> get_projects()}
   end
 
   def handle_info({:new_task_created}, socket) do
     {:noreply,
-      socket
-      |> get_tasks()
-      |> assign_new_project_id()
-    }
+     socket
+     |> get_tasks()
+     |> assign_new_project_id()}
   end
 
   def handle_info({:task_updated, task}, socket) do
-    {:noreply, 
-      socket
-      |> assign(task: task)
-      |> get_tasks()
-    }
+    {:noreply,
+     socket
+     |> assign(task: task)
+     |> get_tasks()}
   end
 
   def handle_event("show_project_tasks", params, socket) do
     unless Enum.member?(socket.assigns.open_projects, params["project_slug"]) do
-      {:noreply, 
-        socket
-        |> assign(open_projects: [params["project_slug"] | socket.assigns.open_projects])
-        |> get_tasks()
-      }
+      {:noreply,
+       socket
+       |> assign(open_projects: [params["project_slug"] | socket.assigns.open_projects])
+       |> get_tasks()}
     end
   end
 
   def handle_event("hide_project_tasks", params, socket) do
-    {:noreply, 
-      socket
-      |> assign(open_projects: List.delete(socket.assigns.open_projects, params["project_slug"]))
-      |> assign(open_project_tasks: Map.delete(socket.assigns.open_project_tasks, params["project_slug"]))
-    }
+    {:noreply,
+     socket
+     |> assign(open_projects: List.delete(socket.assigns.open_projects, params["project_slug"]))
+     |> assign(
+       open_project_tasks: Map.delete(socket.assigns.open_project_tasks, params["project_slug"])
+     )}
   end
 
   def handle_event("separate_now_and_next_tasks", _params, socket) do
     {:noreply,
-      socket
-      |> get_tasks()
-      |> assign(merge_now_and_next_tasks: false)
-    }
+     socket
+     |> get_tasks()
+     |> assign(merge_now_and_next_tasks: false)}
   end
 
   def handle_event("merge_now_and_next_tasks", _params, socket) do
-    {:noreply, 
-      socket
-      |> get_tasks()
-      |> assign(merge_now_and_next_tasks: true)
-    }
+    {:noreply,
+     socket
+     |> get_tasks()
+     |> assign(merge_now_and_next_tasks: true)}
   end
 
   def handle_event("task_action", params, socket) do
@@ -243,7 +241,6 @@ defmodule PmToolWeb.TasksLive do
 
     {:noreply, get_tasks(socket)}
   end
-        
 
   def handle_event(
         "move_task",

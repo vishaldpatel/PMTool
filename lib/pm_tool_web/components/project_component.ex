@@ -88,7 +88,6 @@ defmodule PmToolWeb.ProjectComponent do
     end
   end
 
-
   defp new_project(assigns) do
     ~H"""
     <div>
@@ -105,11 +104,9 @@ defmodule PmToolWeb.ProjectComponent do
 
   def show_project(assigns) do
     ~H"""
-    <li class={"text-left"}>
-      <div
-        class={"inline-block cursor-pointer border text-right rounded bold flex bg-gray-600 hover:bg-gray-500"}
-      >
-        <div 
+    <li class="text-left">
+      <div class="inline-block cursor-pointer border text-right rounded bold flex bg-gray-600 hover:bg-gray-500">
+        <div
           id={"show-#{@id}"}
           phx-click={
             JS.toggle_class("flex", to: "#show-#{@id}")
@@ -142,7 +139,6 @@ defmodule PmToolWeb.ProjectComponent do
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                 <rect x="7" y="7" width="3" height="9" /> <rect x="14" y="7" width="3" height="5" />
               </svg>
-              
             </button>
           </div>
         </div>
@@ -157,7 +153,6 @@ defmodule PmToolWeb.ProjectComponent do
     </li>
     """
   end
-
 
   defp project_form(assigns) do
     save_button_name =
