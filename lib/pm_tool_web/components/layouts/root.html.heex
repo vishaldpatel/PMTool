@@ -11,16 +11,16 @@
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
     </script>
   </head>
-  <body class="bg-black antialiased">
+  <body class="bg-[#082f49] antialiased">
     <ul class="relative z-10 flex items-center gap-4 justify-start mx-2 mb-2">
       <%= if @current_user do %>
-        <li class="text-[0.8125rem] leading-6 text-zinc-900">
+        <li class="text-[0.8125rem] leading-6 text-zinc-400">
           {@current_user.email}
         </li>
         <li>
           <.link
             href={~p"/tasks"}
-            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+            class="text-[0.8125rem] leading-6 text-zinc-400 font-semibold hover:text-zinc-500"
           >
             Tasks
           </.link>
@@ -28,7 +28,7 @@
         <li>
           <.link
             href={~p"/users/settings"}
-            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+            class="text-[0.8125rem] leading-6 text-zinc-400 font-semibold hover:text-zinc-500"
           >
             Settings
           </.link>
@@ -37,7 +37,7 @@
           <.link
             href={~p"/users/log_out"}
             method="delete"
-            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+            class="text-[0.8125rem] leading-6 text-zinc-400 font-semibold hover:text-zinc-500"
           >
             Log out
           </.link>
@@ -46,7 +46,7 @@
         <li>
           <.link
             href={~p"/users/register"}
-            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+            class="text-[0.8125rem] leading-6 text-zinc-400 font-semibold hover:text-zinc-500"
           >
             Register
           </.link>
@@ -54,7 +54,7 @@
         <li>
           <.link
             href={~p"/users/log_in"}
-            class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+            class="text-[0.8125rem] leading-6 text-zinc-400 font-semibold hover:text-zinc-500"
           >
             Log in
           </.link>

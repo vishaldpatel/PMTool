@@ -42,7 +42,8 @@ defmodule PmTool.Tasks do
     query =
       from t in base_list_tasks_query(user),
         join: pt in ProjectTask,
-        on: pt.task_id == t.id and pt.project_id == ^project.id
+        on: pt.task_id == t.id and pt.project_id == ^project.id,
+        order_by: [t.stage, t.task_order]
 
     unsorted_tasks = Repo.all(query)
     tasks = separate_tasks_into_stages(unsorted_tasks)
