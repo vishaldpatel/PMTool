@@ -117,7 +117,7 @@ defmodule PmToolWeb.ProjectComponent do
                 class="font-bold rounded my-1"
               >
                 <svg
-                  class="h-4 w-4 text-orange-500 bg-white rounded border-0"
+                  class="h-4 w-4 text-orange-500 bg-gray-600 hover:bg-gray-500 rounded border-0"
                   <svg
                   viewBox="0 0 24 24"
                   width="24"

@@ -53,10 +53,10 @@ defmodule PmToolWeb.ProjectTasksComponent do
       <div
         droppable="true"
         id={"project-tasks-#{@project.slug}"}
-        class="droppable_project_target bg-gray-200 rounded-md"
+        class="droppable_project_target bg-gray-400 rounded-md"
       >
         <input type="hidden" name="project_slug" class="project_slug" value={@project.slug} />
-        <h3 class="text-right px-1 text-gray-500">Done</h3>
+        <h3 class="font-bold text-right text-sm px-2 text-gray-700">Done</h3>
         <ul>
           <%= for task <- @tasks[:Done] do %>
             <.live_component
@@ -69,7 +69,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
             />
           <% end %>
         </ul>
-        <h3 class="text-right px-1 text-gray-500">Now + Next</h3>
+        <h3 class="font-bold text-right text-sm px-2 mt-1 text-gray-700">Now + Next</h3>
         <ul>
           <%= for task <- @tasks[:Now] do %>
             <.live_component
@@ -92,7 +92,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
             />
           <% end %>
         </ul>
-        <h3 class="text-right px-1 text-gray-500">Later</h3>
+        <h3 class="font-bold text-right text-sm px-2 mt-1 text-gray-700">Later</h3>
         <ul>
           <%= for task <- @tasks[:Later] do %>
             <.live_component
