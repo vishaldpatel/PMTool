@@ -102,7 +102,7 @@ defmodule PmToolWeb.TaskComponents do
 
   defp show_task(assigns) do
     ~H"""
-    <li class="text-left">
+    <li class="text-left mt-0.5">
       <div
         draggable={
           if @no_move == true do
@@ -111,7 +111,7 @@ defmodule PmToolWeb.TaskComponents do
             "true"
           end
         }
-        class={"inline-block draggable_task_item cursor-pointer border text-right rounded bold flex #{status_colors(@task.status)}"}
+        class={"inline-block draggable_task_item cursor-pointer border border-gray-500 text-right rounded bold flex #{status_colors(@task.status)}"}
       >
         <div
           id={"show-#{@id}"}
@@ -180,7 +180,7 @@ defmodule PmToolWeb.TaskComponents do
               type="checkbox"
               name={"#{@task.stage}_task_slugs[]"}
               class="rounded"
-              style="margin-bottom: 1px;"
+              style="margin-bottom: 2px;"
               phx-click={
                 JS.dispatch("task_checkbox_clicked",
                   detail: %{
@@ -232,7 +232,7 @@ defmodule PmToolWeb.TaskComponents do
 
     ~H"""
     <div id={"edit-"<>@id} class={"text-left w-full #{@show_task_edit}"}>
-      <div class="inline-block w-full bg-gray-200 text-left border border-white p-1 rounded">
+      <div class="inline-block w-full bg-gray-200 text-left border border-gray-500 p-1 rounded">
         <form phx-submit={@action} phx-target={@myself}>
           <input
             placeholder="Task Name"

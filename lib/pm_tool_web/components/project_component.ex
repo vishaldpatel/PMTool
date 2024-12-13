@@ -96,8 +96,8 @@ defmodule PmToolWeb.ProjectComponent do
 
   def show_project(assigns) do
     ~H"""
-    <li class="text-left">
-      <div class="inline-block cursor-pointer border text-right rounded bold flex bg-gray-600 hover:bg-gray-500">
+    <li class="text-left mt-0.5">
+      <div class="inline-block cursor-pointer border border-gray-500 text-right rounded bold flex bg-gray-600 hover:bg-gray-500">
         <div
           id={"show-#{@id}"}
           phx-click={
@@ -160,7 +160,7 @@ defmodule PmToolWeb.ProjectComponent do
 
     ~H"""
     <div id={"edit-"<>@id} class={"text-left w-full #{@show_project_edit}"}>
-      <div class="inline-block w-full bg-gray-200 text-left border border-white p-1 rounded">
+      <div class="inline-block w-full bg-gray-200 text-left border border-gray-500 p-1 rounded">
         <form phx-submit={@action} phx-target={@myself}>
           <input
             placeholder="Project Name"
