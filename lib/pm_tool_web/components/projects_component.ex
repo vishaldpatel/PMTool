@@ -49,7 +49,7 @@ defmodule PmToolWeb.ProjectsComponent do
   def mount(socket) do
     {:ok,
      assign(socket,
-       open_projects: [],
+       open_projects: []
      )}
   end
 

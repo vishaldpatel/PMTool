@@ -58,11 +58,11 @@ defmodule PmTool.Projects do
 
   def remove_tasks_from_project(%Project{} = project, task_slugs) do
     pt_ids =
-    from(pt in ProjectTask)
-    |> join(:inner, [pt], t in Task, on: pt.task_id == t.id and t.slug in ^task_slugs)
-    |> join(:inner, [pt, t], p in Project, on: pt.project_id == p.id and p.id == ^project.id)
-    |> Repo.all()
-    |> Enum.map(fn pt -> pt.id end)
+      from(pt in ProjectTask)
+      |> join(:inner, [pt], t in Task, on: pt.task_id == t.id and t.slug in ^task_slugs)
+      |> join(:inner, [pt, t], p in Project, on: pt.project_id == p.id and p.id == ^project.id)
+      |> Repo.all()
+      |> Enum.map(fn pt -> pt.id end)
 
     from(pt in ProjectTask, where: pt.id in ^pt_ids)
     |> Repo.delete_all()

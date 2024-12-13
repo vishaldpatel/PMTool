@@ -11,7 +11,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
         phx-value-project_slug={@project.slug}
       >
         <svg
-          class="h-6 w-6 text-red-500"
+          class="h-6 w-6 text-orange-500"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -19,11 +19,18 @@ defmodule PmToolWeb.ProjectTasksComponent do
           stroke-linecap="round"
           stroke-linejoin="round"
         >
-          <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2" />
-          <line x1="15" y1="9" x2="9" y2="15" /> <line x1="9" y1="9" x2="15" y2="15" />
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          <line x1="9" y1="9" x2="15" y2="15" /> <line x1="15" y1="9" x2="9" y2="15" />
         </svg>
       </button>
-      <form id={"project_task_options_#{@project.slug}"} class="project_task_options" type="submit" style="display: none;" phx-submit="remove_tasks_from_project" phx-value-project_slug={@project.slug} >
+      <form
+        id={"project_task_options_#{@project.slug}"}
+        class="project_task_options"
+        type="submit"
+        style="display: none;"
+        phx-submit="remove_tasks_from_project"
+        phx-value-project_slug={@project.slug}
+      >
         <button class="font-bold rounded">
           <svg
             class="h-6 w-6 text-orange-400"
@@ -43,7 +50,11 @@ defmodule PmToolWeb.ProjectTasksComponent do
           </svg>
         </button>
       </form>
-      <div droppable="true" id={"project-tasks-#{@project.slug}"} class="droppable_project_target bg-gray-200 rounded-md">
+      <div
+        droppable="true"
+        id={"project-tasks-#{@project.slug}"}
+        class="droppable_project_target bg-gray-200 rounded-md"
+      >
         <input type="hidden" name="project_slug" class="project_slug" value={@project.slug} />
         <h3 class="text-right px-1 text-gray-500">Done</h3>
         <ul>

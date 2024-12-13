@@ -29,12 +29,12 @@ defmodule PmToolWeb.TaskComponents do
 
   def mount(socket) do
     {:ok,
-      assign(socket,
-        task: %Task{},
-        project: %Project{slug: nil},
-        no_move: false,
-        actions: true
-      )}
+     assign(socket,
+       task: %Task{},
+       project: %Project{slug: nil},
+       no_move: false,
+       actions: true
+     )}
   end
 
   def update(assigns, socket) do
@@ -183,7 +183,12 @@ defmodule PmToolWeb.TaskComponents do
               style="margin-bottom: 1px;"
               phx-click={
                 JS.dispatch("task_checkbox_clicked",
-                  detail: %{id: @id, slug: @task.slug, stage: @task.stage, project_slug: @project.slug}
+                  detail: %{
+                    id: @id,
+                    slug: @task.slug,
+                    stage: @task.stage,
+                    project_slug: @project.slug
+                  }
                 )
               }
             />
