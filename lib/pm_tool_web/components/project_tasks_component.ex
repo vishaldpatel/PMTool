@@ -101,7 +101,6 @@ defmodule PmToolWeb.ProjectTasksComponent do
               project={@project}
               task={task}
               no_move={false}
-              actions={false}
             />
           <% end %>
         </ul>

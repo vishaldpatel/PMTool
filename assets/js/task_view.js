@@ -251,7 +251,7 @@ export default class TaskView {
 
     let estimation_stations = document.getElementsByClassName("estimation_station")
     for (let x = 0; x < estimation_stations.length; x++) {
-      estimation_stations[x].onmouseout = hide_estimate
+      estimation_stations[x].onmouseleave = hide_estimate
     }
     let estimators = document.getElementsByClassName("estimator")
     for (let x = 0; x < estimators.length; x++) {
