@@ -44,15 +44,16 @@ defmodule PmTool.Tasks do
   defp base_list_tasks_query(user) do
     from t in Task,
       where: t.creator_id == ^user.id and is_nil(t.team_id),
-      order_by: [fragment("CASE
-        WHEN ? = 'Accepted' THEN 1
-        WHEN ? = 'Closed' THEN 2
-        WHEN ? = 'Delivered' THEN 3
-        WHEN ? = 'Finished' THEN 4
-        WHEN ? = 'Started' THEN 5
-        WHEN ? = 'Rejected' THEN 6
-        WHEN ? = 'Unstarted' THEN 7
-        ELSE 8 END", t.status, t.status, t.status, t.status, t.status, t.status, t.status), t.task_order]
+      order_by: [
+        desc: t.status == "Accepted",
+        desc: t.status == "Closed",
+        desc: t.status == "Delivered",
+        desc: t.status == "Finished",
+        desc: t.status == "Started",
+        desc: t.status == "Rejected",
+        desc: t.status == "Unstarted",
+        asc: t.task_order
+      ]
 
     # For an individual, we won't need more than 30 tasks
   end

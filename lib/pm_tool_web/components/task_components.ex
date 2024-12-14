@@ -12,7 +12,8 @@ defmodule PmToolWeb.TaskComponents do
     "Finished" => "bg-lime-700 hover:bg-lime-600",
     "Delivered" => "bg-emerald-800 hover:bg-emerald-700",
     "Rejected" => "bg-red-900 hover:bg-red-800",
-    "Accepted" => "bg-sky-700 hover:bg-sky-600"
+    "Accepted" => "bg-sky-700 hover:bg-sky-600",
+    "Closed" => "bg-gray-900 hover:bg-gray-800"
   }
 
   defp status_colors(status) do
