@@ -65,7 +65,8 @@ defmodule PmTool.Tasks.Task do
   defp maybe_set_status_updated_at(changeset) do
     # If status is changed, set status_updated_at
     if get_field(changeset, :status) != get_field(changeset, :previous_status) do
-      put_change(changeset, :status_updated_at, DateTime.utc_now())
+      truncated_time = DateTime.truncate(DateTime.utc_now(), :second)
+      put_change(changeset, :status_updated_at, truncated_time)
     else
       changeset
     end
