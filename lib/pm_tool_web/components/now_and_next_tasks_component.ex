@@ -79,7 +79,7 @@ defmodule PmToolWeb.NowAndNextTasksComponent do
         module={PmToolWeb.TaskComponents}
         id={@new_task_id}
         current_user={@current_user}
-        task={%Task{stage: "Now"}}
+        task={%Task{stage: "Now", estimate: 0, status: "Unappraised"}}
       />
     </div>
     """

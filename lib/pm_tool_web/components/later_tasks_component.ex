@@ -3,6 +3,7 @@ defmodule PmToolWeb.LaterTasksComponent do
 
   alias Phoenix.LiveView.JS
   alias PmTool.Tasks
+  alias PmTool.Tasks.Task
 
   def render(assigns) do
     ~H"""
@@ -51,7 +52,6 @@ defmodule PmToolWeb.LaterTasksComponent do
               id={"task-#{task.slug}#{@timestamp}"}
               task={task}
               no_move={false}
-              actions={false}
             />
           <% end %>
         </ul>
@@ -60,6 +60,7 @@ defmodule PmToolWeb.LaterTasksComponent do
         module={PmToolWeb.TaskComponents}
         id={@new_task_id}
         current_user={@current_user}
+        task={%Task{estimate: 0, stage: "Later", status: "Unappraised"}}
       />
     </div>
     """

@@ -52,6 +52,7 @@ defmodule PmTool.Tasks do
         desc: t.status == "Started",
         desc: t.status == "Rejected",
         desc: t.status == "Unstarted",
+        desc: t.status == "Unappraised",
         asc: t.task_order
       ]
 
@@ -75,7 +76,7 @@ defmodule PmTool.Tasks do
             Enum.member?(["Accepted", "Closed"], task.status) and (DateTime.compare(status_updated_at, last_period_end) == :lt)  ->
               {:cont, [total_estimate, %{tasks | Done: tasks[:Done] ++ [task]}]}
 
-            task.stage == "Later" ->
+            task.stage == "Later" or task.status == "Unappraised" ->
               {:cont, [total_estimate, %{tasks | Later: tasks[:Later] ++ [task]}]}
 
             total_estimate + task.estimate <= 30 or task.status != "Unstarted" ->

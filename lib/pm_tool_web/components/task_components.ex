@@ -7,6 +7,7 @@ defmodule PmToolWeb.TaskComponents do
   alias PmTool.Projects.Project
 
   @status_colors %{
+    "Unappraised" => "bg-gray-600 hover:bg-gray-500",
     "Unstarted" => "bg-gray-600 hover:bg-gray-500",
     "Started" => "bg-yellow-700 hover:bg-yellow-600",
     "Finished" => "bg-lime-700 hover:bg-lime-600",
@@ -125,7 +126,7 @@ defmodule PmToolWeb.TaskComponents do
           class={"inline-block text-md w-full pl-1 pr-1 text-gray-100 #{@show_task}"}
         >
           <div class="inline-block just_title text-left flex-auto">{@task.name}</div>
-          <div class="inline-block flex-none">
+          <div class="inline-block flex-none m-auto">
             <%= if @actions == true do %>
               <%= if @task.status == "Delivered" do %>
                 <button
@@ -174,6 +175,16 @@ defmodule PmToolWeb.TaskComponents do
                 >
                   Start
                 </button>
+              <% end %>
+              <%= if @task.status == "Unappraised" do %>
+                <svg width="29" height="20" class="inline-block rounded-bl-sm rounded-tr-sm mb-[2px]" xmlns="http://www.w3.org/2000/svg">
+                  <rect y="15" x="0" width="4" height="5" class="fill-yellow-300 hover:fill-yellow-500"/>
+                  <rect y="13" x="5" width="4" height="7" class="fill-yellow-300 hover:fill-yellow-500"/>
+                  <rect y="10" x="10" width="4" height="10" class="fill-orange-300 hover:fill-orange-500"/>
+                  <rect y="8" x="15" width="4" height="12" class="fill-orange-300 hover:fill-orange-500"/>
+                  <rect y="5" x="20" width="4" height="15" class="fill-orange-300 hover:fill-orange-500"/>
+                  <rect y="0" x="25" width="4" height="20" class="fill-red-500 hover:fill-red-600"/>
+                </svg>
               <% end %>
             <% end %>
             <input type="hidden" class="task_slug" value={@task.slug} />

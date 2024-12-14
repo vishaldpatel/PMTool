@@ -7,9 +7,11 @@ defmodule PmTool.Tasks.Task do
   alias PmTool.Teams.Team
 
   @stages ["Later", "Now"]
-  @statuses ["Unstarted", "Started", "Finished", "Delivered", "Rejected", "Accepted", "Closed"]
-  @estimates [1, 2, 4, 6, 8, 12, 16, 24, 60]
+  @statuses ["Unappraised", "Unstarted", "Started", "Finished", "Delivered", "Rejected", "Accepted", "Closed"]
+  @estimates [0, 1, 2, 4, 6, 8, 12, 16, 24, 60]
+  @estimates_for_select [1, 2, 4, 6, 8, 12, 16, 24, 60]
 
+  def estimates_for_select, do: @estimates_for_select
   def estimates, do: @estimates
   def statuses, do: @statuses
   def stages, do: @stages
@@ -53,6 +55,7 @@ defmodule PmTool.Tasks.Task do
     |> slugify()
     |> unique_constraint(:slug)
     |> maybe_set_stage()
+    |> maybe_set_estimate()
     |> maybe_set_status()
     |> validate_inclusion(:stage, @stages)
     |> validate_inclusion(:status, @statuses)
@@ -103,11 +106,22 @@ defmodule PmTool.Tasks.Task do
     end
   end
 
-  defp maybe_set_status(changeset) do
-    if get_field(changeset, :status) == nil do
-      put_change(changeset, :status, "unstarted")
+  def maybe_set_estimate(changeset) do
+    if get_field(changeset, :status) == "Unappraised" and changed?(changeset, :status) do 
+      put_change(changeset, :estimate, 0)
     else
       changeset
+    end
+  end
+
+  defp maybe_set_status(changeset) do
+    cond do
+      get_field(changeset, :estimate) > 0 and changed?(changeset, :estimate) ->
+        put_change(changeset, :status, "Unstarted")
+      get_field(changeset, :status) == nil ->
+        put_change(changeset, :status, "Unappraised")
+      true ->
+        changeset
     end
   end
 
