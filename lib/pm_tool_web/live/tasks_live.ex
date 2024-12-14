@@ -84,7 +84,13 @@ defmodule PmToolWeb.TasksLive do
       |> assign(open_project_tasks: %{})
       |> get_tasks()
       |> assign_new_task_ids()
-      |> assign(merge_now_and_next_tasks: socket.assigns.user_preferences["merge_now_and_next_tasks"] == true)
+      |> assign(
+        merge_now_and_next_tasks:
+          case socket.assigns.user_preferences["merge_now_and_next_tasks"] do 
+              false -> false; 
+              _ -> true 
+          end
+      )
       |> get_projects()
       |> assign_new_project_id()
 
