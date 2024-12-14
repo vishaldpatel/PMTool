@@ -226,7 +226,7 @@ export default class TaskView {
   }
 
   setup_estimate_hovering() {
-    let estimates = [0, 1, 2, 4, 6, 8]
+    let estimates = [1, 2, 4, 6, 8, 12]
 
     function hide_estimate(e) {
       if (e.target.classList.contains("estimation_station")) {

@@ -3,6 +3,7 @@ defmodule PmToolWeb.TasksLive do
 
   alias PmTool.Tasks
   alias PmTool.Projects
+  alias PmTool.Accounts
 
   def render(assigns) do
     ~H"""
@@ -75,11 +76,15 @@ defmodule PmToolWeb.TasksLive do
   def mount(params, _session, socket) do
     socket =
       socket
-      |> assign(open_projects: [])
+      |> assign(user_preferences: Accounts.get_preferences(socket.assigns.current_user))
+
+    socket =
+      socket
+      |> assign(open_projects: socket.assigns.user_preferences["open_projects"] || [])
       |> assign(open_project_tasks: %{})
       |> get_tasks()
       |> assign_new_task_ids()
-      |> assign(merge_now_and_next_tasks: true)
+      |> assign(merge_now_and_next_tasks: socket.assigns.user_preferences["merge_now_and_next_tasks"] == true)
       |> get_projects()
       |> assign_new_project_id()
 
@@ -175,6 +180,12 @@ defmodule PmToolWeb.TasksLive do
 
   def handle_event("show_project_tasks", params, socket) do
     unless Enum.member?(socket.assigns.open_projects, params["project_slug"]) do
+      Accounts.set_preference(
+        socket.assigns.current_user,
+        "open_projects",
+        [params["project_slug"] | socket.assigns.open_projects]
+      )
+
       {:noreply,
        socket
        |> assign(open_projects: [params["project_slug"] | socket.assigns.open_projects])
@@ -183,6 +194,12 @@ defmodule PmToolWeb.TasksLive do
   end
 
   def handle_event("hide_project_tasks", params, socket) do
+    Accounts.set_preference(
+      socket.assigns.current_user,
+      "open_projects",
+      List.delete(socket.assigns.open_projects, params["project_slug"])
+    )
+
     {:noreply,
      socket
      |> assign(open_projects: List.delete(socket.assigns.open_projects, params["project_slug"]))
@@ -192,6 +209,11 @@ defmodule PmToolWeb.TasksLive do
   end
 
   def handle_event("separate_now_and_next_tasks", _params, socket) do
+    Accounts.set_preference(
+      socket.assigns.current_user,
+      "merge_now_and_next_tasks",
+      false
+    )
     {:noreply,
      socket
      |> get_tasks()
@@ -199,6 +221,11 @@ defmodule PmToolWeb.TasksLive do
   end
 
   def handle_event("merge_now_and_next_tasks", _params, socket) do
+    Accounts.set_preference(
+      socket.assigns.current_user,
+      "merge_now_and_next_tasks",
+      true
+    )
     {:noreply,
      socket
      |> get_tasks()

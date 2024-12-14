@@ -6,7 +6,7 @@ defmodule PmTool.Accounts do
   import Ecto.Query, warn: false
   alias PmTool.Repo
 
-  alias PmTool.Accounts.{User, UserToken, UserNotifier}
+  alias PmTool.Accounts.{User, UserToken, UserNotifier, UserPreferences}
 
   ## Database getters
 
@@ -305,6 +305,29 @@ defmodule PmTool.Accounts do
     {encoded_token, user_token} = UserToken.build_email_token(user, "reset_password")
     Repo.insert!(user_token)
     UserNotifier.deliver_reset_password_instructions(user, reset_password_url_fun.(encoded_token))
+  end
+
+  def get_preferences(user) do
+    case Repo.one(from p in UserPreferences, where: p.user_id == ^user.id) do
+      nil -> %{}
+      prefs -> prefs.preferences
+    end
+  end
+
+  def set_preference(%User{} = user, attr_name, value) do
+    user_preferences_query =
+      from p in UserPreferences, 
+        where: p.user_id == ^user.id
+
+    user_preferences = Repo.one(user_preferences_query)
+    case user_preferences do
+      nil -> 
+        UserPreferences.changeset(%UserPreferences{}, %{user_id: user.id, preferences: %{attr_name => value}})
+        |> Repo.insert!()
+      prefs ->
+        UserPreferences.changeset(prefs, %{user_id: user.id, preferences: Map.put(prefs.preferences, attr_name, value)})
+        |> Repo.update!()
+    end
   end
 
   @doc """

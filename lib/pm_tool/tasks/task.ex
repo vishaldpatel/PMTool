@@ -17,7 +17,7 @@ defmodule PmTool.Tasks.Task do
     "Accepted",
     "Closed"
   ]
-  @estimates [0, 1, 2, 4, 6, 8, 12, 16, 24, 60]
+  @estimates [1, 2, 4, 6, 8, 12, 16, 24, 60]
   @estimates_for_select [1, 2, 4, 6, 8, 12, 16, 24, 60]
 
   def estimates_for_select, do: @estimates_for_select
@@ -64,11 +64,11 @@ defmodule PmTool.Tasks.Task do
     |> slugify()
     |> unique_constraint(:slug)
     |> maybe_set_stage()
-    |> maybe_set_estimate()
     |> maybe_set_status()
     |> validate_inclusion(:stage, @stages)
     |> validate_inclusion(:status, @statuses)
     |> validate_inclusion(:estimate, @estimates)
+    |> maybe_set_estimate()
     |> maybe_set_task_order()
     |> maybe_set_status_updated_at()
     |> validate_required([:stage, :status, :task_order])
