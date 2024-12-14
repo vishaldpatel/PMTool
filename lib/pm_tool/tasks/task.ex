@@ -6,8 +6,8 @@ defmodule PmTool.Tasks.Task do
   alias PmTool.Accounts.User
   alias PmTool.Teams.Team
 
-  @stages ["Later", "Now", "Done"]
-  @statuses ["Unstarted", "Started", "Finished", "Delivered", "Rejected", "Accepted"]
+  @stages ["Later", "Now"]
+  @statuses ["Unstarted", "Started", "Finished", "Delivered", "Rejected", "Accepted", "Closed"]
   @estimates [1, 2, 4, 6, 8, 12, 16, 24, 60]
 
   def estimates, do: @estimates
@@ -22,6 +22,7 @@ defmodule PmTool.Tasks.Task do
     field :slug, :string
     field :task_order, :integer
     field :estimate, :integer
+    field :status_updated_at, :utc_datetime
 
     belongs_to :creator, PmTool.Accounts.User
     belongs_to :owner, PmTool.Accounts.User
@@ -57,7 +58,17 @@ defmodule PmTool.Tasks.Task do
     |> validate_inclusion(:status, @statuses)
     |> validate_inclusion(:estimate, @estimates)
     |> maybe_set_task_order()
+    |> maybe_set_status_updated_at()
     |> validate_required([:stage, :status, :task_order])
+  end
+
+  defp maybe_set_status_updated_at(changeset) do
+    # If status is changed, set status_updated_at
+    if get_field(changeset, :status) != get_field(changeset, :previous_status) do
+      put_change(changeset, :status_updated_at, DateTime.utc_now())
+    else
+      changeset
+    end
   end
 
   defp maybe_set_task_order(changeset) do

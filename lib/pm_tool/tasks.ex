@@ -12,15 +12,6 @@ defmodule PmTool.Tasks do
   alias PmTool.Projects.Project
   alias PmTool.Projects.ProjectTask
 
-  def list_tasks_for(%Team{} = team) do
-    query =
-      from t in Task,
-        where: t.team_id == ^team.id and t.status != "done",
-        order_by: [t.stage, t.task_order]
-
-    Repo.all(query)
-  end
-
   # Get all tasks for project
   def list_tasks_for(%Project{} = project) do
     query =
@@ -55,12 +46,13 @@ defmodule PmTool.Tasks do
       where: t.creator_id == ^user.id and is_nil(t.team_id),
       order_by: [fragment("CASE
         WHEN ? = 'Accepted' THEN 1
-        WHEN ? = 'Delivered' THEN 2
-        WHEN ? = 'Finished' THEN 3
-        WHEN ? = 'Started' THEN 4
-        WHEN ? = 'Rejected' THEN 5
-        WHEN ? = 'Unstarted' THEN 6
-        ELSE 7 END", t.status, t.status, t.status, t.status, t.status, t.status), t.task_order]
+        WHEN ? = 'Closed' THEN 2
+        WHEN ? = 'Delivered' THEN 3
+        WHEN ? = 'Finished' THEN 4
+        WHEN ? = 'Started' THEN 5
+        WHEN ? = 'Rejected' THEN 6
+        WHEN ? = 'Unstarted' THEN 7
+        ELSE 8 END", t.status, t.status, t.status, t.status, t.status, t.status, t.status), t.task_order]
 
     # For an individual, we won't need more than 30 tasks
   end
@@ -73,9 +65,13 @@ defmodule PmTool.Tasks do
         [0, %{Now: [], Next: [], Done: [], Later: []}],
         fn task, acc ->
           [total_estimate, tasks] = acc
-
+          last_period_end_date = Date.utc_today() |> Date.end_of_week() |> Date.add(-7)
+          just_before_midnight =  Time.new!(23, 59, 59, 999_999)
+          last_period_end = DateTime.new!(last_period_end_date, just_before_midnight, "Etc/UTC")
+          status_updated_at = DateTime.from_naive!(task.status_updated_at, "Etc/UTC")
           cond do
-            task.stage == "Done" ->
+            # If it was Accepted more than 7 days ago, then it is marked as Done
+            Enum.member?(["Accepted", "Closed"], task.status) and (DateTime.compare(status_updated_at, last_period_end) == :lt)  ->
               {:cont, [total_estimate, %{tasks | Done: tasks[:Done] ++ [task]}]}
 
             task.stage == "Later" ->
@@ -198,6 +194,10 @@ defmodule PmTool.Tasks do
 
   def reject_task(%Task{} = task) do
     update_task(task, %{"status" => "Rejected"})
+  end
+
+  def close_task(%Task{} = task) do
+    update_task(task, %{"status" => "Closed"})
   end
 
   # Be able to delete a Task
