@@ -225,8 +225,43 @@ export default class TaskView {
     })
   }
 
+  setup_estimate_hovering() {
+    let estimates = [0, 1, 2, 4, 6, 8]
+
+    function hide_estimate(e) {
+      if (e.target.classList.contains("estimation_station")) {
+        let estimate_number = e.target.parentNode.querySelector(".estimate_number")
+        estimate_number.innerText = ""
+      }
+    }
+
+    function show_estimate(e) {
+      if (e.target.classList.contains("estimator")) {
+        e.preventDefault()
+        let relevant_parent = e.target.parentNode.parentNode
+        let estimate_number = relevant_parent.querySelector(".estimate_number")
+        for (let x = 0; x < estimates.length; x++) {
+          let i = estimates[x]
+          if (e.target.getAttribute("value") == i) {
+            estimate_number.innerText = i
+          }
+        }
+      }
+    }
+
+    let estimation_stations = document.getElementsByClassName("estimation_station")
+    for (let x = 0; x < estimation_stations.length; x++) {
+      estimation_stations[x].onmouseout = hide_estimate
+    }
+    let estimators = document.getElementsByClassName("estimator")
+    for (let x = 0; x < estimators.length; x++) {
+      estimators[x].onmouseover = show_estimate
+    }
+  }
+
   mount() {
     this.setup_batch_tasks()
     this.setup_drag_and_drop()
+    this.setup_estimate_hovering()
   }
 }

@@ -68,12 +68,14 @@ defmodule PmTool.Tasks do
         fn task, acc ->
           [total_estimate, tasks] = acc
           last_period_end_date = Date.utc_today() |> Date.end_of_week() |> Date.add(-7)
-          just_before_midnight =  Time.new!(23, 59, 59, 999_999)
+          just_before_midnight = Time.new!(23, 59, 59, 999_999)
           last_period_end = DateTime.new!(last_period_end_date, just_before_midnight, "Etc/UTC")
           status_updated_at = DateTime.from_naive!(task.status_updated_at, "Etc/UTC")
+
           cond do
             # If it was Accepted more than 7 days ago, then it is marked as Done
-            Enum.member?(["Accepted", "Closed"], task.status) and (DateTime.compare(status_updated_at, last_period_end) == :lt)  ->
+            Enum.member?(["Accepted", "Closed"], task.status) and
+                DateTime.compare(status_updated_at, last_period_end) == :lt ->
               {:cont, [total_estimate, %{tasks | Done: tasks[:Done] ++ [task]}]}
 
             task.stage == "Later" or task.status == "Unappraised" ->
@@ -200,6 +202,10 @@ defmodule PmTool.Tasks do
 
   def close_task(%Task{} = task) do
     update_task(task, %{"status" => "Closed"})
+  end
+
+  def estimate_task(%Task{} = task, estimate) do
+    update_task(task, %{"estimate" => estimate})
   end
 
   # Be able to delete a Task

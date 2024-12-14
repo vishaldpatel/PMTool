@@ -126,7 +126,7 @@ defmodule PmToolWeb.TaskComponents do
           class={"inline-block text-md w-full pl-1 pr-1 text-gray-100 #{@show_task}"}
         >
           <div class="inline-block just_title text-left flex-auto">{@task.name}</div>
-          <div class="inline-block flex-none m-auto">
+          <div class="inline-block flex-none m-auto relative">
             <%= if @actions == true do %>
               <%= if @task.status == "Delivered" do %>
                 <button
@@ -177,13 +177,86 @@ defmodule PmToolWeb.TaskComponents do
                 </button>
               <% end %>
               <%= if @task.status == "Unappraised" do %>
-                <svg width="29" height="20" class="inline-block rounded-bl-sm rounded-tr-sm mb-[2px]" xmlns="http://www.w3.org/2000/svg">
-                  <rect y="15" x="0" width="4" height="5" class="fill-yellow-300 hover:fill-yellow-500"/>
-                  <rect y="13" x="5" width="4" height="7" class="fill-yellow-300 hover:fill-yellow-500"/>
-                  <rect y="10" x="10" width="4" height="10" class="fill-orange-300 hover:fill-orange-500"/>
-                  <rect y="8" x="15" width="4" height="12" class="fill-orange-300 hover:fill-orange-500"/>
-                  <rect y="5" x="20" width="4" height="15" class="fill-orange-300 hover:fill-orange-500"/>
-                  <rect y="0" x="25" width="4" height="20" class="fill-red-500 hover:fill-red-600"/>
+                <span class="estimate_number text-bold inline-block absolute text-orange-200 top-0 left-0 text-xs">
+                </span>
+                <svg
+                  width="29"
+                  height="20"
+                  class="estimation_station inline-block rounded-bl-sm rounded-tr-sm mb-[2px]"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect
+                    y="15"
+                    x="0"
+                    width="4"
+                    height="5"
+                    value="0"
+                    phx-click="task_action"
+                    phx-value-action="estimate_task"
+                    phx-value-task_slug={@task.slug}
+                    phx-value-estimate="0"
+                    class="estimator fill-yellow-300 hover:fill-yellow-500"
+                  />
+                  <rect
+                    y="13"
+                    x="5"
+                    width="4"
+                    height="7"
+                    value="1"
+                    phx-click="task_action"
+                    phx-value-action="estimate_task"
+                    phx-value-task_slug={@task.slug}
+                    phx-value-estimate="1"
+                    class="estimator fill-yellow-300 hover:fill-yellow-500"
+                  />
+                  <rect
+                    y="10"
+                    x="10"
+                    width="4"
+                    height="10"
+                    value="2"
+                    phx-click="task_action"
+                    phx-value-action="estimate_task"
+                    phx-value-task_slug={@task.slug}
+                    phx-value-estimate="2"
+                    class="estimator fill-orange-300 hover:fill-orange-500"
+                  />
+                  <rect
+                    y="8"
+                    x="15"
+                    width="4"
+                    height="12"
+                    value="4"
+                    phx-click="task_action"
+                    phx-value-action="estimate_task"
+                    phx-value-task_slug={@task.slug}
+                    phx-value-estimate="4"
+                    class="estimator fill-orange-300 hover:fill-orange-500"
+                  />
+                  <rect
+                    y="5"
+                    x="20"
+                    width="4"
+                    height="15"
+                    value="6"
+                    phx-click="task_action"
+                    phx-value-action="estimate_task"
+                    phx-value-task_slug={@task.slug}
+                    phx-value-estimate="6"
+                    class="estimator fill-orange-300 hover:fill-orange-500"
+                  />
+                  <rect
+                    y="0"
+                    x="25"
+                    width="4"
+                    height="20"
+                    value="8"
+                    phx-click="task_action"
+                    phx-value-action="estimate_task"
+                    phx-value-task_slug={@task.slug}
+                    phx-value-estimate="8"
+                    class="estimator fill-red-500 hover:fill-red-600"
+                  />
                 </svg>
               <% end %>
             <% end %>

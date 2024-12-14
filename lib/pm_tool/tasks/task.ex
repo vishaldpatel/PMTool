@@ -7,7 +7,16 @@ defmodule PmTool.Tasks.Task do
   alias PmTool.Teams.Team
 
   @stages ["Later", "Now"]
-  @statuses ["Unappraised", "Unstarted", "Started", "Finished", "Delivered", "Rejected", "Accepted", "Closed"]
+  @statuses [
+    "Unappraised",
+    "Unstarted",
+    "Started",
+    "Finished",
+    "Delivered",
+    "Rejected",
+    "Accepted",
+    "Closed"
+  ]
   @estimates [0, 1, 2, 4, 6, 8, 12, 16, 24, 60]
   @estimates_for_select [1, 2, 4, 6, 8, 12, 16, 24, 60]
 
@@ -107,7 +116,7 @@ defmodule PmTool.Tasks.Task do
   end
 
   def maybe_set_estimate(changeset) do
-    if get_field(changeset, :status) == "Unappraised" and changed?(changeset, :status) do 
+    if get_field(changeset, :status) == "Unappraised" and changed?(changeset, :status) do
       put_change(changeset, :estimate, 0)
     else
       changeset
@@ -118,8 +127,10 @@ defmodule PmTool.Tasks.Task do
     cond do
       get_field(changeset, :estimate) > 0 and changed?(changeset, :estimate) ->
         put_change(changeset, :status, "Unstarted")
+
       get_field(changeset, :status) == nil ->
         put_change(changeset, :status, "Unappraised")
+
       true ->
         changeset
     end

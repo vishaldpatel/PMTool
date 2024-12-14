@@ -215,6 +215,7 @@ defmodule PmToolWeb.TasksLive do
       "deliver_task" -> Tasks.deliver_task(task)
       "accept_task" -> Tasks.accept_task(task)
       "reject_task" -> Tasks.reject_task(task)
+      "estimate_task" -> Tasks.estimate_task(task, params["estimate"])
     end
 
     {:noreply, get_tasks(socket)}
