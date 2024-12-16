@@ -259,9 +259,63 @@ export default class TaskView {
     }
   }
 
+  make_label_editing_work() {
+    function remove_label(e) {
+      e.preventDefault()
+      let label = e.target
+      let label_parent = e.target.parentNode
+      while (! label.classList.contains("label")) {
+        label = label.parentNode
+        label_parent = label_parent.parentNode
+      }
+      label_parent.removeChild(label)
+    }
+
+    let remove_label_buttons = document.getElementsByClassName("remove_label")
+    for (let x = 0; x < remove_label_buttons.length; x++) {
+      let remove_label_button = remove_label_buttons[x]
+      remove_label_button.onclick = remove_label
+    }
+
+    let label_editors = document.getElementsByClassName("new_label_input")
+    for (let x = 0; x < label_editors.length; x++) {
+      let label_editor = label_editors[x]
+      label_editor.addEventListener("keydown", function(e) {
+        if ((e.keyCode == 188) || (e.keyCode == 59) || (e.keyCode == 186) || (e.keyCode == 13)) {
+          e.preventDefault()
+          let new_label_name = label_editor.value
+          let labels = e.target.parentNode.querySelector(".labels")
+          if (new_label_name != "") {
+            let space = document.createTextNode(" ")
+            labels.appendChild(space)
+
+            let new_label_div = document.createElement("div")
+            new_label_div.setAttribute("class", "label inline")
+
+            let new_label_hidden_input = document.createElement("input")
+            new_label_hidden_input.setAttribute("type", "hidden")
+            new_label_hidden_input.setAttribute("name", "task[labels][]")
+            new_label_hidden_input.setAttribute("value", new_label_name)
+            new_label_div.appendChild(new_label_hidden_input)
+
+            let new_label_button = document.createElement("button")
+            new_label_button.onclick = remove_label
+            new_label_button.setAttribute("class", "remove_label px-1 mb-1 text-xs font-xs text-cyan-200 bg-cyan-800 hover:bg-zinc-700")
+            new_label_button.innerHTML = `<span>&#10005; &#10072;</span> <span class="italic">${new_label_name}</span>`
+            new_label_div.appendChild(new_label_button)
+
+            labels.appendChild(new_label_div)
+          }
+          label_editor.value = ""
+        }
+      })
+    }
+  }
+
   mount() {
     this.setup_batch_tasks()
     this.setup_drag_and_drop()
     this.setup_estimate_hovering()
+    this.make_label_editing_work()
   }
 }

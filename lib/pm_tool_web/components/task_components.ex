@@ -364,7 +364,7 @@ defmodule PmToolWeb.TaskComponents do
           <.live_component
             id={"edit-labels-#{@id}"}
             module={PmToolWeb.LabelsComponent}
-            labels={["One", "Two", "Three Four", "Five", "Six", "Seven", "Eight"]}
+            labels={["One", "Two", "Three Four", "Five", "Six", "Seven"]}
             edit_labels={true}
           />
           <div class="w-full text-right">
