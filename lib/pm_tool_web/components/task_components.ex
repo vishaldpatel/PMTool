@@ -21,14 +21,6 @@ defmodule PmToolWeb.TaskComponents do
     @status_colors[status]
   end
 
-  def render(assigns) do
-    if assigns.task.id do
-      show_task(assigns)
-    else
-      new_task(assigns)
-    end
-  end
-
   def mount(socket) do
     {:ok,
      assign(socket,
@@ -47,6 +39,14 @@ defmodule PmToolWeb.TaskComponents do
        show_task: "flex",
        show_task_edit: "hidden"
      )}
+  end
+
+  def render(assigns) do
+    if assigns.task.id do
+      show_task(assigns)
+    else
+      new_task(assigns)
+    end
   end
 
   def handle_event("update_task", %{"task" => task_params}, socket) do
@@ -125,7 +125,13 @@ defmodule PmToolWeb.TaskComponents do
           }
           class={"inline-block text-md w-full pl-1 pr-1 text-gray-100 #{@show_task}"}
         >
-          <div class="inline-block just_title text-left flex-auto">{@task.name}</div>
+          <div class="inline-block just_title text-left flex-auto">{@task.name}
+            <.live_component
+              id={"show-labels-#{@id}"}
+              module={PmToolWeb.LabelsComponent}
+              labels={["One", "Two", "Three Four", "Five", "Six", "Seven", "Eight"]}
+            />
+          </div>
           <div class="inline-block flex-none m-auto relative">
             <%= if @actions == true do %>
               <%= if @task.status == "Delivered" do %>
@@ -355,6 +361,12 @@ defmodule PmToolWeb.TaskComponents do
           </select>
           <br />
           <input type="hidden" name="task[slug]" value={@task.slug} />
+          <.live_component
+            id={"edit-labels-#{@id}"}
+            module={PmToolWeb.LabelsComponent}
+            labels={["One", "Two", "Three Four", "Five", "Six", "Seven", "Eight"]}
+            edit_labels={true}
+          />
           <div class="w-full text-right">
             <button
               type="reset"
