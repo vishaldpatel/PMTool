@@ -174,6 +174,7 @@ defmodule PmToolWeb.TasksLive do
     {:noreply,
      socket
      |> get_tasks()
+     |> assign_new_task_ids()
      |> assign_new_project_id()}
   end
 

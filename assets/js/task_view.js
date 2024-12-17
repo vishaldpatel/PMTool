@@ -310,6 +310,15 @@ export default class TaskView {
         }
       })
     }
+
+    let labels_outers = document.getElementsByClassName("labels_outer")
+    for (let x = 0; x < labels_outers.length; x++) {
+      let labels_outer = labels_outers[x]
+      labels_outer.onclick = function(e) {
+        e.stopPropagation()
+        labels_outer.querySelector(".new_label_input").focus()
+      }
+    }
   }
 
   mount() {

@@ -27,18 +27,16 @@ defmodule PmToolWeb.TaskComponents do
        task: %Task{},
        project: %Project{slug: nil},
        no_move: false,
-       actions: true
+       actions: true,
+       show_task: "flex",
+       show_task_edit: "hidden"
      )}
   end
 
   def update(assigns, socket) do
-    socket = assign(socket, assigns)
-
-    {:ok,
-     assign(socket,
-       show_task: "flex",
-       show_task_edit: "hidden"
-     )}
+    {:ok, 
+      assign(socket, assigns)
+    }
   end
 
   def render(assigns) do
@@ -129,7 +127,7 @@ defmodule PmToolWeb.TaskComponents do
             <.live_component
               id={"show-labels-#{@id}"}
               module={PmToolWeb.LabelsComponent}
-              labels={["One", "Two", "Three Four", "Five", "Six", "Seven", "Eight"]}
+              labels={@task.labels}
             />
           </div>
           <div class="inline-block flex-none m-auto relative">
@@ -322,7 +320,7 @@ defmodule PmToolWeb.TaskComponents do
     assigns = assign(assigns, :save_button_name, save_button_name)
 
     ~H"""
-    <div id={"edit-"<>@id} class={"text-left w-full #{@show_task_edit}"}>
+    <div id={"edit-#{@id}"} class={"text-left w-full #{@show_task_edit}"}>
       <div class="inline-block w-full bg-gray-200 text-left border border-gray-500 p-1 rounded">
         <form phx-submit={@action} phx-target={@myself}>
           <input
@@ -364,7 +362,7 @@ defmodule PmToolWeb.TaskComponents do
           <.live_component
             id={"edit-labels-#{@id}"}
             module={PmToolWeb.LabelsComponent}
-            labels={["One", "Two", "Three Four", "Five", "Six", "Seven"]}
+            labels={@task.labels}
             edit_labels={true}
           />
           <div class="w-full text-right">

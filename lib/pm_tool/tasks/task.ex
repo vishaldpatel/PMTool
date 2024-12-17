@@ -17,10 +17,7 @@ defmodule PmTool.Tasks.Task do
     "Accepted",
     "Closed"
   ]
-  @estimates [1, 2, 4, 6, 8, 12, 16, 24, 60]
-  @estimates_for_select [1, 2, 4, 6, 8, 12, 16, 24, 60]
-
-  def estimates_for_select, do: @estimates_for_select
+  @estimates [0, 1, 2, 4, 6, 8, 12, 16, 24, 60]
   def estimates, do: @estimates
   def statuses, do: @statuses
   def stages, do: @stages
@@ -34,6 +31,7 @@ defmodule PmTool.Tasks.Task do
     field :task_order, :integer
     field :estimate, :integer
     field :status_updated_at, :utc_datetime
+    field :labels, {:array, :string}, default: []
 
     belongs_to :creator, PmTool.Accounts.User
     belongs_to :owner, PmTool.Accounts.User
@@ -58,7 +56,8 @@ defmodule PmTool.Tasks.Task do
       :owner_id,
       :team_id,
       :task_order,
-      :estimate
+      :estimate,
+      :labels
     ])
     |> validate_required([:name, :creator_id])
     |> slugify()
@@ -72,6 +71,16 @@ defmodule PmTool.Tasks.Task do
     |> maybe_set_task_order()
     |> maybe_set_status_updated_at()
     |> validate_required([:stage, :status, :task_order])
+    |> validate_empty_labels(attrs)
+  end
+
+  defp validate_empty_labels(changeset, attrs) do
+    case Map.fetch(attrs, "labels") do
+      {:ok, labels} ->
+        changeset
+      :error ->
+        put_change(changeset, :labels, [])
+    end
   end
 
   defp maybe_set_status_updated_at(changeset) do
@@ -125,6 +134,8 @@ defmodule PmTool.Tasks.Task do
 
   defp maybe_set_status(changeset) do
     cond do
+      get_field(changeset, :id) == nil and get_field(changeset, :status) == "Unappraised" ->
+        changeset
       get_field(changeset, :estimate) > 0 and changed?(changeset, :estimate) ->
         put_change(changeset, :status, "Unstarted")
 

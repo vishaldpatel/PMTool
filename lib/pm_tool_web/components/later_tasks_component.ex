@@ -12,7 +12,7 @@ defmodule PmToolWeb.LaterTasksComponent do
 
       <button
         class="font-bold rounded"
-        phx-click={JS.toggle_class("hidden", to: "#edit-" <> @new_task_id)}
+        phx-click={JS.toggle_class("hidden", to: "#edit-#{@new_task_id}")}
       >
         <svg class="h-6 w-6 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
@@ -60,7 +60,7 @@ defmodule PmToolWeb.LaterTasksComponent do
         module={PmToolWeb.TaskComponents}
         id={@new_task_id}
         current_user={@current_user}
-        task={%Task{estimate: 0, stage: "Later", status: "Unappraised"}}
+        task={%Task{estimate: 1, stage: "Later", status: "Unappraised"}}
       />
     </div>
     """

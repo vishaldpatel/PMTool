@@ -1,9 +1,6 @@
 defmodule PmToolWeb.LabelsComponent do
   use PmToolWeb, :live_component
 
-  alias PmTool.Labels
-  alias PmTool.Labels.Label
-
   def mount(socket) do
     {
       :ok, 
@@ -20,6 +17,10 @@ defmodule PmToolWeb.LabelsComponent do
     {
       :ok,
       assign(socket, assigns)
+      |> assign(labels: case assigns.labels do
+        nil -> []
+        _ -> assigns.labels
+      end)
     }
   end
 
@@ -52,7 +53,7 @@ defmodule PmToolWeb.LabelsComponent do
     ~H"""
     <div>
       <div class="text-sm">Labels</div>
-      <div class="w-full px-1 mb-1 bg-white border border-gray-500 rounded rounded-sm focus:border-blue-500">
+      <div class="labels_outer w-full px-1 mb-1 bg-white border border-gray-500 rounded rounded-sm focus:border-blue-500 cursor-text">
         <div class="labels inline">
           <%= for label <- @labels do %>
             <div class="label inline">
