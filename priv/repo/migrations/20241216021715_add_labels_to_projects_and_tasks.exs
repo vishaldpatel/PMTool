@@ -3,12 +3,12 @@ defmodule PmTool.Repo.Migrations.AddLabelsToProjectsAndTasks do
 
   def change do
     alter table(:tasks) do
-      add :labels, {:array, :string}
+      add :tags, {:array, :string}
     end
 
     alter table(:projects) do
-      add :labels, {:array, :string}
-      add :label, :string
+      add :tags, {:array, :string}
+      add :tag, :string
     end
   end
 end

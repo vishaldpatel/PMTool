@@ -125,9 +125,9 @@ defmodule PmToolWeb.TaskComponents do
         >
           <div class="inline-block just_title text-left flex-auto">{@task.name}
             <.live_component
-              id={"show-labels-#{@id}"}
-              module={PmToolWeb.LabelsComponent}
-              labels={@task.labels}
+              id={"show-tags-#{@id}"}
+              module={PmToolWeb.TagsComponent}
+              tags={@task.tags}
             />
           </div>
           <div class="inline-block flex-none m-auto relative">
@@ -360,10 +360,10 @@ defmodule PmToolWeb.TaskComponents do
           <br />
           <input type="hidden" name="task[slug]" value={@task.slug} />
           <.live_component
-            id={"edit-labels-#{@id}"}
-            module={PmToolWeb.LabelsComponent}
-            labels={@task.labels}
-            edit_labels={true}
+            id={"edit-tags-#{@id}"}
+            module={PmToolWeb.TagsComponent}
+            tags={@task.tags}
+            edit_tags={true}
           />
           <div class="w-full text-right">
             <button

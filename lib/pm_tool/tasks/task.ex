@@ -31,7 +31,7 @@ defmodule PmTool.Tasks.Task do
     field :task_order, :integer
     field :estimate, :integer
     field :status_updated_at, :utc_datetime
-    field :labels, {:array, :string}, default: []
+    field :tags, {:array, :string}, default: []
 
     belongs_to :creator, PmTool.Accounts.User
     belongs_to :owner, PmTool.Accounts.User
@@ -57,7 +57,7 @@ defmodule PmTool.Tasks.Task do
       :team_id,
       :task_order,
       :estimate,
-      :labels
+      :tags
     ])
     |> validate_required([:name, :creator_id])
     |> slugify()
@@ -71,15 +71,15 @@ defmodule PmTool.Tasks.Task do
     |> maybe_set_task_order()
     |> maybe_set_status_updated_at()
     |> validate_required([:stage, :status, :task_order])
-    |> validate_empty_labels(attrs)
+    |> validate_empty_tags(attrs)
   end
 
-  defp validate_empty_labels(changeset, attrs) do
-    case Map.fetch(attrs, "labels") do
-      {:ok, labels} ->
+  defp validate_empty_tags(changeset, attrs) do
+    case Map.fetch(attrs, "tags") do
+      {:ok, _tags} ->
         changeset
       :error ->
-        put_change(changeset, :labels, [])
+        put_change(changeset, :tags, [])
     end
   end
 

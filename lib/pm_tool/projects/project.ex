@@ -7,8 +7,8 @@ defmodule PmTool.Projects.Project do
     field :name, :string
     field :description, :string
     field :slug, :string
-    field :label, :string
-    field :labels, {:array, :string}
+    field :tag, :string
+    field :tags, {:array, :string}
     
     belongs_to :creator, PmTool.Accounts.User
     many_to_many :teams, PmTool.Teams.Team, join_through: PmTool.Projects.TeamProject
@@ -20,10 +20,10 @@ defmodule PmTool.Projects.Project do
   @doc false
   def changeset(project, attrs) do
     project
-    |> cast(attrs, [:name, :description, :creator_id, :label, :labels])
+    |> cast(attrs, [:name, :description, :creator_id, :tag, :tags])
     |> validate_required([:name])
     |> slugify()
     |> unique_constraint(:slug)
-    |> unique_constraint(:label)
+    |> unique_constraint(:tag)
   end
 end

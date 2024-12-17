@@ -259,64 +259,64 @@ export default class TaskView {
     }
   }
 
-  make_label_editing_work() {
-    function remove_label(e) {
+  make_tag_editing_work() {
+    function remove_tag(e) {
       e.preventDefault()
-      let label = e.target
-      let label_parent = e.target.parentNode
-      while (! label.classList.contains("label")) {
-        label = label.parentNode
-        label_parent = label_parent.parentNode
+      let tag = e.target
+      let tag_parent = e.target.parentNode
+      while (! tag.classList.contains("tag")) {
+        tag = tag.parentNode
+        tag_parent = tag_parent.parentNode
       }
-      label_parent.removeChild(label)
+      tag_parent.removeChild(tag)
     }
 
-    let remove_label_buttons = document.getElementsByClassName("remove_label")
-    for (let x = 0; x < remove_label_buttons.length; x++) {
-      let remove_label_button = remove_label_buttons[x]
-      remove_label_button.onclick = remove_label
+    let remove_tag_buttons = document.getElementsByClassName("remove_tag")
+    for (let x = 0; x < remove_tag_buttons.length; x++) {
+      let remove_tag_button = remove_tag_buttons[x]
+      remove_tag_button.onclick = remove_tag
     }
 
-    let label_editors = document.getElementsByClassName("new_label_input")
-    for (let x = 0; x < label_editors.length; x++) {
-      let label_editor = label_editors[x]
-      label_editor.addEventListener("keydown", function(e) {
+    let tag_editors = document.getElementsByClassName("new_tag_input")
+    for (let x = 0; x < tag_editors.length; x++) {
+      let tag_editor = tag_editors[x]
+      tag_editor.addEventListener("keydown", function(e) {
         if ((e.keyCode == 188) || (e.keyCode == 59) || (e.keyCode == 186) || (e.keyCode == 13)) {
           e.preventDefault()
-          let new_label_name = label_editor.value
-          let labels = e.target.parentNode.querySelector(".labels")
-          if (new_label_name != "") {
+          let new_tag_name = tag_editor.value
+          let tags = e.target.parentNode.querySelector(".tags")
+          if (new_tag_name != "") {
             let space = document.createTextNode(" ")
-            labels.appendChild(space)
+            tags.appendChild(space)
 
-            let new_label_div = document.createElement("div")
-            new_label_div.setAttribute("class", "label inline")
+            let new_tag_div = document.createElement("div")
+            new_tag_div.setAttribute("class", "tag inline")
 
-            let new_label_hidden_input = document.createElement("input")
-            new_label_hidden_input.setAttribute("type", "hidden")
-            new_label_hidden_input.setAttribute("name", "task[labels][]")
-            new_label_hidden_input.setAttribute("value", new_label_name)
-            new_label_div.appendChild(new_label_hidden_input)
+            let new_tag_hidden_input = document.createElement("input")
+            new_tag_hidden_input.setAttribute("type", "hidden")
+            new_tag_hidden_input.setAttribute("name", "task[tags][]")
+            new_tag_hidden_input.setAttribute("value", new_tag_name)
+            new_tag_div.appendChild(new_tag_hidden_input)
 
-            let new_label_button = document.createElement("button")
-            new_label_button.onclick = remove_label
-            new_label_button.setAttribute("class", "remove_label px-1 mb-1 text-xs font-xs text-cyan-200 bg-cyan-800 hover:bg-zinc-700")
-            new_label_button.innerHTML = `<span>&#10005; &#10072;</span> <span class="italic">${new_label_name}</span>`
-            new_label_div.appendChild(new_label_button)
+            let new_tag_button = document.createElement("button")
+            new_tag_button.onclick = remove_tag
+            new_tag_button.setAttribute("class", "remove_tag px-1 mb-1 text-xs font-xs text-cyan-200 bg-cyan-800 hover:bg-zinc-700")
+            new_tag_button.innerHTML = `<span>&#10005; &#10072;</span> <span class="italic">${new_tag_name}</span>`
+            new_tag_div.appendChild(new_tag_button)
 
-            labels.appendChild(new_label_div)
+            tags.appendChild(new_tag_div)
           }
-          label_editor.value = ""
+          tag_editor.value = ""
         }
       })
     }
 
-    let labels_outers = document.getElementsByClassName("labels_outer")
-    for (let x = 0; x < labels_outers.length; x++) {
-      let labels_outer = labels_outers[x]
-      labels_outer.onclick = function(e) {
+    let tags_outers = document.getElementsByClassName("tags_outer")
+    for (let x = 0; x < tags_outers.length; x++) {
+      let tags_outer = tags_outers[x]
+      tags_outer.onclick = function(e) {
         e.stopPropagation()
-        labels_outer.querySelector(".new_label_input").focus()
+        tags_outer.querySelector(".new_tag_input").focus()
       }
     }
   }
@@ -325,6 +325,6 @@ export default class TaskView {
     this.setup_batch_tasks()
     this.setup_drag_and_drop()
     this.setup_estimate_hovering()
-    this.make_label_editing_work()
+    this.make_tag_editing_work()
   }
 }
