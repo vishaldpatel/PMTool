@@ -363,6 +363,7 @@ defmodule PmToolWeb.TaskComponents do
             id={"edit-tags-#{@id}"}
             module={PmToolWeb.TagsComponent}
             tags={@task.tags}
+            type="task"
             edit_tags={true}
           />
           <div class="w-full text-right">

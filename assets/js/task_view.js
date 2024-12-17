@@ -260,15 +260,43 @@ export default class TaskView {
   }
 
   make_tag_editing_work() {
+    function findParent(target, parent_class) {
+      if (target.classList.contains(parent_class)) {
+        return target
+      } else {
+        return findParent(target.parentNode, parent_class)
+      }
+    }
+
+    function getTagLimtFor(target) {
+      let outer_tag = findParent(target, "tags_outer")
+      let tag_limit = outer_tag.querySelector('input[name="tag_limit"]').value
+      return tag_limit
+    }
+
+    function getTagTypeFor(target) {
+      let outer_tag = findParent(target, "tags_outer")
+      let tag_type = outer_tag.querySelector('input[name="tag_type"]').value
+      return tag_type
+    }
+
+    function maybe_toggle_tag_adding(target) {
+      let tag_limit = getTagLimtFor(target)
+      let outer_tag = findParent(target, "tags_outer")
+
+      if ((tag_limit == 0) || (target.querySelectorAll(".tag").length < tag_limit)) {
+        outer_tag.querySelector(`.new_tag_input`).disabled = false
+      } else if (target.querySelectorAll(".tag").length >= tag_limit) {
+        outer_tag.querySelector(`.new_tag_input`).disabled = true
+      }
+    }
+
     function remove_tag(e) {
       e.preventDefault()
-      let tag = e.target
-      let tag_parent = e.target.parentNode
-      while (! tag.classList.contains("tag")) {
-        tag = tag.parentNode
-        tag_parent = tag_parent.parentNode
-      }
+      let tag = findParent(e.target, "tag")
+      let tag_parent = tag.parentNode
       tag_parent.removeChild(tag)
+      maybe_toggle_tag_adding(tag_parent)
     }
 
     let remove_tag_buttons = document.getElementsByClassName("remove_tag")
@@ -294,7 +322,15 @@ export default class TaskView {
 
             let new_tag_hidden_input = document.createElement("input")
             new_tag_hidden_input.setAttribute("type", "hidden")
-            new_tag_hidden_input.setAttribute("name", "task[tags][]")
+
+            let tag_limit = getTagLimtFor(e.target)
+            let tag_type = getTagTypeFor(e.target)
+            if (tag_limit == 1) {
+              new_tag_hidden_input.setAttribute("name", `${tag_type}[tag]`)
+            } else {
+              new_tag_hidden_input.setAttribute("name", `${tag_type}[tags][]`)
+            }
+
             new_tag_hidden_input.setAttribute("value", new_tag_name)
             new_tag_div.appendChild(new_tag_hidden_input)
 
@@ -305,6 +341,7 @@ export default class TaskView {
             new_tag_div.appendChild(new_tag_button)
 
             tags.appendChild(new_tag_div)
+            maybe_toggle_tag_adding(e.target.parentNode)
           }
           tag_editor.value = ""
         }

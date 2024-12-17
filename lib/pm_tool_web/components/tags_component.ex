@@ -8,7 +8,8 @@ defmodule PmToolWeb.TagsComponent do
         socket, 
         tags: [], 
         color: "text-cyan-200 bg-cyan-800 hover:bg-zinc-700",
-        edit_tags: false
+        edit_tags: false,
+        tag_type: "task"
       )
     }
   end
@@ -52,12 +53,14 @@ defmodule PmToolWeb.TagsComponent do
   defp edit_tags(assigns) do
     ~H"""
     <div>
-      <div class="text-sm">Tags</div>
+      <div class="text-sm">{String.capitalize(@tag_type)} Tags</div>
       <div class="tags_outer w-full px-1 mb-1 bg-white border border-gray-500 rounded rounded-sm focus:border-blue-500 cursor-text">
+        <input type="hidden" name="tag_type" value={@tag_type} />
+        <input type="hidden" name="tag_limit" value={0} />
         <div class="tags inline">
           <%= for tag <- @tags do %>
             <div class="tag inline">
-              <input type="hidden" name="task[tags][]" value={tag} />
+              <input type="hidden" name={"#{@tag_type}[tags][]"} value={tag} />
               <button
                 type="button"
                 class={"remove_tag px-1 mb-1 text-xs font-xs #{@color}"}

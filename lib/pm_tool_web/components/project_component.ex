@@ -175,8 +175,14 @@ defmodule PmToolWeb.ProjectComponent do
             type="text"
             class="rounded-sm w-full py-0 px-1 mb-1"
           ><%= @project.description %></textarea><br />
-          <br />
           <input type="hidden" name="project[slug]" value={@project.slug} />
+          <.live_component
+            id={"edit-project-tag-#{@id}"}
+            module={PmToolWeb.TagComponent}
+            tag={@project.tag}
+            edit_tag={true}
+            type="project"
+          />
           <div class="w-full text-right">
             <button
               type="reset"
