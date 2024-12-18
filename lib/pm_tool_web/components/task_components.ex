@@ -29,7 +29,8 @@ defmodule PmToolWeb.TaskComponents do
        no_move: false,
        actions: true,
        show_task: "flex",
-       show_task_edit: "hidden"
+       show_task_edit: "hidden",
+       hide_project_tag: false
      )}
   end
 
@@ -124,6 +125,13 @@ defmodule PmToolWeb.TaskComponents do
           class={"inline-block text-md w-full pl-1 pr-1 text-gray-100 #{@show_task}"}
         >
           <div class="inline-block just_title text-left flex-auto">{@task.name}
+            <.live_component
+              id={"show-project-tags-#{@id}"}
+              module={PmToolWeb.TagsComponent}
+              tags={if @hide_project_tag == true, do: @task.project_tags -- [@project.tag], else: @task.project_tags}
+              color="text-gray-200 bg-gray-700 hover:bg-gray-600"
+              tag_type="project"
+            />
             <.live_component
               id={"show-tags-#{@id}"}
               module={PmToolWeb.TagsComponent}

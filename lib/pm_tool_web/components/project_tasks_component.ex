@@ -66,6 +66,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
               task={task}
               no_move={true}
               actions={false}
+              hide_project_tag={true}
             />
           <% end %>
         </ul>
@@ -79,6 +80,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
               project={@project}
               task={task}
               actions={true}
+              hide_project_tag={true}
             />
           <% end %>
           <%= for task <- @tasks[:Next] do %>
@@ -89,6 +91,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
               project={@project}
               task={task}
               actions={true}
+              hide_project_tag={true}
             />
           <% end %>
         </ul>
@@ -101,6 +104,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
               project={@project}
               task={task}
               no_move={false}
+              hide_project_tag={true}
             />
           <% end %>
         </ul>

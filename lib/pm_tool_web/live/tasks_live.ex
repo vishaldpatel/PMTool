@@ -255,6 +255,11 @@ defmodule PmToolWeb.TasksLive do
     {:noreply, get_tasks(socket)}
   end
 
+  def handle_event("tag_clicked", params, socket) do
+    IO.inspect(params)
+    {:noreply, socket}
+  end
+
   def handle_event("delete_tasks", params, socket) do
     current_user = socket.assigns.current_user
     task_slugs = params["task_slugs"]

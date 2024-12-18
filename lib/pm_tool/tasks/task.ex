@@ -32,6 +32,7 @@ defmodule PmTool.Tasks.Task do
     field :estimate, :integer
     field :status_updated_at, :utc_datetime
     field :tags, {:array, :string}, default: []
+    field :project_tags, {:array, :string}, default: []
 
     belongs_to :creator, PmTool.Accounts.User
     belongs_to :owner, PmTool.Accounts.User
@@ -74,6 +75,13 @@ defmodule PmTool.Tasks.Task do
     |> validate_empty_tags(attrs)
   end
 
+  def project_tags_changeset(task, attrs) do
+    task
+    |> changeset(attrs)
+    |> cast(attrs, [:project_tags])
+    |> validate_empty_project_tags(attrs)
+  end
+
   defp validate_empty_tags(changeset, attrs) do
     case Map.fetch(attrs, "tags") do
       {:ok, _tags} ->
@@ -83,9 +91,19 @@ defmodule PmTool.Tasks.Task do
     end
   end
 
+  defp validate_empty_project_tags(changeset, attrs) do
+    IO.inspect(Map.fetch!(attrs, "project_tags"))
+    case Map.fetch(attrs, "project_tags") do
+      {:ok, _tags} ->
+        changeset
+      :error ->
+        put_change(changeset, :project_tags, [])
+    end
+  end
+
   defp maybe_set_status_updated_at(changeset) do
     # If status is changed, set status_updated_at
-    if get_field(changeset, :status) != get_field(changeset, :previous_status) do
+    if changed?(changeset, :status) do
       truncated_time = DateTime.truncate(DateTime.utc_now(), :second)
       put_change(changeset, :status_updated_at, truncated_time)
     else

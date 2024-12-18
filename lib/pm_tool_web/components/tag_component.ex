@@ -33,12 +33,15 @@ defmodule PmToolWeb.TagComponent do
     ~H"""
     <div class="flex flex-row flex-wrap">
       <button
+        phx-click="tag_clicked"
+        phx-value-tag={@tag}
+        phx-value-tag-type={@tag_type}
         type="button"
         class={
           "mr-[3px] mb-1 inline-flex items-center px-1 text-xs font-xs italic #{@color} align-text-top italic" 
         }
       >
-        <%= @tag %>
+        {@tag}
       </button>
     </div>
     """
