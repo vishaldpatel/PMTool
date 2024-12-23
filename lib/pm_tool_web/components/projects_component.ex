@@ -8,7 +8,6 @@ defmodule PmToolWeb.ProjectsComponent do
   def render(assigns) do
     ~H"""
     <div class="mr-2 text-left w-60 flex-shrink-0">
-      <span class="font-semibold uppercase float-right text-gray-400">Projects</span>
       <button
         class="font-bold rounded"
         phx-click={JS.toggle_class("hidden", to: "#edit-" <> @new_project_id)}
@@ -22,6 +21,7 @@ defmodule PmToolWeb.ProjectsComponent do
           />
         </svg>
       </button>
+      <span class="font-semibold uppercase align-top ml-1 text-gray-400">Projects</span>
 
       <%= if @projects do %>
         <ul phx-hook="Sortable" id={@id}>

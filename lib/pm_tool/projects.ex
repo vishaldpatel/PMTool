@@ -36,6 +36,8 @@ defmodule PmTool.Projects do
     Repo.all(from p in Project, where: p.slug in ^slugs)
   end
 
+  def get_project_by_tag!(tag), do: Repo.get_by!(Project, tag: tag)
+
   def get_project_by_slug!(slug), do: Repo.get_by!(Project, slug: slug)
 
   def create_project(attrs \\ %{}) do

@@ -8,7 +8,6 @@ defmodule PmToolWeb.NowAndNextTasksComponent do
   def render(assigns) do
     ~H"""
     <div class="mr-2 text-left w-80 flex-shrink-0">
-      <span class="font-semibold uppercase float-right text-gray-400">Now+Next</span>
       <button
         class="font-bold rounded"
         phx-click={JS.toggle_class("hidden", to: "#edit-#{@new_task_id}")}
@@ -41,6 +40,7 @@ defmodule PmToolWeb.NowAndNextTasksComponent do
           <rect x="7" y="7" width="3" height="9" /> <rect x="14" y="7" width="3" height="5" />
         </svg>
       </button>
+      <span class="font-semibold uppercase align-top ml-1 text-gray-400">Now+Next</span>
 
       <form id="now_task_options" style="display: none;" phx-submit="delete_tasks">
         <button class="font-bold rounded">

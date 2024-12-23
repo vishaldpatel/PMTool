@@ -8,7 +8,6 @@ defmodule PmToolWeb.LaterTasksComponent do
   def render(assigns) do
     ~H"""
     <div class="mr-2 text-left w-80 flex-shrink-0">
-      <span class="font-semibold uppercase float-right text-gray-400">Later</span>
 
       <button
         class="font-bold rounded"
@@ -23,6 +22,7 @@ defmodule PmToolWeb.LaterTasksComponent do
           />
         </svg>
       </button>
+      <span class="font-semibold uppercase align-top ml-1 text-gray-400">Later</span>
 
       <form id="later_task_options" style="display: none;" phx-submit="delete_tasks">
         <button class="font-bold rounded">

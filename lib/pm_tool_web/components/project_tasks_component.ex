@@ -4,7 +4,6 @@ defmodule PmToolWeb.ProjectTasksComponent do
   def render(assigns) do
     ~H"""
     <div class="mr-2 text-left w-80 flex-shrink-0">
-      <span class="font-semibold uppercase float-right text-gray-400">{@project.name}</span>
       <button
         class="font-bold rounded"
         phx-click="hide_project_tasks"
@@ -23,6 +22,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
           <line x1="9" y1="9" x2="15" y2="15" /> <line x1="15" y1="9" x2="9" y2="15" />
         </svg>
       </button>
+      <span class="font-semibold uppercase align-top ml-1 text-gray-400">{@project.name}</span>
       <form
         id={"project_task_options_#{@project.slug}"}
         class="project_task_options"

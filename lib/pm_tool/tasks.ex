@@ -27,6 +27,15 @@ defmodule PmTool.Tasks do
     |> separate_tasks_into_stages()
   end
 
+  def list_tasks_for_tag(%User{} = user, tag) do
+    query =
+      from t in base_list_tasks_query(user),
+        where: ^tag in t.tags
+
+    Repo.all(query)
+    |> separate_tasks_into_stages()
+  end
+
   def list_tasks(%User{} = user, project_slug) do
     project = Projects.get_project_by_slug!(project_slug)
 
@@ -59,7 +68,7 @@ defmodule PmTool.Tasks do
     # For an individual, we won't need more than 30 tasks
   end
 
-  defp separate_tasks_into_stages(unsorted_tasks) do
+  def separate_tasks_into_stages(unsorted_tasks) do
     # Limit the results until the estimate adds up to 30
     [_now_estimate, tasks] =
       Enum.reduce_while(

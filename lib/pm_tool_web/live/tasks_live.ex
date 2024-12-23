@@ -26,6 +26,16 @@ defmodule PmToolWeb.TasksLive do
           timestamp={@timestamp}
         />
       <% end %>
+      <%= for tag <- @open_tags do %>
+        <.live_component
+          module={PmToolWeb.TagTasksComponent}
+          id={"tag-#{tag}"}
+          current_user={@current_user}
+          tag={tag}
+          tasks={@open_tag_tasks[tag]}
+          timestamp={@timestamp}
+        />
+      <% end %>
       <%= if @merge_now_and_next_tasks do %>
         <.live_component
           module={PmToolWeb.NowAndNextTasksComponent}
@@ -81,7 +91,9 @@ defmodule PmToolWeb.TasksLive do
     socket =
       socket
       |> assign(open_projects: socket.assigns.user_preferences["open_projects"] || [])
+      |> assign(open_tags: socket.assigns.user_preferences["open_tags"] || [])
       |> assign(open_project_tasks: %{})
+      |> assign(open_tag_tasks: %{})
       |> get_tasks()
       |> assign_new_task_ids()
       |> assign(
@@ -117,6 +129,16 @@ defmodule PmToolWeb.TasksLive do
     next_tasks = tasks[:Next]
     later_tasks = tasks[:Later]
     done_tasks = tasks[:Done]
+
+    socket =
+      Enum.reduce(socket.assigns.open_tags, socket, fn tag, socket ->
+        tag_tasks = Tasks.list_tasks_for_tag(socket.assigns.current_user, tag)
+
+        assign(socket,
+          open_tag_tasks:
+            Map.put(socket.assigns.open_tag_tasks, tag, tag_tasks)
+        )
+      end)
 
     socket =
       Enum.reduce(socket.assigns.open_projects, socket, fn project_slug, socket ->
@@ -185,34 +207,88 @@ defmodule PmToolWeb.TasksLive do
      |> get_tasks()}
   end
 
-  def handle_event("show_project_tasks", params, socket) do
-    unless Enum.member?(socket.assigns.open_projects, params["project_slug"]) do
+  defp show_tasks_with_tag(socket, tag) do
+    unless Enum.member?(socket.assigns.open_tags, tag) do
       Accounts.set_preference(
         socket.assigns.current_user,
-        "open_projects",
-        [params["project_slug"] | socket.assigns.open_projects]
+        "open_tags",
+        [tag | socket.assigns.open_tags]
       )
 
       {:noreply,
        socket
-       |> assign(open_projects: [params["project_slug"] | socket.assigns.open_projects])
+       |> assign(open_tags: [tag | socket.assigns.open_tags])
        |> get_tasks()}
+    else
+      {:noreply, socket}
     end
   end
 
-  def handle_event("hide_project_tasks", params, socket) do
+  defp hide_tasks_with_tag(socket, tag) do
     Accounts.set_preference(
       socket.assigns.current_user,
-      "open_projects",
-      List.delete(socket.assigns.open_projects, params["project_slug"])
+      "open_tags",
+      List.delete(socket.assigns.open_tags, tag)
     )
 
     {:noreply,
      socket
-     |> assign(open_projects: List.delete(socket.assigns.open_projects, params["project_slug"]))
-     |> assign(
-       open_project_tasks: Map.delete(socket.assigns.open_project_tasks, params["project_slug"])
-     )}
+     |> assign(open_tags: List.delete(socket.assigns.open_tags, tag))
+     |> assign(open_tag_tasks: Map.delete(socket.assigns.open_tag_tasks, tag))
+    }
+  end
+
+  defp show_project(socket, project_slug) do
+    unless Enum.member?(socket.assigns.open_projects, project_slug) do
+      Accounts.set_preference(
+        socket.assigns.current_user,
+        "open_projects",
+        [project_slug | socket.assigns.open_projects]
+      )
+
+      {:noreply,
+       socket
+       |> assign(open_projects: [project_slug | socket.assigns.open_projects])
+       |> get_tasks()}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  defp hide_project(socket, project_slug) do
+    Accounts.set_preference(
+      socket.assigns.current_user,
+      "open_projects",
+      List.delete(socket.assigns.open_projects, project_slug)
+    )
+
+    {:noreply,
+     socket
+     |> assign(open_projects: List.delete(socket.assigns.open_projects, project_slug))
+     |> assign(open_project_tasks: Map.delete(socket.assigns.open_project_tasks, project_slug))
+    }
+  end
+
+  def handle_event("show_project_tasks", params, socket) do
+    show_project(socket, params["project_slug"])
+  end
+
+  def handle_event("hide_project_tasks", params, socket) do
+    hide_project(socket, params["project_slug"])
+  end
+
+  def handle_event("hide_tag_tasks", params, socket) do
+    hide_tasks_with_tag(socket, params["tag"])
+  end
+
+  def handle_event("tag_clicked", params, socket) do
+    case params["tag-type"] do
+      "project" -> 
+        project = Projects.get_project_by_tag!(params["tag"])
+        show_project(socket, project.slug)
+      "task" ->
+        show_tasks_with_tag(socket, params["tag"])
+    end
   end
 
   def handle_event("separate_now_and_next_tasks", _params, socket) do
@@ -253,11 +329,6 @@ defmodule PmToolWeb.TasksLive do
     end
 
     {:noreply, get_tasks(socket)}
-  end
-
-  def handle_event("tag_clicked", params, socket) do
-    IO.inspect(params)
-    {:noreply, socket}
   end
 
   def handle_event("delete_tasks", params, socket) do

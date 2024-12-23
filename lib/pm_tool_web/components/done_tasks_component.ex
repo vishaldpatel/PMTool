@@ -25,7 +25,6 @@ defmodule PmToolWeb.DoneTasksComponent do
         </button>
       </form>
 
-      <span class="font-semibold uppercase float-right text-gray-400">Done</span>
       <button class="font-bold rounded">
         <svg
           class="h-6 w-6 text-orange-500"
@@ -43,6 +42,7 @@ defmodule PmToolWeb.DoneTasksComponent do
           <line x1="10" y1="12" x2="14" y2="12" />
         </svg>
       </button>
+      <span class="font-semibold uppercase align-top ml-1 text-gray-400">Done</span>
 
       <%= if @tasks do %>
         <ul phx-hook="Sortable" id={@id}>

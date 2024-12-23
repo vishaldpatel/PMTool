@@ -83,21 +83,28 @@ defmodule PmTool.Tasks.Task do
   end
 
   defp validate_empty_tags(changeset, attrs) do
-    case Map.fetch(attrs, "tags") do
-      {:ok, _tags} ->
-        changeset
-      :error ->
-        put_change(changeset, :tags, [])
+    if changed?(changeset, :tags) do
+      case Map.fetch(attrs, "tags") do
+        {:ok, _tags} ->
+          changeset
+        :error ->
+          put_change(changeset, :tags, [])
+      end
+    else
+      changeset
     end
   end
 
   defp validate_empty_project_tags(changeset, attrs) do
-    IO.inspect(Map.fetch!(attrs, "project_tags"))
-    case Map.fetch(attrs, "project_tags") do
-      {:ok, _tags} ->
-        changeset
-      :error ->
-        put_change(changeset, :project_tags, [])
+    if changed?(changeset, :project_tags) do
+      case Map.fetch(attrs, "project_tags") do
+        {:ok, _tags} ->
+          changeset
+        :error ->
+          put_change(changeset, :project_tags, [])
+      end
+    else
+      changeset
     end
   end
 
