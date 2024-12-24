@@ -189,6 +189,7 @@ defmodule PmToolWeb.TasksLive do
     {:noreply,
      socket
      |> assign(project: project)
+     |> get_tasks()
      |> get_projects()}
   end
 
@@ -342,7 +343,11 @@ defmodule PmToolWeb.TasksLive do
   def handle_event("remove_tasks_from_project", params, socket) do
     project = Projects.get_project_by_slug!(params["project_slug"])
     task_slugs = params["task_slugs"]
-    Projects.remove_tasks_from_project(project, task_slugs)
+
+    Enum.each(task_slugs, fn task_slug ->
+      task = Tasks.get_task_by_slug!(task_slug)
+      Tasks.update_task(task, %{project_tags: List.delete(task.project_tags, project.tag)})
+    end)
 
     {:noreply, get_tasks(socket)}
   end
@@ -358,7 +363,9 @@ defmodule PmToolWeb.TasksLive do
     task = Tasks.get_task_by_slug!(task_slug)
     project = Projects.get_project_by_slug!(project_slug)
 
-    Projects.add_task_to_project(project, task)
+    unless Enum.member?(task.project_tags, project.tag) do
+      Tasks.update_task(task, %{project_tags: [project.tag | task.project_tags]})
+    end
 
     {:noreply, get_tasks(socket)}
   end

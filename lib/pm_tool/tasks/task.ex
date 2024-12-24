@@ -40,7 +40,6 @@ defmodule PmTool.Tasks.Task do
 
     has_many :blockers, PmTool.Tasks.Blocker
     has_many :comments, PmTool.Comments.TaskComment
-    many_to_many :projects, PmTool.Projects.Project, join_through: PmTool.Projects.ProjectTask
 
     timestamps()
   end
@@ -58,6 +57,7 @@ defmodule PmTool.Tasks.Task do
       :team_id,
       :task_order,
       :estimate,
+      :project_tags,
       :tags
     ])
     |> validate_required([:name, :creator_id])
@@ -73,12 +73,6 @@ defmodule PmTool.Tasks.Task do
     |> maybe_set_status_updated_at()
     |> validate_required([:stage, :status, :task_order])
     |> validate_empty_tags(attrs)
-  end
-
-  def project_tags_changeset(task, attrs) do
-    task
-    |> changeset(attrs)
-    |> cast(attrs, [:project_tags])
     |> validate_empty_project_tags(attrs)
   end
 

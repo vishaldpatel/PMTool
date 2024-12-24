@@ -12,7 +12,6 @@ defmodule PmTool.Projects.Project do
     
     belongs_to :creator, PmTool.Accounts.User
     many_to_many :teams, PmTool.Teams.Team, join_through: PmTool.Projects.TeamProject
-    many_to_many :tasks, PmTool.Tasks.Task, join_through: PmTool.Projects.ProjectTask
 
     timestamps()
   end
@@ -21,7 +20,7 @@ defmodule PmTool.Projects.Project do
   def changeset(project, attrs) do
     project
     |> cast(attrs, [:name, :description, :creator_id, :tag, :tags])
-    |> validate_required([:name])
+    |> validate_required([:name, :creator_id, :tag])
     |> slugify()
     |> unique_constraint(:slug)
     |> unique_constraint(:tag)

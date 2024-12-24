@@ -10,13 +10,12 @@ defmodule PmTool.Tasks do
   alias PmTool.Accounts.User
   alias PmTool.Projects
   alias PmTool.Projects.Project
-  alias PmTool.Projects.ProjectTask
 
   # Get all tasks for project
   def list_tasks_for(%Project{} = project) do
     query =
       from t in Task,
-        where: t.project_id == ^project.id,
+        where: ^project.tag in t.project_tags,
         order_by: [t.stage, t.task_order]
 
     Repo.all(query)
@@ -41,8 +40,7 @@ defmodule PmTool.Tasks do
 
     query =
       from t in base_list_tasks_query(user),
-        join: pt in ProjectTask,
-        on: pt.task_id == t.id and pt.project_id == ^project.id,
+        where: ^project.tag in t.project_tags,
         order_by: [t.stage, t.task_order]
 
     unsorted_tasks = Repo.all(query)
@@ -180,6 +178,17 @@ defmodule PmTool.Tasks do
         select: max(t.task_order)
 
     Repo.one(query)
+  end
+
+  def replace_project_tag(old_project_tag, new_project_tag) do
+    query = from t in Task, where: ^old_project_tag in t.project_tags
+    tasks = Repo.all(query)
+    Enum.each(
+      tasks, 
+      fn task -> 
+        update_task(task, %{"project_tags" => (task.project_tags -- [old_project_tag]) ++ [new_project_tag]})
+      end
+    )
   end
 
   # Be able to update a Task
