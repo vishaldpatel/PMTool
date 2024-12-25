@@ -44,16 +44,23 @@ defmodule PmToolWeb.NextTasksComponent do
         </button>
       </form>
       <%= if @tasks do %>
-        <ul phx-hook="Sortable" id={@id}>
-          <%= for task <- @tasks do %>
-            <.live_component
-              module={PmToolWeb.TaskComponents}
-              id={"task-#{task.slug}#{@timestamp}"}
-              no_move={false}
-              task={task}
-            />
+        <%= for {index, current_tasks} <- @tasks do %>
+          <%= if index == 1 do %>
+            <div class="font-bold text-gray-400 uppercase text-xs mb-1 mt-[-18px] text-right">Next Iteration</div>
+          <% else %>
+            <div class="font-bold text-gray-400 uppercase text-xs my-1 text-right">{index} Iterations</div>
           <% end %>
-        </ul>
+          <ul phx-hook="Sortable" id={@id}>
+            <%= for task <- current_tasks do %>
+              <.live_component
+                module={PmToolWeb.TaskComponents}
+                id={"task-#{task.slug}#{@timestamp}"}
+                no_move={false}
+                task={task}
+              />
+            <% end %>
+          </ul>
+        <% end %>
       <% end %>
       <.live_component
         module={PmToolWeb.TaskComponents}

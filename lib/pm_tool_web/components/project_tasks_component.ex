@@ -58,7 +58,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
         <input type="hidden" name="project_slug" class="project_slug" value={@project.slug} />
         <h3 class="font-bold text-right text-sm px-2 text-gray-500">Done</h3>
         <ul>
-          <%= for task <- @tasks[:Done] do %>
+          <%= for task <- @tasks[:Done] |> Map.values() |> List.flatten() do %>
             <.live_component
               module={PmToolWeb.TaskComponents}
               id={"project-#{@project.slug}-task-#{task.slug}#{@timestamp}"}
@@ -83,7 +83,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
               hide_project_tag={true}
             />
           <% end %>
-          <%= for task <- @tasks[:Next] do %>
+          <%= for task <- @tasks[:Next] |> Map.values() |> List.flatten() do %>
             <.live_component
               module={PmToolWeb.TaskComponents}
               no_move={task.status != "Unstarted"}

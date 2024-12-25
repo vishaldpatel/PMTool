@@ -68,31 +68,70 @@ defmodule PmTool.Tasks do
 
   def separate_tasks_into_stages(unsorted_tasks) do
     # Limit the results until the estimate adds up to 30
-    [_now_estimate, tasks] =
+    last_period_end_date = Date.utc_today() |> Date.end_of_week() |> Date.add(-7)
+    two_period_end_date = Date.add(last_period_end_date, -7)
+    three_period_end_date = Date.add(last_period_end_date, -14)
+    earlier_end_date = Date.add(last_period_end_date, -21)
+    
+    just_before_midnight = Time.new!(23, 59, 59, 999_999)
+    last_period_end = DateTime.new!(last_period_end_date, just_before_midnight, "Etc/UTC")
+    two_period_end = DateTime.new!(two_period_end_date, just_before_midnight, "Etc/UTC")
+    three_period_end = DateTime.new!(three_period_end_date, just_before_midnight, "Etc/UTC")
+    earlier_end = DateTime.new!(earlier_end_date, just_before_midnight, "Etc/UTC")
+
+    velocity = 30
+
+    [_now_estimate, _current_period, tasks] =
       Enum.reduce_while(
         unsorted_tasks,
-        [0, %{Now: [], Next: [], Done: [], Later: []}],
+        [0, 0, %{Now: [], Next: %{}, Done: %{last: [], two: [], three: [], earlier: []}, Later: []}],
         fn task, acc ->
-          [total_estimate, tasks] = acc
-          last_period_end_date = Date.utc_today() |> Date.end_of_week() |> Date.add(-7)
-          just_before_midnight = Time.new!(23, 59, 59, 999_999)
-          last_period_end = DateTime.new!(last_period_end_date, just_before_midnight, "Etc/UTC")
+          [total_estimate, current_period, tasks] = acc
           status_updated_at = DateTime.from_naive!(task.status_updated_at, "Etc/UTC")
 
           cond do
             # If it was Accepted more than 7 days ago, then it is marked as Done
             Enum.member?(["Accepted", "Closed"], task.status) and
                 DateTime.compare(status_updated_at, last_period_end) == :lt ->
-              {:cont, [total_estimate, %{tasks | Done: tasks[:Done] ++ [task]}]}
+              cond do
+                DateTime.compare(status_updated_at, earlier_end) == :lt ->
+                  {:cont, 
+                    [total_estimate, current_period, 
+                    Map.put(tasks, :Done, Map.put(tasks[:Done], :earlier, tasks[:Done][:earlier] ++ [task]))]}
+                DateTime.compare(status_updated_at, three_period_end) == :lt ->
+                  {:cont, 
+                    [total_estimate, current_period,
+                    Map.put(tasks, :Done, Map.put(tasks[:Done], :three, tasks[:Done][:three] ++ [task]))]}
+                DateTime.compare(status_updated_at, two_period_end) == :lt ->
+                  {:cont, 
+                    [total_estimate, current_period,
+                    Map.put(tasks, :Done, Map.put(tasks[:Done], :two, tasks[:Done][:two] ++ [task]))]}
+                true ->
+                  {:cont, [total_estimate, current_period, 
+                    Map.put(tasks, :Done, Map.put(tasks[:Done], :last, tasks[:Done][:last] ++ [task]))]}
+              end
 
-            task.stage == "Later" or task.status == "Unappraised" ->
-              {:cont, [total_estimate, %{tasks | Later: tasks[:Later] ++ [task]}]}
+            task.stage == "Later" ->
+              {:cont, [total_estimate, current_period, Map.put(tasks, :Later, tasks[:Later] ++ [task])]}
 
-            total_estimate + task.estimate <= 30 or task.status != "Unstarted" ->
-              {:cont, [total_estimate + task.estimate, %{tasks | Now: tasks[:Now] ++ [task]}]}
-
+            total_estimate + task.estimate <= velocity or 
+              (task.status != "Unstarted" and task.status != "Unappraised") ->
+              {:cont, [total_estimate + task.estimate, current_period, %{tasks | Now: tasks[:Now] ++ [task]}]}
             true ->
-              {:cont, [total_estimate + task.estimate, %{tasks | Next: tasks[:Next] ++ [task]}]}
+              current_period = case total_estimate + task.estimate > velocity * (current_period + 1) do
+                true ->
+                  current_period + 1
+                false ->
+                  current_period
+              end
+              tasks = case tasks[:Next][current_period] do
+                nil ->
+                  Map.put(tasks, :Next, Map.put(tasks[:Next], current_period, [task]))
+                current_period_tasks ->
+                  Map.put(tasks, :Next, Map.put(tasks[:Next], current_period, current_period_tasks ++ [task]))
+              end
+
+              {:cont, [total_estimate + task.estimate, current_period, tasks]}
           end
         end
       )
@@ -223,7 +262,7 @@ defmodule PmTool.Tasks do
   end
 
   def estimate_task(%Task{} = task, estimate) do
-    update_task(task, %{"estimate" => estimate})
+    update_task(task, %{"estimate" => estimate, "status" => "Unstarted"})
   end
 
   # Be able to delete a Task

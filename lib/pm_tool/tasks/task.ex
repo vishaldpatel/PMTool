@@ -17,7 +17,7 @@ defmodule PmTool.Tasks.Task do
     "Accepted",
     "Closed"
   ]
-  @estimates [0, 1, 2, 4, 6, 8, 12, 16, 24, 60]
+  @estimates [1, 2, 4, 6, 8, 12, 16, 24, 60]
   def estimates, do: @estimates
   def statuses, do: @statuses
   def stages, do: @stages
@@ -145,7 +145,7 @@ defmodule PmTool.Tasks.Task do
 
   def maybe_set_estimate(changeset) do
     if get_field(changeset, :status) == "Unappraised" and changed?(changeset, :status) do
-      put_change(changeset, :estimate, 0)
+      put_change(changeset, :estimate, 1)
     else
       changeset
     end
@@ -155,12 +155,10 @@ defmodule PmTool.Tasks.Task do
     cond do
       get_field(changeset, :id) == nil and get_field(changeset, :status) == "Unappraised" ->
         changeset
-      get_field(changeset, :estimate) > 0 and changed?(changeset, :estimate) ->
+      changed?(changeset, :estimate) ->
         put_change(changeset, :status, "Unstarted")
-
       get_field(changeset, :status) == nil ->
         put_change(changeset, :status, "Unappraised")
-
       true ->
         changeset
     end

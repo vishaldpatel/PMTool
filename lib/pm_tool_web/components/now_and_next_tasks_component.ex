@@ -62,9 +62,9 @@ defmodule PmToolWeb.NowAndNextTasksComponent do
           </svg>
         </button>
       </form>
-      <%= if @tasks do %>
+      <%= if @now_tasks do %>
         <ul phx-hook="Sortable" id={@id}>
-          <%= for task <- @tasks do %>
+          <%= for task <- @now_tasks do %>
             <.live_component
               module={PmToolWeb.TaskComponents}
               no_move={task.status != "Unstarted"}
@@ -74,6 +74,25 @@ defmodule PmToolWeb.NowAndNextTasksComponent do
             />
           <% end %>
         </ul>
+      <% end %>
+      <%= if @next_tasks do %>
+        <%= for {index, current_tasks} <- @next_tasks do %>
+          <%= if index == 1 do %>
+            <div class="font-bold text-gray-400 uppercase text-xs my-1 text-right">Next Iteration</div>
+          <% else %>
+            <div class="font-bold text-gray-400 uppercase text-xs my-1 text-right">{index} Iterations</div>
+          <% end %>
+          <ul phx-hook="Sortable" id={@id}>
+            <%= for task <- current_tasks do %>
+              <.live_component
+                module={PmToolWeb.TaskComponents}
+                id={"task-#{task.slug}#{@timestamp}"}
+                no_move={false}
+                task={task}
+              />
+            <% end %>
+          </ul>
+        <% end %>
       <% end %>
       <.live_component
         module={PmToolWeb.TaskComponents}
@@ -93,7 +112,6 @@ defmodule PmToolWeb.NowAndNextTasksComponent do
     socket =
       socket
       |> assign(assigns)
-      |> assign(tasks: [] ++ assigns.now_tasks ++ assigns.next_tasks)
       |> maybe_get_current_task()
 
     {:ok, socket}

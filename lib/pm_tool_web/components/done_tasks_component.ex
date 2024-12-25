@@ -45,17 +45,24 @@ defmodule PmToolWeb.DoneTasksComponent do
       <span class="font-semibold uppercase align-top ml-1 text-gray-400">Done</span>
 
       <%= if @tasks do %>
-        <ul phx-hook="Sortable" id={@id}>
-          <%= for task <- @tasks do %>
-            <.live_component
-              module={PmToolWeb.TaskComponents}
-              id={"task-#{task.slug}#{@timestamp}"}
-              task={task}
-              no_move={true}
-              actions={false}
-            />
+        <%= for group <- [:last, :two, :three, :earlier] do %>
+          <%= if group == :last do %>
+            <div class="font-bold text-gray-400 uppercase text-xs mb-1 mt-[-18px] text-right">Previous</div>
+          <% else %>
+            <div class="font-bold text-gray-400 uppercase text-xs my-1 text-right">{group}</div>
           <% end %>
-        </ul>
+          <ul phx-hook="Sortable" id={@id}>
+            <%= for task <- @tasks[group] do %>
+              <.live_component
+                module={PmToolWeb.TaskComponents}
+                id={"task-#{task.slug}#{@timestamp}"}
+                task={task}
+                no_move={true}
+                actions={false}
+              />
+            <% end %>
+          </ul>
+        <% end %>
       <% end %>
     </div>
     """
