@@ -72,13 +72,15 @@ defmodule PmToolWeb.TasksLive do
         new_task_id={@new_later_task_id}
         timestamp={@timestamp}
       />
-      <.live_component
-        module={PmToolWeb.DoneTasksComponent}
-        id="done"
-        current_user={@current_user}
-        tasks={@done_tasks}
-        timestamp={@timestamp}
-      />
+      <%= if @done_tasks |> Map.values() |> List.flatten() |> Enum.count() > 0 do %>
+        <.live_component
+          module={PmToolWeb.DoneTasksComponent}
+          id="done"
+          current_user={@current_user}
+          tasks={@done_tasks}
+          timestamp={@timestamp}
+        />
+      <% end %>
     </div>
     """
   end

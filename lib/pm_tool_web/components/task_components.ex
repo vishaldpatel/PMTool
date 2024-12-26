@@ -344,7 +344,9 @@ defmodule PmToolWeb.TaskComponents do
             type="text"
             class="rounded-sm w-full py-0 px-1 mb-1"
           ><%= @task.description %></textarea><br />
-          <%= if @save_button_name == "Update" do %>
+          <%= if @save_button_name == "Create" do %>
+            <input type="hidden" name="task[stage]" value={@task.stage} />
+          <% else %>
             <select
               name="task[estimate]"
               class="w-full py-0 px-2 mb-1 rounded-sm"
