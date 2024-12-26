@@ -344,28 +344,30 @@ defmodule PmToolWeb.TaskComponents do
             type="text"
             class="rounded-sm w-full py-0 px-1 mb-1"
           ><%= @task.description %></textarea><br />
-          <select
-            name="task[estimate]"
-            class="w-full py-0 px-2 mb-1 rounded-sm"
-            value={@task.estimate}
-          >
-            <%= for estimate <- Tasks.Task.estimates() do %>
-              <option value={estimate} selected={@task.estimate == estimate}>{estimate}</option>
-            <% end %>
-          </select>
-          <br />
-          <select name="task[status]" class="w-full py-0 px-2 mb-1 rounded-sm" value={@task.status}>
-            <%= for status <- Tasks.Task.statuses() do %>
-              <option value={status} selected={@task.status == status}>{status}</option>
-            <% end %>
-          </select>
-          <br />
-          <select name="task[stage]" class="w-full py-0 px-2 mb-1 rounded-sm" value={@task.stage}>
-            <%= for stage <- Tasks.Task.stages() do %>
-              <option value={stage} selected={@task.stage == stage}>{stage}</option>
-            <% end %>
-          </select>
-          <br />
+          <%= if @save_button_name == "Update" do %>
+            <select
+              name="task[estimate]"
+              class="w-full py-0 px-2 mb-1 rounded-sm"
+              value={@task.estimate}
+            >
+              <%= for estimate <- Tasks.Task.estimates() do %>
+                <option value={estimate} selected={@task.estimate == estimate}>{estimate}</option>
+              <% end %>
+            </select>
+            <br />
+            <select name="task[status]" class="w-full py-0 px-2 mb-1 rounded-sm" value={@task.status}>
+              <%= for status <- Tasks.Task.statuses() do %>
+                <option value={status} selected={@task.status == status}>{status}</option>
+              <% end %>
+            </select>
+            <br />
+            <select name="task[stage]" class="w-full py-0 px-2 mb-1 rounded-sm" value={@task.stage}>
+              <%= for stage <- Tasks.Task.stages() do %>
+                <option value={stage} selected={@task.stage == stage}>{stage}</option>
+              <% end %>
+            </select>
+            <br />
+          <% end %>
           <input type="hidden" name="task[slug]" value={@task.slug} />
           <.live_component
             id={"edit-tags-#{@id}"}
