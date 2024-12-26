@@ -33,7 +33,7 @@ defmodule PmToolWeb.NextTasksComponent do
       <%= if @tasks do %>
         <%= for {index, current_tasks} <- @tasks do %>
           <%= if index == 1 do %>
-            <div class="font-bold text-gray-400 uppercase text-xs mb-1 mt-[-18px] text-right">Next Iteration</div>
+            <div class="font-bold text-gray-400 uppercase text-xs mb-1 mt-[-12px] text-right">Next Iteration</div>
           <% else %>
             <div class="font-bold text-gray-400 uppercase text-xs my-1 text-right">{index} Iterations</div>
           <% end %>
