@@ -44,6 +44,7 @@ defmodule PmToolWeb.TasksLive do
           now_tasks={@now_tasks}
           next_tasks={@next_tasks}
           new_task_id={@new_now_next_task_id}
+          open_tasks={@open_tasks}
           timestamp={@timestamp}
         />
       <% else %>
@@ -53,6 +54,7 @@ defmodule PmToolWeb.TasksLive do
           current_user={@current_user}
           tasks={@now_tasks}
           new_task_id={@new_now_task_id}
+          open_tasks={@open_tasks}
           timestamp={@timestamp}
         />
         <.live_component
@@ -61,6 +63,7 @@ defmodule PmToolWeb.TasksLive do
           current_user={@current_user}
           tasks={@next_tasks}
           new_task_id={@new_next_task_id}
+          open_tasks={@open_tasks}
           timestamp={@timestamp}
         />
       <% end %>
@@ -70,6 +73,7 @@ defmodule PmToolWeb.TasksLive do
         current_user={@current_user}
         tasks={@later_tasks}
         new_task_id={@new_later_task_id}
+        open_tasks={@open_tasks}
         timestamp={@timestamp}
       />
       <%= if @done_tasks |> Map.values() |> List.flatten() |> Enum.count() > 0 do %>
@@ -78,6 +82,7 @@ defmodule PmToolWeb.TasksLive do
           id="done"
           current_user={@current_user}
           tasks={@done_tasks}
+          open_tasks={@open_tasks}
           timestamp={@timestamp}
         />
       <% end %>
@@ -94,8 +99,11 @@ defmodule PmToolWeb.TasksLive do
       socket
       |> assign(open_projects: socket.assigns.user_preferences["open_projects"] || [])
       |> assign(open_tags: socket.assigns.user_preferences["open_tags"] || [])
+      |> assign(open_tasks: socket.assigns.user_preferences["open_tasks"] || [])
       |> assign(open_project_tasks: %{})
       |> assign(open_tag_tasks: %{})
+      |> assign(open_tasks: %{})
+      |> maybe_get_current_task(params)
       |> get_tasks()
       |> assign_new_task_ids()
       |> assign(
@@ -119,6 +127,15 @@ defmodule PmToolWeb.TasksLive do
       end
 
     {:ok, socket}
+  end
+
+  defp maybe_get_current_task(socket, params) do
+    case params["slug"] do
+      nil ->
+        socket
+      slug ->
+        assign(socket, open_tasks: Map.put(socket.assigns.open_tasks, slug, true))
+    end
   end
 
   defp get_projects(socket) do

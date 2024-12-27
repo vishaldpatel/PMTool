@@ -52,6 +52,8 @@ defmodule PmToolWeb.LaterTasksComponent do
               id={"task-#{task.slug}#{@timestamp}"}
               task={task}
               no_move={false}
+              show_task={if @open_tasks[task.slug], do: "hidden", else: "flex"}
+              show_task_edit={if @open_tasks[task.slug], do: "flex", else: "hidden"}
             />
           <% end %>
         </ul>

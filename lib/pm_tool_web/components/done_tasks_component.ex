@@ -53,7 +53,7 @@ defmodule PmToolWeb.DoneTasksComponent do
               <div class="font-bold text-gray-400 uppercase text-xs my-1 text-right">{group}</div>
             <% end %>
           <% end %>
-          <ul phx-hook="Sortable" id={@id}>
+          <ul phx-hook="Sortable" id={"#{@id}-group-#{group}"}>
             <%= for task <- @tasks[group] do %>
               <.live_component
                 module={PmToolWeb.TaskComponents}
@@ -61,6 +61,8 @@ defmodule PmToolWeb.DoneTasksComponent do
                 task={task}
                 no_move={true}
                 actions={false}
+                show_task={if @open_tasks[task.slug], do: "hidden", else: "flex"}
+                show_task_edit={if @open_tasks[task.slug], do: "flex", else: "hidden"}
               />
             <% end %>
           </ul>

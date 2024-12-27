@@ -379,6 +379,9 @@ defmodule PmToolWeb.TaskComponents do
             edit_tags={true}
           />
           <div class="w-full text-right">
+            <a href={"/tasks/#{@task.slug}"} 
+              onclick="event.preventDefault(); navigator.clipboard.writeText(event.target.href).then(() => console.log('Link copied to clipboard'))" 
+              class="float-left my-1 bg-orange-100 hover:bg-orange-200 text-orange-600 text-sm px-2 py-1 rounded">Copy Link</a>
             <button
               type="reset"
               phx-click={

@@ -82,13 +82,15 @@ defmodule PmToolWeb.NowAndNextTasksComponent do
           <% else %>
             <div class="font-bold text-gray-400 uppercase text-xs my-1 text-right">{index} Iterations</div>
           <% end %>
-          <ul phx-hook="Sortable" id={@id}>
+          <ul phx-hook="Sortable" id={"#{@id}-group-#{index}"}>
             <%= for task <- current_tasks do %>
               <.live_component
                 module={PmToolWeb.TaskComponents}
                 id={"task-#{task.slug}#{@timestamp}"}
                 no_move={false}
                 task={task}
+                show_task={if @open_tasks[task.slug], do: "hidden", else: "flex"}
+                show_task_edit={if @open_tasks[task.slug], do: "flex", else: "hidden"}
               />
             <% end %>
           </ul>

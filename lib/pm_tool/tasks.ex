@@ -23,7 +23,7 @@ defmodule PmTool.Tasks do
 
   def list_tasks(%User{} = user) do
     Repo.all(base_list_tasks_query(user))
-    |> separate_tasks_into_stages()
+    |> separate_tasks_into_stages(user)
   end
 
   def list_tasks_for_tag(%User{} = user, tag) do
@@ -32,7 +32,7 @@ defmodule PmTool.Tasks do
         where: ^tag in t.tags
 
     Repo.all(query)
-    |> separate_tasks_into_stages()
+    |> separate_tasks_into_stages(user)
   end
 
   def list_tasks(%User{} = user, project_slug) do
@@ -44,7 +44,7 @@ defmodule PmTool.Tasks do
         order_by: [t.stage, t.task_order]
 
     unsorted_tasks = Repo.all(query)
-    tasks = separate_tasks_into_stages(unsorted_tasks)
+    tasks = separate_tasks_into_stages(unsorted_tasks, user)
     tasks
   end
 
@@ -66,7 +66,24 @@ defmodule PmTool.Tasks do
     # For an individual, we won't need more than 30 tasks
   end
 
-  def separate_tasks_into_stages(unsorted_tasks) do
+  def determine_velocity(%User{} = user) do
+    just_before_midnight = Time.new!(23, 59, 59, 999_999)
+    two_iterations = Date.utc_today() |> Date.add(-7) |> DateTime.new!(just_before_midnight, "Etc/UTC")
+    # last_iteration_end_date = Date.utc_today() |> Date.end_of_week() |> Date.add(-7) |> DateTime.new!(just_before_midnight, "Etc/UTC")
+    # three_iterations_ago_end_date = Date.add(last_iteration_end_date, -21) |> DateTime.new!(just_before_midnight, "Etc/UTC")
+
+    query =
+      from t in Task,
+        where: t.creator_id == ^user.id and 
+          is_nil(t.team_id) and
+          t.status == "Accepted" and
+          t.status_updated_at >= ^two_iterations,
+        select: sum(t.estimate)
+
+    Repo.one(query) || 0
+  end
+
+  def separate_tasks_into_stages(unsorted_tasks, user) do
     # Limit the results until the estimate adds up to 30
     last_period_end_date = Date.utc_today() |> Date.end_of_week() |> Date.add(-7)
     two_period_end_date = Date.add(last_period_end_date, -7)
@@ -79,7 +96,8 @@ defmodule PmTool.Tasks do
     three_period_end = DateTime.new!(three_period_end_date, just_before_midnight, "Etc/UTC")
     earlier_end = DateTime.new!(earlier_end_date, just_before_midnight, "Etc/UTC")
 
-    velocity = 30
+    velocity = round(determine_velocity(user))
+    velocity = if velocity <= 20, do: 20, else: velocity
 
     [_now_estimate, _current_period, tasks] =
       Enum.reduce_while(
