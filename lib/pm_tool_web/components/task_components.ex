@@ -35,9 +35,7 @@ defmodule PmToolWeb.TaskComponents do
   end
 
   def update(assigns, socket) do
-    {:ok, 
-      assign(socket, assigns)
-    }
+    {:ok, assign(socket, assigns)}
   end
 
   def render(assigns) do
@@ -124,11 +122,16 @@ defmodule PmToolWeb.TaskComponents do
           }
           class={"inline-block text-md w-full pl-1 pr-1 text-gray-100 #{@show_task}"}
         >
-          <div class="inline-block just_title text-left flex-auto">{@task.name}
+          <div class="inline-block just_title text-left flex-auto">
+            {@task.name}
             <.live_component
               id={"show-project-tags-#{@id}"}
               module={PmToolWeb.TagsComponent}
-              tags={if @hide_project_tag == true, do: @task.project_tags -- [@project.tag], else: @task.project_tags}
+              tags={
+                if @hide_project_tag == true,
+                  do: @task.project_tags -- [@project.tag],
+                  else: @task.project_tags
+              }
               color="text-gray-200 bg-gray-700 hover:bg-gray-600"
               tag_type="project"
             />
@@ -379,9 +382,13 @@ defmodule PmToolWeb.TaskComponents do
             edit_tags={true}
           />
           <div class="w-full text-right">
-            <a href={"/tasks/#{@task.slug}"} 
-              onclick="event.preventDefault(); navigator.clipboard.writeText(event.target.href).then(() => console.log('Link copied to clipboard'))" 
-              class="float-left my-1 bg-orange-100 hover:bg-orange-200 text-orange-600 text-sm px-2 py-1 rounded">Copy Link</a>
+            <a
+              href={"/tasks/#{@task.slug}"}
+              onclick="event.preventDefault(); navigator.clipboard.writeText(event.target.href).then(() => console.log('Link copied to clipboard'))"
+              class="float-left my-1 bg-orange-100 hover:bg-orange-200 text-orange-600 text-sm px-2 py-1 rounded"
+            >
+              Copy Link
+            </a>
             <button
               type="reset"
               phx-click={

@@ -55,11 +55,13 @@ defmodule PmTool.Projects do
   def update_project(%Project{} = project, attrs) do
     project_changeset = Project.changeset(project, attrs)
     result = Repo.update(project_changeset)
+
     if changed?(project_changeset, :tag) do
       old_tag = project.tag
       new_tag = project_changeset.changes[:tag]
       Tasks.replace_project_tag(old_tag, new_tag)
     end
+
     result
   end
 

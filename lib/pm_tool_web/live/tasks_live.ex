@@ -2,20 +2,30 @@ defmodule PmToolWeb.TasksLive do
   use PmToolWeb, :live_view
 
   alias PmTool.Tasks
+  alias PmTool.Teams
   alias PmTool.Projects
   alias PmTool.Accounts
 
   def render(assigns) do
     ~H"""
     <div id="tasks" class="flex overflow-x-auto h-screen">
-      <.live_component
-        module={PmToolWeb.ProjectsComponent}
-        id="projects"
-        current_user={@current_user}
-        new_project_id={@new_project_id}
-        projects={@projects}
-        open_projects={@open_projects}
-      />
+      <div class="mr-2 text-left w-60 flex-shrink-0">
+        <.live_component
+          module={PmToolWeb.ProjectsComponent}
+          id="projects"
+          current_user={@current_user}
+          new_project_id={@new_project_id}
+          projects={@projects}
+          open_projects={@open_projects}
+        />
+        <.live_component
+          module={PmToolWeb.TeamsComponent}
+          id="teams"
+          current_user={@current_user}
+          new_team_id={@new_team_id}
+          teams={@teams}
+        />
+      </div>
       <%= for project <- Projects.get_projects!(@open_projects) do %>
         <.live_component
           module={PmToolWeb.ProjectTasksComponent}
@@ -108,13 +118,15 @@ defmodule PmToolWeb.TasksLive do
       |> assign_new_task_ids()
       |> assign(
         merge_now_and_next_tasks:
-          case socket.assigns.user_preferences["merge_now_and_next_tasks"] do 
-              false -> false; 
-              _ -> true 
+          case socket.assigns.user_preferences["merge_now_and_next_tasks"] do
+            false -> false
+            _ -> true
           end
       )
       |> get_projects()
       |> assign_new_project_id()
+      |> get_teams()
+      |> assign_new_team_id()
 
     socket =
       case params["slug"] do
@@ -133,9 +145,14 @@ defmodule PmToolWeb.TasksLive do
     case params["slug"] do
       nil ->
         socket
+
       slug ->
         assign(socket, open_tasks: Map.put(socket.assigns.open_tasks, slug, true))
     end
+  end
+
+  defp get_teams(socket) do
+    assign(socket, teams: Teams.list_teams(socket.assigns.current_user))
   end
 
   defp get_projects(socket) do
@@ -154,8 +171,7 @@ defmodule PmToolWeb.TasksLive do
         tag_tasks = Tasks.list_tasks_for_tag(socket.assigns.current_user, tag)
 
         assign(socket,
-          open_tag_tasks:
-            Map.put(socket.assigns.open_tag_tasks, tag, tag_tasks)
+          open_tag_tasks: Map.put(socket.assigns.open_tag_tasks, tag, tag_tasks)
         )
       end)
 
@@ -174,6 +190,15 @@ defmodule PmToolWeb.TasksLive do
       now_tasks: now_tasks,
       next_tasks: next_tasks,
       later_tasks: later_tasks
+    )
+  end
+
+  defp assign_new_team_id(socket) do
+    timestamp = DateTime.to_unix(DateTime.utc_now())
+
+    assign(socket,
+      timestamp: timestamp,
+      new_team_id: "new-team-#{timestamp}"
     )
   end
 
@@ -212,12 +237,24 @@ defmodule PmToolWeb.TasksLive do
      |> get_projects()}
   end
 
+  def handle_info({:new_team_created}, socket) do
+    {:noreply,
+     get_teams(socket)
+     |> assign_new_team_id()}
+  end
+
   def handle_info({:new_task_created}, socket) do
     {:noreply,
      socket
      |> get_tasks()
      |> assign_new_task_ids()
      |> assign_new_project_id()}
+  end
+
+  def handle_info({:team_updated, team}, socket) do
+    {:noreply,
+     socket
+     |> assign(team: team)}
   end
 
   def handle_info({:task_updated, task}, socket) do
@@ -254,8 +291,7 @@ defmodule PmToolWeb.TasksLive do
     {:noreply,
      socket
      |> assign(open_tags: List.delete(socket.assigns.open_tags, tag))
-     |> assign(open_tag_tasks: Map.delete(socket.assigns.open_tag_tasks, tag))
-    }
+     |> assign(open_tag_tasks: Map.delete(socket.assigns.open_tag_tasks, tag))}
   end
 
   defp show_project(socket, project_slug) do
@@ -285,8 +321,7 @@ defmodule PmToolWeb.TasksLive do
     {:noreply,
      socket
      |> assign(open_projects: List.delete(socket.assigns.open_projects, project_slug))
-     |> assign(open_project_tasks: Map.delete(socket.assigns.open_project_tasks, project_slug))
-    }
+     |> assign(open_project_tasks: Map.delete(socket.assigns.open_project_tasks, project_slug))}
   end
 
   def handle_event("show_project_tasks", params, socket) do
@@ -303,9 +338,10 @@ defmodule PmToolWeb.TasksLive do
 
   def handle_event("tag_clicked", params, socket) do
     case params["tag-type"] do
-      "project" -> 
+      "project" ->
         project = Projects.get_project_by_tag!(params["tag"])
         show_project(socket, project.slug)
+
       "task" ->
         show_tasks_with_tag(socket, params["tag"])
     end
@@ -317,6 +353,7 @@ defmodule PmToolWeb.TasksLive do
       "merge_now_and_next_tasks",
       false
     )
+
     {:noreply,
      socket
      |> get_tasks()
@@ -329,6 +366,7 @@ defmodule PmToolWeb.TasksLive do
       "merge_now_and_next_tasks",
       true
     )
+
     {:noreply,
      socket
      |> get_tasks()

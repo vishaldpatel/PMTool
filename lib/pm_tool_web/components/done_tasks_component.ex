@@ -48,7 +48,9 @@ defmodule PmToolWeb.DoneTasksComponent do
         <%= for group <- [:last, :two, :three, :earlier] do %>
           <%= if Enum.count(@tasks[group]) > 0 do %>
             <%= if group == :last do %>
-              <div class="font-bold text-gray-400 uppercase text-xs mb-1 mt-[-18px] text-right">Previous</div>
+              <div class="font-bold text-gray-400 uppercase text-xs mb-1 mt-[-18px] text-right">
+                Previous
+              </div>
             <% else %>
               <div class="font-bold text-gray-400 uppercase text-xs my-1 text-right">{group}</div>
             <% end %>

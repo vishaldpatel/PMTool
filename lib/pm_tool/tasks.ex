@@ -68,16 +68,20 @@ defmodule PmTool.Tasks do
 
   def determine_velocity(%User{} = user) do
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
-    two_iterations = Date.utc_today() |> Date.add(-7) |> DateTime.new!(just_before_midnight, "Etc/UTC")
+
+    two_iterations =
+      Date.utc_today() |> Date.add(-7) |> DateTime.new!(just_before_midnight, "Etc/UTC")
+
     # last_iteration_end_date = Date.utc_today() |> Date.end_of_week() |> Date.add(-7) |> DateTime.new!(just_before_midnight, "Etc/UTC")
     # three_iterations_ago_end_date = Date.add(last_iteration_end_date, -21) |> DateTime.new!(just_before_midnight, "Etc/UTC")
 
     query =
       from t in Task,
-        where: t.creator_id == ^user.id and 
-          is_nil(t.team_id) and
-          t.status == "Accepted" and
-          t.status_updated_at >= ^two_iterations,
+        where:
+          t.creator_id == ^user.id and
+            is_nil(t.team_id) and
+            t.status == "Accepted" and
+            t.status_updated_at >= ^two_iterations,
         select: sum(t.estimate)
 
     Repo.one(query) || 0
@@ -89,7 +93,7 @@ defmodule PmTool.Tasks do
     two_period_end_date = Date.add(last_period_end_date, -7)
     three_period_end_date = Date.add(last_period_end_date, -14)
     earlier_end_date = Date.add(last_period_end_date, -21)
-    
+
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
     last_period_end = DateTime.new!(last_period_end_date, just_before_midnight, "Etc/UTC")
     two_period_end = DateTime.new!(two_period_end_date, just_before_midnight, "Etc/UTC")
@@ -102,7 +106,11 @@ defmodule PmTool.Tasks do
     [_now_estimate, _current_period, tasks] =
       Enum.reduce_while(
         unsorted_tasks,
-        [0, 0, %{Now: [], Next: %{}, Done: %{last: [], two: [], three: [], earlier: []}, Later: []}],
+        [
+          0,
+          0,
+          %{Now: [], Next: %{}, Done: %{last: [], two: [], three: [], earlier: []}, Later: []}
+        ],
         fn task, acc ->
           [total_estimate, current_period, tasks] = acc
           status_updated_at = DateTime.from_naive!(task.status_updated_at, "Etc/UTC")
@@ -113,41 +121,89 @@ defmodule PmTool.Tasks do
                 DateTime.compare(status_updated_at, last_period_end) == :lt ->
               cond do
                 DateTime.compare(status_updated_at, earlier_end) == :lt ->
-                  {:cont, 
-                    [total_estimate, current_period, 
-                    Map.put(tasks, :Done, Map.put(tasks[:Done], :earlier, tasks[:Done][:earlier] ++ [task]))]}
+                  {:cont,
+                   [
+                     total_estimate,
+                     current_period,
+                     Map.put(
+                       tasks,
+                       :Done,
+                       Map.put(tasks[:Done], :earlier, tasks[:Done][:earlier] ++ [task])
+                     )
+                   ]}
+
                 DateTime.compare(status_updated_at, three_period_end) == :lt ->
-                  {:cont, 
-                    [total_estimate, current_period,
-                    Map.put(tasks, :Done, Map.put(tasks[:Done], :three, tasks[:Done][:three] ++ [task]))]}
+                  {:cont,
+                   [
+                     total_estimate,
+                     current_period,
+                     Map.put(
+                       tasks,
+                       :Done,
+                       Map.put(tasks[:Done], :three, tasks[:Done][:three] ++ [task])
+                     )
+                   ]}
+
                 DateTime.compare(status_updated_at, two_period_end) == :lt ->
-                  {:cont, 
-                    [total_estimate, current_period,
-                    Map.put(tasks, :Done, Map.put(tasks[:Done], :two, tasks[:Done][:two] ++ [task]))]}
+                  {:cont,
+                   [
+                     total_estimate,
+                     current_period,
+                     Map.put(
+                       tasks,
+                       :Done,
+                       Map.put(tasks[:Done], :two, tasks[:Done][:two] ++ [task])
+                     )
+                   ]}
+
                 true ->
-                  {:cont, [total_estimate, current_period, 
-                    Map.put(tasks, :Done, Map.put(tasks[:Done], :last, tasks[:Done][:last] ++ [task]))]}
+                  {:cont,
+                   [
+                     total_estimate,
+                     current_period,
+                     Map.put(
+                       tasks,
+                       :Done,
+                       Map.put(tasks[:Done], :last, tasks[:Done][:last] ++ [task])
+                     )
+                   ]}
               end
 
             task.stage == "Later" ->
-              {:cont, [total_estimate, current_period, Map.put(tasks, :Later, tasks[:Later] ++ [task])]}
+              {:cont,
+               [total_estimate, current_period, Map.put(tasks, :Later, tasks[:Later] ++ [task])]}
 
-            total_estimate + task.estimate <= velocity or 
-              (task.status != "Unstarted" and task.status != "Unappraised") ->
-              {:cont, [total_estimate + task.estimate, current_period, %{tasks | Now: tasks[:Now] ++ [task]}]}
+            total_estimate + task.estimate <= velocity or
+                (task.status != "Unstarted" and task.status != "Unappraised") ->
+              {:cont,
+               [
+                 total_estimate + task.estimate,
+                 current_period,
+                 %{tasks | Now: tasks[:Now] ++ [task]}
+               ]}
+
             true ->
-              current_period = case total_estimate + task.estimate > velocity * (current_period + 1) do
-                true ->
-                  current_period + 1
-                false ->
-                  current_period
-              end
-              tasks = case tasks[:Next][current_period] do
-                nil ->
-                  Map.put(tasks, :Next, Map.put(tasks[:Next], current_period, [task]))
-                current_period_tasks ->
-                  Map.put(tasks, :Next, Map.put(tasks[:Next], current_period, current_period_tasks ++ [task]))
-              end
+              current_period =
+                case total_estimate + task.estimate > velocity * (current_period + 1) do
+                  true ->
+                    current_period + 1
+
+                  false ->
+                    current_period
+                end
+
+              tasks =
+                case tasks[:Next][current_period] do
+                  nil ->
+                    Map.put(tasks, :Next, Map.put(tasks[:Next], current_period, [task]))
+
+                  current_period_tasks ->
+                    Map.put(
+                      tasks,
+                      :Next,
+                      Map.put(tasks[:Next], current_period, current_period_tasks ++ [task])
+                    )
+                end
 
               {:cont, [total_estimate + task.estimate, current_period, tasks]}
           end
@@ -240,10 +296,13 @@ defmodule PmTool.Tasks do
   def replace_project_tag(old_project_tag, new_project_tag) do
     query = from t in Task, where: ^old_project_tag in t.project_tags
     tasks = Repo.all(query)
+
     Enum.each(
-      tasks, 
-      fn task -> 
-        update_task(task, %{"project_tags" => (task.project_tags -- [old_project_tag]) ++ [new_project_tag]})
+      tasks,
+      fn task ->
+        update_task(task, %{
+          "project_tags" => (task.project_tags -- [old_project_tag]) ++ [new_project_tag]
+        })
       end
     )
   end

@@ -13,7 +13,7 @@ defmodule PmTool.Teams do
   # Be able to find teams for which
   # the current uesr has a membership
   # and also load their role
-  def list_teams_for(%User{} = user) do
+  def list_teams(%User{} = user) do
     query =
       from t in Team,
         join: tm in TeamMember,
@@ -23,6 +23,7 @@ defmodule PmTool.Teams do
         where: u.id == ^user.id
 
     Repo.all(query)
+    |> Repo.preload([:team_members, :owner])
   end
 
   # List team members for a team along with their roles
@@ -37,10 +38,19 @@ defmodule PmTool.Teams do
   end
 
   # Be able to create a Team
-  def create_team(attrs \\ %{}) do
-    %Team{}
+  def create_team_for(%User{} = user, attrs \\ %{}) do
+    result = %Team{}
     |> Team.changeset(attrs)
     |> Repo.insert()
+
+    case result do
+      {:ok, team} ->
+        case create_team_member(team, user, "owner") do
+          {:ok, _} -> {:ok, team}
+          {:error, changeset} -> {:error, changeset}
+        end
+      {:error, changeset} -> {:error, changeset}
+    end
   end
 
   # Be able to get a Team
@@ -60,14 +70,20 @@ defmodule PmTool.Teams do
   end
 
   # Add a user to a team
-  def add_user_to_team(%Team{} = team, %User{} = user, role \\ "member") do
+  def create_team_member(team_member_params) do
     %TeamMember{}
-    |> TeamMember.changeset(%{team_id: team.id, user_id: user.id, role: role})
+    |> TeamMember.changeset(team_member_params)
+    |> Repo.insert()
+  end
+
+  def create_team_member(%Team{} = team, %User{} = user, role \\ "member") do
+    %TeamMember{}
+    |> TeamMember.changeset(%{team_id: team.id, user_id: user.id, role: role, email: user.email, name: user.name})
     |> Repo.insert()
   end
 
   # Remove a user from a team
-  def remove_user_from_team(%TeamMember{} = team_member) do
+  def remove_team_member(%TeamMember{} = team_member) do
     Repo.delete(team_member)
   end
 end

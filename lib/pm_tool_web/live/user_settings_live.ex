@@ -12,6 +12,14 @@ defmodule PmToolWeb.UserSettingsLive do
 
     <div class="space-y-12 divide-y">
       <div>
+        <.simple_form for={@name_form} id="name_form" phx-submit="update_name">
+          <.input field={@name_form[:name]} type="text" label="Name" required />
+          <:actions>
+            <.button phx-disable-with="Changing...">Change Name</.button>
+          </:actions>
+        </.simple_form>
+      </div>
+      <div>
         <.simple_form
           for={@email_form}
           id="email_form"
@@ -88,6 +96,7 @@ defmodule PmToolWeb.UserSettingsLive do
 
   def mount(_params, _session, socket) do
     user = socket.assigns.current_user
+    name_changeset = Accounts.change_user_name(user)
     email_changeset = Accounts.change_user_email(user)
     password_changeset = Accounts.change_user_password(user)
 
@@ -96,6 +105,7 @@ defmodule PmToolWeb.UserSettingsLive do
       |> assign(:current_password, nil)
       |> assign(:email_form_current_password, nil)
       |> assign(:current_email, user.email)
+      |> assign(:name_form, to_form(name_changeset))
       |> assign(:email_form, to_form(email_changeset))
       |> assign(:password_form, to_form(password_changeset))
       |> assign(:trigger_submit, false)
@@ -113,6 +123,14 @@ defmodule PmToolWeb.UserSettingsLive do
       |> to_form()
 
     {:noreply, assign(socket, email_form: email_form, email_form_current_password: password)}
+  end
+
+  def handle_event("update_name", params, socket) do
+    %{"user" => user_params} = params
+    user = socket.assigns.current_user
+
+    Accounts.update_user_name(user, user_params)
+    {:noreply, socket}
   end
 
   def handle_event("update_email", params, socket) do

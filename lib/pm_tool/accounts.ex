@@ -95,6 +95,10 @@ defmodule PmTool.Accounts do
 
   ## Settings
 
+  def change_user_name(user, attrs \\ %{}) do
+    User.name_changeset(user, attrs)
+  end
+
   @doc """
   Returns an `%Ecto.Changeset{}` for changing the user email.
 
@@ -126,6 +130,12 @@ defmodule PmTool.Accounts do
     |> User.email_changeset(attrs)
     |> User.validate_current_password(password)
     |> Ecto.Changeset.apply_action(:update)
+  end
+
+  def update_user_name(user, attrs \\ %{}) do
+    user
+    |> User.name_changeset(attrs)
+    |> Repo.update()
   end
 
   @doc """
@@ -316,16 +326,24 @@ defmodule PmTool.Accounts do
 
   def set_preference(%User{} = user, attr_name, value) do
     user_preferences_query =
-      from p in UserPreferences, 
+      from p in UserPreferences,
         where: p.user_id == ^user.id
 
     user_preferences = Repo.one(user_preferences_query)
+
     case user_preferences do
-      nil -> 
-        UserPreferences.changeset(%UserPreferences{}, %{user_id: user.id, preferences: %{attr_name => value}})
+      nil ->
+        UserPreferences.changeset(%UserPreferences{}, %{
+          user_id: user.id,
+          preferences: %{attr_name => value}
+        })
         |> Repo.insert!()
+
       prefs ->
-        UserPreferences.changeset(prefs, %{user_id: user.id, preferences: Map.put(prefs.preferences, attr_name, value)})
+        UserPreferences.changeset(prefs, %{
+          user_id: user.id,
+          preferences: Map.put(prefs.preferences, attr_name, value)
+        })
         |> Repo.update!()
     end
   end

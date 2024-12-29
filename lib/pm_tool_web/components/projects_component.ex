@@ -7,7 +7,7 @@ defmodule PmToolWeb.ProjectsComponent do
 
   def render(assigns) do
     ~H"""
-    <div class="mr-2 text-left w-60 flex-shrink-0">
+    <div>
       <button
         class="font-bold rounded"
         phx-click={JS.toggle_class("hidden", to: "#edit-" <> @new_project_id)}

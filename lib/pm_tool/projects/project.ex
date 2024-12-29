@@ -9,7 +9,7 @@ defmodule PmTool.Projects.Project do
     field :slug, :string
     field :tag, :string
     field :tags, {:array, :string}
-    
+
     belongs_to :creator, PmTool.Accounts.User
     many_to_many :teams, PmTool.Teams.Team, join_through: PmTool.Projects.TeamProject
 

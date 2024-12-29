@@ -81,6 +81,7 @@ defmodule PmTool.Tasks.Task do
       case Map.fetch(attrs, "tags") do
         {:ok, _tags} ->
           changeset
+
         :error ->
           put_change(changeset, :tags, [])
       end
@@ -94,6 +95,7 @@ defmodule PmTool.Tasks.Task do
       case Map.fetch(attrs, "project_tags") do
         {:ok, _tags} ->
           changeset
+
         :error ->
           put_change(changeset, :project_tags, [])
       end
@@ -155,10 +157,13 @@ defmodule PmTool.Tasks.Task do
     cond do
       get_field(changeset, :id) == nil and get_field(changeset, :status) == "Unappraised" ->
         changeset
+
       changed?(changeset, :estimate) ->
         put_change(changeset, :status, "Unstarted")
+
       get_field(changeset, :status) == nil ->
         put_change(changeset, :status, "Unappraised")
+
       true ->
         changeset
     end

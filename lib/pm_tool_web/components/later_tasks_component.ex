@@ -8,7 +8,6 @@ defmodule PmToolWeb.LaterTasksComponent do
   def render(assigns) do
     ~H"""
     <div class="mr-2 text-left w-80 flex-shrink-0">
-
       <button
         class="font-bold rounded"
         phx-click={JS.toggle_class("hidden", to: "#edit-#{@new_task_id}")}

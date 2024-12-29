@@ -4,11 +4,7 @@ defmodule PmToolWeb.TagTasksComponent do
   def render(assigns) do
     ~H"""
     <div class="mr-2 text-left w-80 flex-shrink-0">
-      <button
-        class="font-bold rounded"
-        phx-click="hide_tag_tasks"
-        phx-value-tag={@tag}
-      >
+      <button class="font-bold rounded" phx-click="hide_tag_tasks" phx-value-tag={@tag}>
         <svg
           class="h-6 w-6 text-orange-500"
           viewBox="0 0 24 24"
