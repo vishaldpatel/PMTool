@@ -30,6 +30,7 @@ defmodule PmToolWeb.TeamsComponent do
               id={"team-#{team.slug}"}
               current_user={@current_user}
               team={team}
+              is_current={@current_team != nil and @current_team.slug == team.slug}
             />
           <% end %>
         </ul>

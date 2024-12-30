@@ -62,6 +62,7 @@ defmodule PmToolWeb.LaterTasksComponent do
         id={@new_task_id}
         current_user={@current_user}
         task={%Task{estimate: 1, stage: "Later", status: "Unappraised"}}
+        current_team={@current_team}
       />
     </div>
     """

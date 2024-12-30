@@ -16,10 +16,10 @@ defmodule PmToolWeb.TeamComponent do
     {:ok,
      assign(socket,
        team: %Team{},
-       open_teams: [],
        actions: true,
        show_team: "flex",
-       show_team_edit: "hidden"
+       show_team_edit: "hidden",
+       is_current: false
      )}
   end
 
@@ -83,10 +83,16 @@ defmodule PmToolWeb.TeamComponent do
   def handle_event("create_team_member", %{"team_member" => team_member_params}, socket) do
     team = Teams.get_team_by_slug!(team_member_params["team_slug"])
 
-    team_member_params
-    |> Map.put("role", "member")
-    |> Map.put("team_id", team.id)
-    |> Teams.create_team_member()
+    result =
+      team_member_params
+      |> Map.put("role", "member")
+      |> Map.put("team_id", team.id)
+      |> Teams.create_team_member()
+
+    case result do
+      {:ok, _} ->
+        send(self(), {:new_team_member_created})
+    end
 
     {:noreply, socket}
   end
@@ -106,9 +112,17 @@ defmodule PmToolWeb.TeamComponent do
   end
 
   def show_team(assigns) do
+    team_class =
+    if assigns.is_current do
+      "inline-block cursor-pointer border border-gray-500 text-right rounded bold w-60 text-gray-700 bg-orange-300 hover:bg-orange-200"
+    else
+      "inline-block cursor-pointer border border-gray-500 text-right rounded bold w-60 text-gray-100 bg-gray-600 hover:bg-gray-500"
+    end
+    assigns = assign(assigns, :team_class, team_class)
+
     ~H"""
     <li class="text-left mt-0.5">
-      <div class="inline-block cursor-pointer border border-gray-500 text-right rounded bold w-60 bg-gray-600 hover:bg-gray-500">
+      <div class={@team_class}>
         <div>
           <div
             id={"show-#{@id}"}
@@ -118,7 +132,7 @@ defmodule PmToolWeb.TeamComponent do
               |> JS.toggle_class("hidden", to: "#edit-#{@id}")
               |> JS.toggle_class("flex", to: "#edit-#{@id}")
             }
-            class={"inline-block text-md w-full pl-1 pr-1 pt-0.5 text-gray-100 #{@show_team}"}
+            class={"inline-block text-md w-full pl-1 pr-1 pt-0.5 #{@show_team}"}
           >
             <div class="inline-block just_title text-left flex-auto">{@team.name}</div>
             <div class="inline-block flex-none">
@@ -137,14 +151,37 @@ defmodule PmToolWeb.TeamComponent do
                   />
                 </svg>
               </button>
-              <%= unless Enum.member?(@open_teams, @team.slug) do %>
+              <%= if @is_current == true do %>
                 <button
-                  phx-click="show_team_tasks"
+                  class="font-bold rounded my-1"
+                  phx-click="unset_current_team"
+                >
+                  <svg
+                    class="h-4 w-4 text-orange-700 bg-orange-200 hover:bg-orange-300 rounded border-0"
+                    <svg
+                    viewBox="0 0 24 24"
+                    width="24"
+                    height="24"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                  </svg>
+                </button>
+              <% else %>
+                <button
+                  phx-click="set_current_team"
                   phx-value-team_slug={@team.slug}
                   class="font-bold rounded my-1"
                 >
                   <svg
-                    class="h-4 w-4 text-orange-500 bg-gray-600 hover:bg-gray-500 rounded border-0"
+                    class="h-4 w-4 text-orange-200 bg-orange-700 hover:bg-orange-500 rounded border-0"
                     <svg
                     viewBox="0 0 24 24"
                     width="24"
@@ -187,7 +224,7 @@ defmodule PmToolWeb.TeamComponent do
                   class="font-bold rounded my-1"
                 >
                   <svg
-                    class="h-4 w-4 text-orange-500 bg-gray-600 hover:bg-gray-500 rounded border-0"
+                    class="h-4 w-4 text-orange-200 bg-orange-700 hover:bg-orange-500 rounded border-0"
                     <svg
                     viewBox="0 0 24 24"
                     width="24"
@@ -285,12 +322,13 @@ defmodule PmToolWeb.TeamComponent do
             name="team[name]"
             type="text"
             value={@team.name}
-            class="rounded-sm w-full py-0 px-1 mb-1"
+            class="rounded-sm w-full py-0 px-1 mb-1 text-gray-900"
           /><br />
           <input type="hidden" name="team[slug]" value={@team.slug} />
           <div class="w-full text-right">
             <button
               type="reset"
+              class="text-gray-900"
               phx-click={
                 JS.toggle_class("flex", to: "#edit-#{@id}")
                 |> JS.toggle_class("hidden", to: "#edit-#{@id}")

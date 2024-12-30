@@ -18,9 +18,7 @@ defmodule PmTool.Teams do
       from t in Team,
         join: tm in TeamMember,
         on: tm.team_id == t.id,
-        join: u in User,
-        on: u.id == tm.user_id,
-        where: u.id == ^user.id
+        where: tm.email == ^user.email
 
     Repo.all(query)
     |> Repo.preload([:team_members, :owner])

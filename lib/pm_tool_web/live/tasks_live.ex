@@ -3,6 +3,7 @@ defmodule PmToolWeb.TasksLive do
 
   alias PmTool.Tasks
   alias PmTool.Teams
+  alias PmTool.Teams.Team
   alias PmTool.Projects
   alias PmTool.Accounts
 
@@ -24,6 +25,7 @@ defmodule PmToolWeb.TasksLive do
           current_user={@current_user}
           new_team_id={@new_team_id}
           teams={@teams}
+          current_team={@current_team}
         />
       </div>
       <%= for project <- Projects.get_projects!(@open_projects) do %>
@@ -56,6 +58,7 @@ defmodule PmToolWeb.TasksLive do
           new_task_id={@new_now_next_task_id}
           open_tasks={@open_tasks}
           timestamp={@timestamp}
+          current_team={@current_team}
         />
       <% else %>
         <.live_component
@@ -66,6 +69,7 @@ defmodule PmToolWeb.TasksLive do
           new_task_id={@new_now_task_id}
           open_tasks={@open_tasks}
           timestamp={@timestamp}
+          current_team={@current_team}
         />
         <.live_component
           module={PmToolWeb.NextTasksComponent}
@@ -75,6 +79,7 @@ defmodule PmToolWeb.TasksLive do
           new_task_id={@new_next_task_id}
           open_tasks={@open_tasks}
           timestamp={@timestamp}
+          current_team={@current_team}
         />
       <% end %>
       <.live_component
@@ -85,6 +90,7 @@ defmodule PmToolWeb.TasksLive do
         new_task_id={@new_later_task_id}
         open_tasks={@open_tasks}
         timestamp={@timestamp}
+        current_team={@current_team}
       />
       <%= if @done_tasks |> Map.values() |> List.flatten() |> Enum.count() > 0 do %>
         <.live_component
@@ -113,6 +119,8 @@ defmodule PmToolWeb.TasksLive do
       |> assign(open_project_tasks: %{})
       |> assign(open_tag_tasks: %{})
       |> assign(open_tasks: %{})
+      |> assign(current_team_id: socket.assigns.user_preferences["current_team_id"] || nil)
+      |> maybe_get_current_team()
       |> maybe_get_current_task(params)
       |> get_tasks()
       |> assign_new_task_ids()
@@ -141,6 +149,16 @@ defmodule PmToolWeb.TasksLive do
     {:ok, socket}
   end
 
+  defp maybe_get_current_team(socket) do
+    case socket.assigns.current_team_id do
+      nil ->
+        assign(socket, current_team: nil)
+
+      team_id ->
+        assign(socket, current_team: Teams.get_team!(team_id))
+    end
+  end
+
   defp maybe_get_current_task(socket, params) do
     case params["slug"] do
       nil ->
@@ -160,7 +178,11 @@ defmodule PmToolWeb.TasksLive do
   end
 
   defp get_tasks(socket) do
-    tasks = Tasks.list_tasks(socket.assigns.current_user)
+    tasks =
+      case socket.assigns.current_team do
+        current_team = %Team{} -> Tasks.list_tasks(current_team)
+        _ -> Tasks.list_tasks(socket.assigns.current_user)
+      end
     now_tasks = tasks[:Now]
     next_tasks = tasks[:Next]
     later_tasks = tasks[:Later]
@@ -235,6 +257,10 @@ defmodule PmToolWeb.TasksLive do
      |> assign(project: project)
      |> get_tasks()
      |> get_projects()}
+  end
+
+  def handle_info({:new_team_member_created}, socket) do
+    {:noreply, get_teams(socket)}
   end
 
   def handle_info({:new_team_created}, socket) do
@@ -322,6 +348,33 @@ defmodule PmToolWeb.TasksLive do
      socket
      |> assign(open_projects: List.delete(socket.assigns.open_projects, project_slug))
      |> assign(open_project_tasks: Map.delete(socket.assigns.open_project_tasks, project_slug))}
+  end
+
+  def handle_event("unset_current_team", _params, socket) do
+    Accounts.set_preference(
+      socket.assigns.current_user,
+      "current_team_id",
+      nil
+    )
+    {:noreply, 
+      socket 
+      |> assign(current_team: nil) 
+      |> assign(current_team_id: nil) 
+      |> get_tasks()}
+  end
+
+  def handle_event("set_current_team", params, socket) do
+    team = Teams.get_team_by_slug!(params["team_slug"])
+    Accounts.set_preference(
+      socket.assigns.current_user,
+      "current_team_id",
+      team.id
+    )
+    {:noreply, 
+      socket 
+      |> assign(current_team: team) 
+      |> assign(current_team_id: team.id) 
+      |> get_tasks()}
   end
 
   def handle_event("show_project_tasks", params, socket) do

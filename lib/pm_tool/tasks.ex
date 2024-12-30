@@ -26,13 +26,20 @@ defmodule PmTool.Tasks do
     |> separate_tasks_into_stages(user)
   end
 
+  def list_tasks(%Team{} = team) do
+    velocity = determine_velocity(team)
+    Repo.all(base_list_tasks_query(team))
+    |> separate_tasks_into_stages(velocity)
+  end
+
   def list_tasks_for_tag(%User{} = user, tag) do
     query =
       from t in base_list_tasks_query(user),
         where: ^tag in t.tags
 
+    velocity = determine_velocity(user)
     Repo.all(query)
-    |> separate_tasks_into_stages(user)
+    |> separate_tasks_into_stages(velocity)
   end
 
   def list_tasks(%User{} = user, project_slug) do
@@ -43,12 +50,30 @@ defmodule PmTool.Tasks do
         where: ^project.tag in t.project_tags,
         order_by: [t.stage, t.task_order]
 
-    unsorted_tasks = Repo.all(query)
-    tasks = separate_tasks_into_stages(unsorted_tasks, user)
-    tasks
+    velocity = determine_velocity(user)
+    Repo.all(query)
+    |> separate_tasks_into_stages(velocity)
   end
 
-  defp base_list_tasks_query(user) do
+  defp base_list_tasks_query(%Team{} = team) do
+    from t in Task,
+      where: t.team_id == ^team.id,
+      order_by: [
+        desc: t.status == "Accepted",
+        desc: t.status == "Closed",
+        desc: t.status == "Delivered",
+        desc: t.status == "Finished",
+        desc: t.status == "Started",
+        desc: t.status == "Rejected",
+        desc: t.status == "Unstarted",
+        desc: t.status == "Unappraised",
+        asc: t.task_order
+      ]
+
+    # For an individual, we won't need more than 30 tasks
+  end
+
+  defp base_list_tasks_query(%User{} = user) do
     from t in Task,
       where: t.creator_id == ^user.id and is_nil(t.team_id),
       order_by: [
@@ -66,14 +91,25 @@ defmodule PmTool.Tasks do
     # For an individual, we won't need more than 30 tasks
   end
 
+  def determine_velocity(%Team{} = team) do
+    just_before_midnight = Time.new!(23, 59, 59, 999_999)
+    two_iterations =
+      Date.utc_today() |> Date.add(-7) |> DateTime.new!(just_before_midnight, "Etc/UTC")
+    query = from t in Task, 
+      where: t.team_id == ^team.id and 
+        t.status == "Accepted" and
+        t.status_updated_at >= ^two_iterations,
+      select: sum(t.estimate)
+    velocity = Repo.one(query) || 0
+    velocity = round(velocity)
+    if velocity <= 20, do: 20, else: velocity
+  end
+
   def determine_velocity(%User{} = user) do
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
 
     two_iterations =
       Date.utc_today() |> Date.add(-7) |> DateTime.new!(just_before_midnight, "Etc/UTC")
-
-    # last_iteration_end_date = Date.utc_today() |> Date.end_of_week() |> Date.add(-7) |> DateTime.new!(just_before_midnight, "Etc/UTC")
-    # three_iterations_ago_end_date = Date.add(last_iteration_end_date, -21) |> DateTime.new!(just_before_midnight, "Etc/UTC")
 
     query =
       from t in Task,
@@ -84,10 +120,12 @@ defmodule PmTool.Tasks do
             t.status_updated_at >= ^two_iterations,
         select: sum(t.estimate)
 
-    Repo.one(query) || 0
+    velocity = Repo.one(query) || 0
+    velocity = round(velocity)
+    if velocity <= 20, do: 20, else: velocity
   end
 
-  def separate_tasks_into_stages(unsorted_tasks, user) do
+  def separate_tasks_into_stages(unsorted_tasks, velocity) do
     # Limit the results until the estimate adds up to 30
     last_period_end_date = Date.utc_today() |> Date.end_of_week() |> Date.add(-7)
     two_period_end_date = Date.add(last_period_end_date, -7)
@@ -99,9 +137,6 @@ defmodule PmTool.Tasks do
     two_period_end = DateTime.new!(two_period_end_date, just_before_midnight, "Etc/UTC")
     three_period_end = DateTime.new!(three_period_end_date, just_before_midnight, "Etc/UTC")
     earlier_end = DateTime.new!(earlier_end_date, just_before_midnight, "Etc/UTC")
-
-    velocity = round(determine_velocity(user))
-    velocity = if velocity <= 20, do: 20, else: velocity
 
     [_now_estimate, _current_period, tasks] =
       Enum.reduce_while(

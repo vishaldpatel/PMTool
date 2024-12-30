@@ -5,6 +5,7 @@ defmodule PmToolWeb.TaskComponents do
   alias PmTool.Tasks
   alias PmTool.Tasks.Task
   alias PmTool.Projects.Project
+  alias PmTool.Teams.Team
 
   @status_colors %{
     "Unappraised" => "bg-gray-600 hover:bg-gray-500",
@@ -30,7 +31,8 @@ defmodule PmToolWeb.TaskComponents do
        actions: true,
        show_task: "flex",
        show_task_edit: "hidden",
-       hide_project_tag: false
+       hide_project_tag: false,
+       current_team: nil
      )}
   end
 
@@ -74,10 +76,19 @@ defmodule PmToolWeb.TaskComponents do
 
   def handle_event("create_task", %{"task" => task_params}, socket) do
     task_params =
-      %{
-        "creator_id" => socket.assigns.current_user.id,
-        "owner_id" => socket.assigns.current_user.id
-      }
+      case socket.assigns.current_team do
+        nil ->
+          %{
+            "creator_id" => socket.assigns.current_user.id,
+            "owner_id" => socket.assigns.current_user.id
+          }
+        %Team{} = team ->
+          %{
+            "creator_id" => socket.assigns.current_user.id,
+            "team_id" => team.id,
+            "owner_id" => socket.assigns.current_user.id
+          }
+      end
       |> Enum.into(task_params)
 
     case Tasks.create_task(task_params) do
@@ -90,7 +101,7 @@ defmodule PmToolWeb.TaskComponents do
            show_task_edit: "hidden"
          )}
 
-      {:error, _changeset} ->
+      {:error, changeset} ->
         {:noreply,
          assign(socket,
            show_task: "hidden",
