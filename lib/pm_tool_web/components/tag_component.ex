@@ -9,7 +9,8 @@ defmodule PmToolWeb.TagComponent do
         tag: "",
         color: "text-cyan-200 bg-cyan-800 hover:bg-zinc-700",
         edit_tag: false,
-        tag_type: "project"
+        tag_type: "project",
+        tag_slug: nil
       )
     }
   end
@@ -36,6 +37,7 @@ defmodule PmToolWeb.TagComponent do
         phx-click="tag_clicked"
         phx-value-tag={@tag}
         phx-value-tag-type={@tag_type}
+        phx-value-tag-slug={@tag_slug}
         type="button"
         class={
           "mr-[3px] mb-1 inline-flex items-center px-1 text-xs font-xs italic #{@color} align-text-top italic" 

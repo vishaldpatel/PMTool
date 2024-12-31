@@ -141,6 +141,8 @@ defmodule PmToolWeb.TaskComponents do
                 module={PmToolWeb.TagComponent}
                 color="text-gray-900 bg-orange-400 hover:bg-orange-300"
                 tag={@task.team.name}
+                tag_type="team"
+                tag_slug={@task.team.slug}
               />
             <% end %>
             <.live_component

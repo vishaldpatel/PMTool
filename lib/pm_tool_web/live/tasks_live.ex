@@ -375,8 +375,8 @@ defmodule PmToolWeb.TasksLive do
       |> get_tasks()}
   end
 
-  def handle_event("set_current_team", params, socket) do
-    team = Teams.get_team_by_slug!(params["team_slug"])
+  defp set_current_team(socket, slug) do
+    team = Teams.get_team_by_slug!(slug)
     Accounts.set_preference(
       socket.assigns.current_user,
       "current_team_id",
@@ -387,6 +387,10 @@ defmodule PmToolWeb.TasksLive do
       |> assign(current_team: team) 
       |> assign(current_team_id: team.id) 
       |> get_tasks()}
+  end
+
+  def handle_event("set_current_team", params, socket) do
+    set_current_team(socket, params["team_slug"])
   end
 
   def handle_event("show_project_tasks", params, socket) do
@@ -403,6 +407,8 @@ defmodule PmToolWeb.TasksLive do
 
   def handle_event("tag_clicked", params, socket) do
     case params["tag-type"] do
+      "team" ->
+        set_current_team(socket, params["tag-slug"])
       "project" ->
         project = Projects.get_project_by_tag!(params["tag"])
         show_project(socket, project.slug)
