@@ -55,7 +55,7 @@ defmodule PmTool.Tasks do
     |> separate_tasks_into_stages(velocity)
   end
 
-  defp base_list_tasks_query() do
+  def base_list_tasks_query() do
     from t in Task,
       order_by: [
         desc: t.status == "Accepted",
@@ -70,7 +70,7 @@ defmodule PmTool.Tasks do
       ]
   end
 
-  defp base_list_tasks_query(%Team{} = team) do
+  def base_list_tasks_query(%Team{} = team) do
     from t in Task,
       where: t.team_id == ^team.id,
       order_by: [
@@ -86,7 +86,7 @@ defmodule PmTool.Tasks do
       ]
   end
 
-  defp base_list_tasks_query(%User{} = user) do
+  def base_list_tasks_query(%User{} = user) do
     from t in Task,
       where: t.creator_id == ^user.id and is_nil(t.team_id),
       order_by: [

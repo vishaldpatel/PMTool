@@ -7,25 +7,29 @@ defmodule PmTool.Projects do
   import Ecto.Changeset
   alias PmTool.Repo
   alias PmTool.Tasks
+  alias PmTool.Teams
 
   alias PmTool.Projects.Project
   alias PmTool.Projects.TeamProject
   alias PmTool.Teams.Team
   alias PmTool.Accounts.User
 
-  def list_projects_for(%Team{} = team) do
-    query =
-      from p in Project,
-        join: t in assoc(p, :team_projects),
-        where: t.team_id == ^team.id
+  def list_project_tags_for_team_ids(teams) do
+    project_tags_query = 
+      from t in Tasks.Task,
+        where: t.team_id in ^teams,
+        select: t.project_tags
 
-    Repo.all(query)
+    project_tags = Repo.all(project_tags_query) |> List.flatten()
   end
 
   def list_projects_for(%User{} = user) do
+    teams = Teams.list_teams(user)
+    project_tags = list_project_tags_for_team_ids(Enum.map(teams, & &1.id))
+
     query =
       from p in Project,
-        where: p.creator_id == ^user.id
+        where: p.creator_id == ^user.id or p.tag in ^project_tags
 
     Repo.all(query)
   end
