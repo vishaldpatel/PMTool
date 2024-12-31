@@ -344,6 +344,7 @@ defmodule PmTool.Tasks do
 
   # Be able to update a Task
   def update_task(%Task{} = task, attrs) do
+    IO.inspect(attrs)
     task
     |> Task.changeset(attrs)
     |> Repo.update()

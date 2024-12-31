@@ -101,7 +101,7 @@ defmodule PmToolWeb.TaskComponents do
            show_task_edit: "hidden"
          )}
 
-      {:error, changeset} ->
+      {:error, _changeset} ->
         {:noreply,
          assign(socket,
            show_task: "hidden",

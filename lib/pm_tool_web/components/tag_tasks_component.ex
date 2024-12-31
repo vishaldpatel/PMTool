@@ -53,19 +53,30 @@ defmodule PmToolWeb.TagTasksComponent do
       >
         <input type="hidden" name="tag" class="tag" value={@tag} />
         <h3 class="font-bold text-right text-sm px-2 text-gray-500">Done</h3>
-        <ul>
-          <%= for task <- @tasks[:Done] do %>
-            <.live_component
-              module={PmToolWeb.TaskComponents}
-              id={"tag-#{@tag}-task-#{task.slug}#{@timestamp}"}
-              tag={@tag}
-              task={task}
-              no_move={true}
-              actions={false}
-              hide_tag_tag={true}
-            />
+        <%= for group <- [:last, :two, :three, :earlier] do %>
+          <%= if Enum.count(@tasks[:Done][group]) > 0 do %>
+            <%= if group == :last do %>
+              <div class="font-bold text-gray-400 uppercase text-xs mb-1 mt-[-18px] text-right">
+                Previous
+              </div>
+            <% else %>
+              <div class="font-bold text-gray-400 uppercase text-xs my-1 text-right">{group}</div>
+            <% end %>
           <% end %>
-        </ul>
+          <ul phx-hook="Sortable" id={"#{@id}-group-#{group}"}>
+            <%= for task <- @tasks[:Done][group] do %>
+              <.live_component
+                module={PmToolWeb.TaskComponents}
+                id={"task-#{task.slug}#{@timestamp}"}
+                task={task}
+                no_move={true}
+                actions={false}
+                show_task={if @open_tasks[task.slug], do: "hidden", else: "flex"}
+                show_task_edit={if @open_tasks[task.slug], do: "flex", else: "hidden"}
+              />
+            <% end %>
+          </ul>
+        <% end %>
         <h3 class="font-bold text-right text-sm px-2 mt-1 text-gray-500">Now + Next</h3>
         <ul>
           <%= for task <- @tasks[:Now] do %>

@@ -92,7 +92,7 @@ defmodule PmTool.Tasks.Task do
 
   defp validate_empty_project_tags(changeset, attrs) do
     if changed?(changeset, :project_tags) do
-      case Map.fetch(attrs, "project_tags") do
+      case Map.fetch(attrs, :project_tags) do
         {:ok, _tags} ->
           changeset
 
