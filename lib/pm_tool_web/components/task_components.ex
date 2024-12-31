@@ -135,6 +135,14 @@ defmodule PmToolWeb.TaskComponents do
         >
           <div class="inline-block just_title text-left flex-auto">
             {@task.name}
+            <%= if Ecto.assoc_loaded?(@task.team) and @task.team do %>
+              <.live_component
+                id={"show-team-tags-#{@id}"}
+                module={PmToolWeb.TagComponent}
+                color="text-gray-900 bg-orange-400 hover:bg-orange-300"
+                tag={@task.team.name}
+              />
+            <% end %>
             <.live_component
               id={"show-project-tags-#{@id}"}
               module={PmToolWeb.TagsComponent}

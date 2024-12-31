@@ -31,7 +31,7 @@ defmodule PmToolWeb.TagComponent do
 
   defp show_tag(assigns) do
     ~H"""
-    <div class="flex flex-row flex-wrap">
+    <div class="inline">
       <button
         phx-click="tag_clicked"
         phx-value-tag={@tag}

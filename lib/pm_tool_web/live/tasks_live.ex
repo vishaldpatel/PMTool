@@ -202,7 +202,11 @@ defmodule PmToolWeb.TasksLive do
 
     socket =
       Enum.reduce(socket.assigns.open_project_slugs, socket, fn project_slug, socket ->
-        project_tasks = Tasks.list_tasks(socket.assigns.current_user, project_slug)
+        project_tasks =
+        case socket.assigns.current_team do
+          current_team = %Team{} -> Tasks.list_tasks(current_team, project_slug)
+          _ -> Tasks.list_tasks(socket.assigns.current_user, project_slug)
+        end
 
         assign(socket,
           open_project_tasks:

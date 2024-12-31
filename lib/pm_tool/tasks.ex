@@ -9,21 +9,11 @@ defmodule PmTool.Tasks do
   alias PmTool.Teams.Team
   alias PmTool.Accounts.User
   alias PmTool.Projects
-  alias PmTool.Projects.Project
-
-  # Get all tasks for project
-  def list_tasks_for(%Project{} = project) do
-    query =
-      from t in Task,
-        where: ^project.tag in t.project_tags,
-        order_by: [t.stage, t.task_order]
-
-    Repo.all(query)
-  end
 
   def list_tasks(%User{} = user) do
+    velocity = determine_velocity(user)
     Repo.all(base_list_tasks_query(user))
-    |> separate_tasks_into_stages(user)
+    |> separate_tasks_into_stages(velocity)
   end
 
   def list_tasks(%Team{} = team) do
@@ -42,17 +32,42 @@ defmodule PmTool.Tasks do
     |> separate_tasks_into_stages(velocity)
   end
 
+  def list_tasks(%Team{} = team, project_slug) do
+    velocity = determine_velocity(team)
+    project = Projects.get_project_by_slug!(project_slug)
+    query = 
+      from t in base_list_tasks_query(team),
+        where: ^project.tag in t.project_tags
+    Repo.all(query)
+    |> separate_tasks_into_stages(velocity)
+  end
+
   def list_tasks(%User{} = user, project_slug) do
     project = Projects.get_project_by_slug!(project_slug)
-
     query =
-      from t in base_list_tasks_query(user),
+      from t in base_list_tasks_query(),
         where: ^project.tag in t.project_tags,
         order_by: [t.stage, t.task_order]
 
     velocity = determine_velocity(user)
     Repo.all(query)
+    |> Repo.preload(:team)
     |> separate_tasks_into_stages(velocity)
+  end
+
+  defp base_list_tasks_query() do
+    from t in Task,
+      order_by: [
+        desc: t.status == "Accepted",
+        desc: t.status == "Closed",
+        desc: t.status == "Delivered",
+        desc: t.status == "Finished",
+        desc: t.status == "Started",
+        desc: t.status == "Rejected",
+        desc: t.status == "Unstarted",
+        desc: t.status == "Unappraised",
+        asc: t.task_order
+      ]
   end
 
   defp base_list_tasks_query(%Team{} = team) do
@@ -69,8 +84,6 @@ defmodule PmTool.Tasks do
         desc: t.status == "Unappraised",
         asc: t.task_order
       ]
-
-    # For an individual, we won't need more than 30 tasks
   end
 
   defp base_list_tasks_query(%User{} = user) do
@@ -87,8 +100,6 @@ defmodule PmTool.Tasks do
         desc: t.status == "Unappraised",
         asc: t.task_order
       ]
-
-    # For an individual, we won't need more than 30 tasks
   end
 
   def determine_velocity(%Team{} = team) do
