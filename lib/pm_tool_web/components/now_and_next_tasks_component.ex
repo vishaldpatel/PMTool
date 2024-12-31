@@ -70,6 +70,8 @@ defmodule PmToolWeb.NowAndNextTasksComponent do
               no_move={task.status != "Unstarted"}
               id={"task-#{task.slug}#{@timestamp}"}
               task={task}
+              show_task={if @open_tasks[task.slug], do: "hidden", else: "flex"}
+              show_task_edit={if @open_tasks[task.slug], do: "flex", else: "hidden"}
               actions={true}
             />
           <% end %>
@@ -112,7 +114,7 @@ defmodule PmToolWeb.NowAndNextTasksComponent do
   end
 
   def mount(socket) do
-    {:ok, assign(socket, merge_now_and_next_tasks: true)}
+    {:ok, socket}
   end
 
   def update(assigns, socket) do

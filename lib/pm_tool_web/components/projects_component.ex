@@ -31,7 +31,7 @@ defmodule PmToolWeb.ProjectsComponent do
               id={"project-#{project.slug}"}
               project={project}
               current_user={@current_user}
-              open_projects={@open_projects}
+              open_project_slugs={@open_project_slugs}
             />
           <% end %>
         </ul>
@@ -49,7 +49,7 @@ defmodule PmToolWeb.ProjectsComponent do
   def mount(socket) do
     {:ok,
      assign(socket,
-       open_projects: []
+       open_project_slugs: []
      )}
   end
 

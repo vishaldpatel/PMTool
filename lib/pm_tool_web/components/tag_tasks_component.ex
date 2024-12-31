@@ -67,7 +67,7 @@ defmodule PmToolWeb.TagTasksComponent do
             <%= for task <- @tasks[:Done][group] do %>
               <.live_component
                 module={PmToolWeb.TaskComponents}
-                id={"task-#{task.slug}#{@timestamp}"}
+                id={"tag-#{@tag}-task-#{task.slug}#{@timestamp}"}
                 task={task}
                 no_move={true}
                 actions={false}

@@ -16,7 +16,7 @@ defmodule PmToolWeb.ProjectComponent do
     {:ok,
      assign(socket,
        project: %Project{},
-       open_projects: [],
+       open_project_slugs: [],
        actions: true,
        show_project: "flex",
        show_project_edit: "hidden"
@@ -110,7 +110,7 @@ defmodule PmToolWeb.ProjectComponent do
         >
           <div class="inline-block just_title text-left flex-auto">{@project.name}</div>
           <div class="inline-block flex-none">
-            <%= unless Enum.member?(@open_projects, @project.slug) do %>
+            <%= unless Enum.member?(@open_project_slugs, @project.slug) do %>
               <button
                 phx-click="show_project_tasks"
                 phx-value-project_slug={@project.slug}

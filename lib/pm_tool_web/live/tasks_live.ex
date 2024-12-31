@@ -17,7 +17,7 @@ defmodule PmToolWeb.TasksLive do
           current_user={@current_user}
           new_project_id={@new_project_id}
           projects={@projects}
-          open_projects={@open_projects}
+          open_project_slugs={@open_project_slugs}
         />
         <.live_component
           module={PmToolWeb.TeamsComponent}
@@ -28,7 +28,7 @@ defmodule PmToolWeb.TasksLive do
           current_team={@current_team}
         />
       </div>
-      <%= for project <- Projects.get_projects!(@open_projects) do %>
+      <%= for project <- @open_projects do %>
         <.live_component
           module={PmToolWeb.ProjectTasksComponent}
           id={"project-#{project.slug}"}
@@ -45,6 +45,7 @@ defmodule PmToolWeb.TasksLive do
           current_user={@current_user}
           tag={tag}
           tasks={@open_tag_tasks[tag]}
+          open_tasks={@open_tasks}
           timestamp={@timestamp}
         />
       <% end %>
@@ -113,12 +114,12 @@ defmodule PmToolWeb.TasksLive do
 
     socket =
       socket
-      |> assign(open_projects: socket.assigns.user_preferences["open_projects"] || [])
+      |> assign(open_project_slugs: socket.assigns.user_preferences["open_project_slugs"] || [])
+      |> assign(open_projects: [])
       |> assign(open_tags: socket.assigns.user_preferences["open_tags"] || [])
-      |> assign(open_tasks: socket.assigns.user_preferences["open_tasks"] || [])
+      |> assign(open_tasks: %{})
       |> assign(open_project_tasks: %{})
       |> assign(open_tag_tasks: %{})
-      |> assign(open_tasks: %{})
       |> assign(current_team_id: socket.assigns.user_preferences["current_team_id"] || nil)
       |> maybe_get_current_team()
       |> maybe_get_current_task(params)
@@ -174,7 +175,9 @@ defmodule PmToolWeb.TasksLive do
   end
 
   defp get_projects(socket) do
-    assign(socket, projects: Projects.list_projects_for(socket.assigns.current_user))
+    socket
+    |> assign(projects: Projects.list_projects_for(socket.assigns.current_user))
+    |> assign(open_projects: Projects.get_projects!(socket.assigns.open_project_slugs))
   end
 
   defp get_tasks(socket) do
@@ -198,7 +201,7 @@ defmodule PmToolWeb.TasksLive do
       end)
 
     socket =
-      Enum.reduce(socket.assigns.open_projects, socket, fn project_slug, socket ->
+      Enum.reduce(socket.assigns.open_project_slugs, socket, fn project_slug, socket ->
         project_tasks = Tasks.list_tasks(socket.assigns.current_user, project_slug)
 
         assign(socket,
@@ -321,16 +324,18 @@ defmodule PmToolWeb.TasksLive do
   end
 
   defp show_project(socket, project_slug) do
-    unless Enum.member?(socket.assigns.open_projects, project_slug) do
+    unless Enum.member?(socket.assigns.open_project_slugs, project_slug) do
       Accounts.set_preference(
         socket.assigns.current_user,
-        "open_projects",
-        [project_slug | socket.assigns.open_projects]
+        "open_project_slugs",
+        [project_slug | socket.assigns.open_project_slugs]
       )
 
+      project_slugs = [project_slug | socket.assigns.open_project_slugs]
       {:noreply,
        socket
-       |> assign(open_projects: [project_slug | socket.assigns.open_projects])
+       |> assign(open_project_slugs: project_slugs)
+       |> assign(open_projects: Projects.get_projects!(project_slugs))
        |> get_tasks()}
     else
       {:noreply, socket}
@@ -340,14 +345,17 @@ defmodule PmToolWeb.TasksLive do
   defp hide_project(socket, project_slug) do
     Accounts.set_preference(
       socket.assigns.current_user,
-      "open_projects",
-      List.delete(socket.assigns.open_projects, project_slug)
+      "open_project_slugs",
+      List.delete(socket.assigns.open_project_slugs, project_slug)
     )
 
+    project_slugs = List.delete(socket.assigns.open_project_slugs, project_slug)
     {:noreply,
      socket
-     |> assign(open_projects: List.delete(socket.assigns.open_projects, project_slug))
-     |> assign(open_project_tasks: Map.delete(socket.assigns.open_project_tasks, project_slug))}
+     |> assign(open_project_slugs: project_slugs)
+     |> assign(open_project_tasks: Map.delete(socket.assigns.open_project_tasks, project_slug))
+     |> assign(open_projects: Projects.get_projects!(project_slugs))
+    }
   end
 
   def handle_event("unset_current_team", _params, socket) do
