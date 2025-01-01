@@ -15,7 +15,7 @@ defmodule PmTool.Projects do
   alias PmTool.Accounts.User
 
   def list_project_tags_for_team_ids(teams) do
-    project_tags_query = 
+    project_tags_query =
       from t in Tasks.Task,
         where: t.team_id in ^teams,
         select: t.project_tags

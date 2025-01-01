@@ -113,11 +113,12 @@ defmodule PmToolWeb.TeamComponent do
 
   def show_team(assigns) do
     team_class =
-    if assigns.is_current do
-      "inline-block cursor-pointer border border-gray-500 text-right rounded bold w-60 text-gray-700 bg-orange-300 hover:bg-orange-200"
-    else
-      "inline-block cursor-pointer border border-gray-500 text-right rounded bold w-60 text-gray-100 bg-gray-600 hover:bg-gray-500"
-    end
+      if assigns.is_current do
+        "inline-block cursor-pointer border border-gray-500 text-right rounded bold w-60 text-gray-700 bg-orange-300 hover:bg-orange-200"
+      else
+        "inline-block cursor-pointer border border-gray-500 text-right rounded bold w-60 text-gray-100 bg-gray-600 hover:bg-gray-500"
+      end
+
     assigns = assign(assigns, :team_class, team_class)
 
     ~H"""
@@ -152,10 +153,7 @@ defmodule PmToolWeb.TeamComponent do
                 </svg>
               </button>
               <%= if @is_current == true do %>
-                <button
-                  class="font-bold rounded my-1"
-                  phx-click="unset_current_team"
-                >
+                <button class="font-bold rounded my-1" phx-click="unset_current_team">
                   <svg
                     class="h-4 w-4 text-orange-700 bg-orange-200 hover:bg-orange-300 rounded border-0"
                     <svg

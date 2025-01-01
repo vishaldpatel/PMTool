@@ -82,6 +82,7 @@ defmodule PmToolWeb.TaskComponents do
             "creator_id" => socket.assigns.current_user.id,
             "owner_id" => socket.assigns.current_user.id
           }
+
         %Team{} = team ->
           %{
             "creator_id" => socket.assigns.current_user.id,

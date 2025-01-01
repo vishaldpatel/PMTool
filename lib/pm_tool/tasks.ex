@@ -12,12 +12,14 @@ defmodule PmTool.Tasks do
 
   def list_tasks(%User{} = user) do
     velocity = determine_velocity(user)
+
     Repo.all(base_list_tasks_query(user))
     |> separate_tasks_into_stages(velocity)
   end
 
   def list_tasks(%Team{} = team) do
     velocity = determine_velocity(team)
+
     Repo.all(base_list_tasks_query(team))
     |> separate_tasks_into_stages(velocity)
   end
@@ -28,6 +30,7 @@ defmodule PmTool.Tasks do
         where: ^tag in t.tags
 
     velocity = determine_velocity(user)
+
     Repo.all(query)
     |> separate_tasks_into_stages(velocity)
   end
@@ -35,23 +38,28 @@ defmodule PmTool.Tasks do
   def list_tasks(%Team{} = team, project_slug) do
     velocity = determine_velocity(team)
     project = Projects.get_project_by_slug!(project_slug)
-    query = 
+
+    query =
       from t in base_list_tasks_query(team),
         where: ^project.tag in t.project_tags
+
     Repo.all(query)
     |> separate_tasks_into_stages(velocity)
   end
 
   def list_tasks(%User{} = user, project_slug, teams) do
     project = Projects.get_project_by_slug!(project_slug)
+
     query =
       from t in base_list_tasks_query(),
-        where: ((t.creator_id == ^user.id and is_nil(t.team_id)) 
-                or (t.team_id in ^teams)) 
-          and ^project.tag in t.project_tags, 
+        where:
+          ((t.creator_id == ^user.id and is_nil(t.team_id)) or
+             t.team_id in ^teams) and
+            ^project.tag in t.project_tags,
         order_by: [t.stage, t.task_order]
 
     velocity = determine_velocity(user)
+
     Repo.all(query)
     |> Repo.preload(:team)
     |> separate_tasks_into_stages(velocity)
@@ -106,13 +114,18 @@ defmodule PmTool.Tasks do
 
   def determine_velocity(%Team{} = team) do
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
+
     two_iterations =
       Date.utc_today() |> Date.add(-7) |> DateTime.new!(just_before_midnight, "Etc/UTC")
-    query = from t in Task, 
-      where: t.team_id == ^team.id and 
-        t.status == "Accepted" and
-        t.status_updated_at >= ^two_iterations,
-      select: sum(t.estimate)
+
+    query =
+      from t in Task,
+        where:
+          t.team_id == ^team.id and
+            t.status == "Accepted" and
+            t.status_updated_at >= ^two_iterations,
+        select: sum(t.estimate)
+
     velocity = Repo.one(query) || 0
     velocity = round(velocity)
     if velocity <= 20, do: 20, else: velocity
@@ -358,6 +371,7 @@ defmodule PmTool.Tasks do
   # Be able to update a Task
   def update_task(%Task{} = task, attrs) do
     IO.inspect(attrs)
+
     task
     |> Task.changeset(attrs)
     |> Repo.update()

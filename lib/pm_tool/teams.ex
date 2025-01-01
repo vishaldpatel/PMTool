@@ -37,9 +37,10 @@ defmodule PmTool.Teams do
 
   # Be able to create a Team
   def create_team_for(%User{} = user, attrs \\ %{}) do
-    result = %Team{}
-    |> Team.changeset(attrs)
-    |> Repo.insert()
+    result =
+      %Team{}
+      |> Team.changeset(attrs)
+      |> Repo.insert()
 
     case result do
       {:ok, team} ->
@@ -47,7 +48,9 @@ defmodule PmTool.Teams do
           {:ok, _} -> {:ok, team}
           {:error, changeset} -> {:error, changeset}
         end
-      {:error, changeset} -> {:error, changeset}
+
+      {:error, changeset} ->
+        {:error, changeset}
     end
   end
 
@@ -76,7 +79,13 @@ defmodule PmTool.Teams do
 
   def create_team_member(%Team{} = team, %User{} = user, role \\ "member") do
     %TeamMember{}
-    |> TeamMember.changeset(%{team_id: team.id, user_id: user.id, role: role, email: user.email, name: user.name})
+    |> TeamMember.changeset(%{
+      team_id: team.id,
+      user_id: user.id,
+      role: role,
+      email: user.email,
+      name: user.name
+    })
     |> Repo.insert()
   end
 

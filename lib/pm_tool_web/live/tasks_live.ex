@@ -186,6 +186,7 @@ defmodule PmToolWeb.TasksLive do
         current_team = %Team{} -> Tasks.list_tasks(current_team)
         _ -> Tasks.list_tasks(socket.assigns.current_user)
       end
+
     now_tasks = tasks[:Now]
     next_tasks = tasks[:Next]
     later_tasks = tasks[:Later]
@@ -203,10 +204,17 @@ defmodule PmToolWeb.TasksLive do
     socket =
       Enum.reduce(socket.assigns.open_project_slugs, socket, fn project_slug, socket ->
         project_tasks =
-        case socket.assigns.current_team do
-          current_team = %Team{} -> Tasks.list_tasks(current_team, project_slug)
-          _ -> Tasks.list_tasks(socket.assigns.current_user, project_slug, Enum.map(socket.assigns.teams, & &1.id))
-        end
+          case socket.assigns.current_team do
+            current_team = %Team{} ->
+              Tasks.list_tasks(current_team, project_slug)
+
+            _ ->
+              Tasks.list_tasks(
+                socket.assigns.current_user,
+                project_slug,
+                Enum.map(socket.assigns.teams, & &1.id)
+              )
+          end
 
         assign(socket,
           open_project_tasks:
@@ -336,6 +344,7 @@ defmodule PmToolWeb.TasksLive do
       )
 
       project_slugs = [project_slug | socket.assigns.open_project_slugs]
+
       {:noreply,
        socket
        |> assign(open_project_slugs: project_slugs)
@@ -354,12 +363,12 @@ defmodule PmToolWeb.TasksLive do
     )
 
     project_slugs = List.delete(socket.assigns.open_project_slugs, project_slug)
+
     {:noreply,
      socket
      |> assign(open_project_slugs: project_slugs)
      |> assign(open_project_tasks: Map.delete(socket.assigns.open_project_tasks, project_slug))
-     |> assign(open_projects: Projects.get_projects!(project_slugs))
-    }
+     |> assign(open_projects: Projects.get_projects!(project_slugs))}
   end
 
   def handle_event("unset_current_team", _params, socket) do
@@ -368,25 +377,28 @@ defmodule PmToolWeb.TasksLive do
       "current_team_id",
       nil
     )
-    {:noreply, 
-      socket 
-      |> assign(current_team: nil) 
-      |> assign(current_team_id: nil) 
-      |> get_tasks()}
+
+    {:noreply,
+     socket
+     |> assign(current_team: nil)
+     |> assign(current_team_id: nil)
+     |> get_tasks()}
   end
 
   defp set_current_team(socket, slug) do
     team = Teams.get_team_by_slug!(slug)
+
     Accounts.set_preference(
       socket.assigns.current_user,
       "current_team_id",
       team.id
     )
-    {:noreply, 
-      socket 
-      |> assign(current_team: team) 
-      |> assign(current_team_id: team.id) 
-      |> get_tasks()}
+
+    {:noreply,
+     socket
+     |> assign(current_team: team)
+     |> assign(current_team_id: team.id)
+     |> get_tasks()}
   end
 
   def handle_event("set_current_team", params, socket) do
@@ -409,6 +421,7 @@ defmodule PmToolWeb.TasksLive do
     case params["tag-type"] do
       "team" ->
         set_current_team(socket, params["tag-slug"])
+
       "project" ->
         project = Projects.get_project_by_tag!(params["tag"])
         show_project(socket, project.slug)
