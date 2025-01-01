@@ -42,11 +42,13 @@ defmodule PmTool.Tasks do
     |> separate_tasks_into_stages(velocity)
   end
 
-  def list_tasks(%User{} = user, project_slug) do
+  def list_tasks(%User{} = user, project_slug, teams) do
     project = Projects.get_project_by_slug!(project_slug)
     query =
       from t in base_list_tasks_query(),
-        where: ^project.tag in t.project_tags,
+        where: ((t.creator_id == ^user.id and is_nil(t.team_id)) 
+                or (t.team_id in ^teams)) 
+          and ^project.tag in t.project_tags, 
         order_by: [t.stage, t.task_order]
 
     velocity = determine_velocity(user)

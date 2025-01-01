@@ -123,6 +123,7 @@ defmodule PmToolWeb.TasksLive do
       |> assign(current_team_id: socket.assigns.user_preferences["current_team_id"] || nil)
       |> maybe_get_current_team()
       |> maybe_get_current_task(params)
+      |> get_teams()
       |> get_tasks()
       |> assign_new_task_ids()
       |> assign(
@@ -134,7 +135,6 @@ defmodule PmToolWeb.TasksLive do
       )
       |> get_projects()
       |> assign_new_project_id()
-      |> get_teams()
       |> assign_new_team_id()
 
     socket =
@@ -205,7 +205,7 @@ defmodule PmToolWeb.TasksLive do
         project_tasks =
         case socket.assigns.current_team do
           current_team = %Team{} -> Tasks.list_tasks(current_team, project_slug)
-          _ -> Tasks.list_tasks(socket.assigns.current_user, project_slug)
+          _ -> Tasks.list_tasks(socket.assigns.current_user, project_slug, Enum.map(socket.assigns.teams, & &1.id))
         end
 
         assign(socket,
