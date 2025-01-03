@@ -382,6 +382,7 @@ defmodule PmToolWeb.TasksLive do
      socket
      |> assign(current_team: nil)
      |> assign(current_team_id: nil)
+     |> assign_new_task_ids()
      |> get_tasks()}
   end
 
