@@ -55,8 +55,8 @@ defmodule PmTool.Teams do
   end
 
   # Be able to get a Team
-  def get_team_by_slug!(slug), do: Repo.get_by!(Team, slug: slug)
-  def get_team!(id), do: Repo.get!(Team, id)
+  def get_team_by_slug!(slug), do: Repo.get_by!(Team, slug: slug) |> Repo.preload([:team_members])
+  def get_team!(id), do: Repo.get!(Team, id) |> Repo.preload([:team_members])
 
   # Be able to update a Team
   def update_team(%Team{} = team, attrs) do

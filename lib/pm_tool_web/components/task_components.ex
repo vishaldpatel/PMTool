@@ -6,6 +6,7 @@ defmodule PmToolWeb.TaskComponents do
   alias PmTool.Tasks.Task
   alias PmTool.Projects.Project
   alias PmTool.Teams.Team
+  alias PmTool.Teams.TeamMember
 
   @status_colors %{
     "Unappraised" => "bg-gray-600 hover:bg-gray-500",
@@ -25,7 +26,7 @@ defmodule PmToolWeb.TaskComponents do
   def mount(socket) do
     {:ok,
      assign(socket,
-       task: %Task{},
+       task: %Task{stage: "Now", estimate: 1, status: "Unappraised"},
        project: %Project{slug: nil},
        no_move: false,
        actions: true,
@@ -37,7 +38,19 @@ defmodule PmToolWeb.TaskComponents do
   end
 
   def update(assigns, socket) do
-    {:ok, assign(socket, assigns)}
+    socket = assign(socket, assigns)
+    socket =
+    if is_nil(socket.assigns.task.id) and socket.assigns.current_team do
+      assign(socket, 
+        task: 
+          socket.assigns.task
+          |> Map.put(:team_id, socket.assigns.current_team.id)
+          |> Map.put(:team, socket.assigns.current_team)
+      )
+    else
+      socket
+    end
+    {:ok, socket}
   end
 
   def render(assigns) do
@@ -79,15 +92,13 @@ defmodule PmToolWeb.TaskComponents do
       case socket.assigns.current_team do
         nil ->
           %{
-            "creator_id" => socket.assigns.current_user.id,
-            "owner_id" => socket.assigns.current_user.id
+            "creator_id" => socket.assigns.current_user.id
           }
 
         %Team{} = team ->
           %{
             "creator_id" => socket.assigns.current_user.id,
-            "team_id" => team.id,
-            "owner_id" => socket.assigns.current_user.id
+            "team_id" => team.id
           }
       end
       |> Enum.into(task_params)
@@ -369,6 +380,19 @@ defmodule PmToolWeb.TaskComponents do
             type="text"
             class="rounded-sm w-full py-0 px-1 mb-1"
           ><%= @task.description %></textarea><br />
+          <%= if Ecto.assoc_loaded?(@task.team) and @task.team do %>
+            <select
+              name="task[owner_id]"
+              class="w-full py-0 px-2 mb-1 rounded-sm"
+              value={@task.owner_id}
+            >
+              <%= for member <- @task.team.team_members do %>
+                <option value={member.id} selected={@task.owner_id == member.id}>
+                  <%= member.name %>
+                </option>
+              <% end %>
+            </select>
+          <% end %>
           <%= if @save_button_name == "Create" do %>
             <input type="hidden" name="task[stage]" value={@task.stage} />
           <% else %>

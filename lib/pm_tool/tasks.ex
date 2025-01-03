@@ -21,6 +21,7 @@ defmodule PmTool.Tasks do
     velocity = determine_velocity(team)
 
     Repo.all(base_list_tasks_query(team))
+    |> Repo.preload([team: [:team_members]])
     |> separate_tasks_into_stages(velocity)
   end
 
@@ -32,6 +33,7 @@ defmodule PmTool.Tasks do
     velocity = determine_velocity(user)
 
     Repo.all(query)
+    |> Repo.preload([team: [:team_members]])
     |> separate_tasks_into_stages(velocity)
   end
 
@@ -44,6 +46,7 @@ defmodule PmTool.Tasks do
         where: ^project.tag in t.project_tags
 
     Repo.all(query)
+    |> Repo.preload([team: [:team_members]])
     |> separate_tasks_into_stages(velocity)
   end
 
@@ -61,7 +64,7 @@ defmodule PmTool.Tasks do
     velocity = determine_velocity(user)
 
     Repo.all(query)
-    |> Repo.preload(:team)
+    |> Repo.preload([team: [:team_members]])
     |> separate_tasks_into_stages(velocity)
   end
 
