@@ -54,8 +54,6 @@ defmodule PmTool.Tasks do
   end
 
   def list_tasks(%User{} = user, teams) do
-    IO.inspect(teams)
-
     query =
       from t in base_list_tasks_query(),
         where: (t.creator_id == ^user.id and is_nil(t.team_id)) or t.team_id in ^teams,
@@ -393,8 +391,6 @@ defmodule PmTool.Tasks do
 
   # Be able to update a Task
   def update_task(%Task{} = task, attrs) do
-    IO.inspect(attrs)
-
     task
     |> Task.changeset(attrs)
     |> Repo.update()

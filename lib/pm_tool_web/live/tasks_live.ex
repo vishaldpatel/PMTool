@@ -377,21 +377,6 @@ defmodule PmToolWeb.TasksLive do
      |> assign(open_projects: Projects.get_projects!(project_slugs))}
   end
 
-  def handle_event("unset_current_team", _params, socket) do
-    Accounts.set_preference(
-      socket.assigns.current_user,
-      "current_team_id",
-      nil
-    )
-
-    {:noreply,
-     socket
-     |> assign(current_team: nil)
-     |> assign(current_team_id: nil)
-     |> assign_new_task_ids()
-     |> get_tasks()}
-  end
-
   defp set_current_team(socket, slug) do
     team = Teams.get_team_by_slug!(slug)
 
@@ -405,6 +390,21 @@ defmodule PmToolWeb.TasksLive do
      socket
      |> assign(current_team: team)
      |> assign(current_team_id: team.id)
+     |> get_tasks()}
+  end
+
+  def handle_event("unset_current_team", _params, socket) do
+    Accounts.set_preference(
+      socket.assigns.current_user,
+      "current_team_id",
+      nil
+    )
+
+    {:noreply,
+     socket
+     |> assign(current_team: nil)
+     |> assign(current_team_id: nil)
+     |> assign_new_task_ids()
      |> get_tasks()}
   end
 

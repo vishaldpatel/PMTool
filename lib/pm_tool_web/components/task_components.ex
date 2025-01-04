@@ -6,7 +6,6 @@ defmodule PmToolWeb.TaskComponents do
   alias PmTool.Tasks.Task
   alias PmTool.Projects.Project
   alias PmTool.Teams.Team
-  alias PmTool.Teams.TeamMember
 
   @status_colors %{
     "Unappraised" => "bg-gray-600 hover:bg-gray-500",

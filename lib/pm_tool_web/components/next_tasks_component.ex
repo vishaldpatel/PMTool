@@ -2,7 +2,6 @@ defmodule PmToolWeb.NextTasksComponent do
   use PmToolWeb, :live_component
 
   alias PmTool.Tasks
-  alias PmTool.Tasks.Task
 
   def render(assigns) do
     ~H"""

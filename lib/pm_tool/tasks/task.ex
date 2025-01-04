@@ -4,7 +4,6 @@ defmodule PmTool.Tasks.Task do
   import PmTool.URLs
   alias PmTool.Tasks
   alias PmTool.Accounts.User
-  alias PMTool.Teams.TeamMember
   alias PmTool.Teams.Team
 
   @stages ["Later", "Now"]

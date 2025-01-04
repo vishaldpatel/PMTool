@@ -20,7 +20,9 @@ defmodule PmTool.Projects do
         where: t.team_id in ^teams,
         select: t.project_tags
 
-    project_tags = Repo.all(project_tags_query) |> List.flatten()
+    project_tags_query
+    |> Repo.all()
+    |> List.flatten()
   end
 
   def list_projects_for(%User{} = user) do

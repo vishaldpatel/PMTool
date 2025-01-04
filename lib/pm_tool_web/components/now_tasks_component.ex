@@ -3,7 +3,6 @@ defmodule PmToolWeb.NowTasksComponent do
 
   alias Phoenix.LiveView.JS
   alias PmTool.Tasks
-  alias PmTool.Tasks.Task
 
   def render(assigns) do
     ~H"""
