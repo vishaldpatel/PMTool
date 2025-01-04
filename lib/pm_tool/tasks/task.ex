@@ -4,6 +4,7 @@ defmodule PmTool.Tasks.Task do
   import PmTool.URLs
   alias PmTool.Tasks
   alias PmTool.Accounts.User
+  alias PMTool.Teams.TeamMember
   alias PmTool.Teams.Team
 
   @stages ["Later", "Now"]
@@ -35,7 +36,7 @@ defmodule PmTool.Tasks.Task do
     field :project_tags, {:array, :string}, default: []
 
     belongs_to :creator, PmTool.Accounts.User
-    belongs_to :owner, PmTool.Accounts.User
+    belongs_to :owner, PmTool.Teams.TeamMember
     belongs_to :team, PmTool.Teams.Team
 
     has_many :blockers, PmTool.Tasks.Blocker

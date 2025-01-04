@@ -148,6 +148,12 @@ defmodule PmToolWeb.TaskComponents do
           class={"inline-block text-md w-full pl-1 pr-1 text-gray-100 #{@show_task}"}
         >
           <div class="inline-block just_title text-left flex-auto">
+            <%= if Ecto.assoc_loaded?(@task.owner) and @task.owner do %>
+              <img
+                class="w-4 h-4 rounded-full inline align-middle mb-[2px] mr-[-2px]"
+                src={"/images/team_members/#{@task.owner.email}.png"}
+              />
+            <% end %>
             {@task.name}
             <%= if Ecto.assoc_loaded?(@task.team) and @task.team do %>
               <.live_component

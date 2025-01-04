@@ -22,6 +22,7 @@ defmodule PmTool.Tasks do
 
     Repo.all(base_list_tasks_query(team))
     |> Repo.preload(team: [:team_members])
+    |> Repo.preload(:owner)
     |> separate_tasks_into_stages(velocity)
   end
 
@@ -34,6 +35,7 @@ defmodule PmTool.Tasks do
 
     Repo.all(query)
     |> Repo.preload(team: [:team_members])
+    |> Repo.preload(:owner)
     |> separate_tasks_into_stages(velocity)
   end
 
@@ -47,6 +49,7 @@ defmodule PmTool.Tasks do
 
     Repo.all(query)
     |> Repo.preload(team: [:team_members])
+    |> Repo.preload(:owner)
     |> separate_tasks_into_stages(velocity)
   end
 
@@ -62,6 +65,7 @@ defmodule PmTool.Tasks do
 
     Repo.all(query)
     |> Repo.preload(team: [:team_members])
+    |> Repo.preload(:owner)
     |> separate_tasks_into_stages(velocity)
   end
 
@@ -80,6 +84,7 @@ defmodule PmTool.Tasks do
 
     Repo.all(query)
     |> Repo.preload(team: [:team_members])
+    |> Repo.preload(:owner)
     |> separate_tasks_into_stages(velocity)
   end
 

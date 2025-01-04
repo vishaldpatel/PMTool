@@ -1,6 +1,8 @@
 defmodule PmTool.Teams.TeamMember do
   use Ecto.Schema
   import Ecto.Changeset
+  import Exgravatar
+
   @roles ["owner", "admin", "member"]
 
   schema "team_members" do
@@ -21,5 +23,28 @@ defmodule PmTool.Teams.TeamMember do
     |> validate_required([:team_id, :email, :role])
     |> unique_constraint([:team_id, :email], name: :team_members_team_id_email_index)
     |> validate_inclusion(:role, @roles)
+    |> maybe_make_a_thumbnail()
+  end
+
+  defp maybe_make_a_thumbnail(changeset) do
+    if changed?(changeset, :email) or changed?(changeset, :name) do
+      IO.inspect("making thumbnail...")
+      # Create a thumbnail for the email and store it in the assets directory
+      email = get_field(changeset, :email)
+      name = get_field(changeset, :name)
+      url = gravatar_url(email, s: 100, d: "identicon")
+
+      case HTTPoison.get(url) do
+        {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+          File.write!("priv/static/images/team_members/#{email}.png", body)
+          IO.inspect(url)
+
+        _ ->
+          IO.inspect("waw waw")
+          nil
+      end
+
+      changeset
+    end
   end
 end
