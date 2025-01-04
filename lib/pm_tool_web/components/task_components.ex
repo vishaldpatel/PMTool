@@ -39,17 +39,19 @@ defmodule PmToolWeb.TaskComponents do
 
   def update(assigns, socket) do
     socket = assign(socket, assigns)
+
     socket =
-    if is_nil(socket.assigns.task.id) and socket.assigns.current_team do
-      assign(socket, 
-        task: 
-          socket.assigns.task
-          |> Map.put(:team_id, socket.assigns.current_team.id)
-          |> Map.put(:team, socket.assigns.current_team)
-      )
-    else
-      socket
-    end
+      if is_nil(socket.assigns.task.id) and socket.assigns.current_team do
+        assign(socket,
+          task:
+            socket.assigns.task
+            |> Map.put(:team_id, socket.assigns.current_team.id)
+            |> Map.put(:team, socket.assigns.current_team)
+        )
+      else
+        socket
+      end
+
     {:ok, socket}
   end
 
@@ -388,7 +390,7 @@ defmodule PmToolWeb.TaskComponents do
             >
               <%= for member <- @task.team.team_members do %>
                 <option value={member.id} selected={@task.owner_id == member.id}>
-                  <%= member.name %>
+                  {member.name}
                 </option>
               <% end %>
             </select>

@@ -183,8 +183,14 @@ defmodule PmToolWeb.TasksLive do
   defp get_tasks(socket) do
     tasks =
       case socket.assigns.current_team do
-        current_team = %Team{} -> Tasks.list_tasks(current_team)
-        _ -> Tasks.list_tasks(socket.assigns.current_user)
+        current_team = %Team{} ->
+          Tasks.list_tasks(current_team)
+
+        _ ->
+          Tasks.list_tasks(
+            socket.assigns.current_user,
+            Enum.map(socket.assigns.teams, & &1.id)
+          )
       end
 
     now_tasks = tasks[:Now]
