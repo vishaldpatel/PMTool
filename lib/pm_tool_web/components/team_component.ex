@@ -215,7 +215,7 @@ defmodule PmToolWeb.TeamComponent do
             <div class="text-md pl-1 pr-1 pt-0.5 text-gray-900 flex">
               <div class="inline-block just_title text-left flex-auto">
                 <img
-                  class="w-4 h-4 rounded-full inline align-middle mr-[2px] mb-1"
+                  class="w-4 h-4 rounded-full inline align-middle mr-[2px] mb-[3px]"
                   src={"/images/team_members/#{member.email}.png"}
                 />{member.name}
               </div>
