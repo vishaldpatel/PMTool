@@ -3,6 +3,7 @@ defmodule PmToolWeb.TeamComponent do
 
   alias PmTool.Teams
   alias PmTool.Teams.Team
+  alias PmTool.Teams.TeamMember
 
   def render(assigns) do
     if assigns.team.id do
@@ -16,9 +17,9 @@ defmodule PmToolWeb.TeamComponent do
     {:ok,
      assign(socket,
        team: %Team{},
-       actions: true,
        show_team: "flex",
        show_team_edit: "hidden",
+       show_team_members: "hidden",
        is_current: false
      )}
   end
@@ -80,23 +81,6 @@ defmodule PmToolWeb.TeamComponent do
     end
   end
 
-  def handle_event("create_team_member", %{"team_member" => team_member_params}, socket) do
-    team = Teams.get_team_by_slug!(team_member_params["team_slug"])
-
-    result =
-      team_member_params
-      |> Map.put("role", "member")
-      |> Map.put("team_id", team.id)
-      |> Teams.create_team_member()
-
-    case result do
-      {:ok, _} ->
-        send(self(), {:new_team_member_created})
-    end
-
-    {:noreply, socket}
-  end
-
   defp new_team(assigns) do
     ~H"""
     <div>
@@ -137,7 +121,10 @@ defmodule PmToolWeb.TeamComponent do
           >
             <div class="inline-block just_title text-left flex-auto">{@team.name}</div>
             <div class="inline-block flex-none">
-              <button phx-click={JS.toggle_class("hidden", to: "#teammates-#{@id}")}>
+              <button phx-click={
+                JS.toggle_class("hidden", to: "#teammates-#{@id}")
+                |> JS.push("show_hide_team_members", value: %{"team_slug" => @team.slug})
+              }>
                 <svg
                   class="h-4 w-4 text-amber-500 hover:text-amber-400 bg-gray-600 hover:bg-gray-500 rounded border-0"
                   fill="none"
@@ -209,48 +196,20 @@ defmodule PmToolWeb.TeamComponent do
         </div>
         <div
           id={"teammates-#{@id}"}
-          class="border-gray-500 text-right bold bg-gray-200 inline-block w-full hidden"
+          class={"border-gray-500 text-right bold bg-gray-200 inline-block w-full #{@show_team_members}"}
         >
           <%= for member <- @team.team_members do %>
-            <div class="text-md pl-1 pr-1 pt-0.5 text-gray-900 flex">
-              <div class="inline-block just_title text-left flex-auto">
-                <img
-                  class="w-4 h-4 rounded-full inline align-middle mr-[2px] mb-[3px]"
-                  src={"/images/team_members/#{member.email}.png"}
-                />{member.name}
-              </div>
-              <div class="inline-block flex-none">
-                <button
-                  phx-click="show_team_tasks"
-                  phx-value-team_slug={@team.slug}
-                  phx-value-teammember="Alice Cooper"
-                  class="font-bold rounded my-1"
-                >
-                  <svg
-                    class="h-4 w-4 text-orange-200 bg-orange-700 hover:bg-orange-500 rounded border-0"
-                    <svg
-                    viewBox="0 0 24 24"
-                    width="24"
-                    height="24"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                    <rect x="7" y="7" width="3" height="9" />
-                    <rect x="14" y="7" width="3" height="5" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+            <.live_component
+              module={PmToolWeb.TeamMemberComponent}
+              id={"team-member-#{@team.slug}-#{member.id}"}
+              team={@team}
+              team_member={member}
+            />
           <% end %>
           <div class="flex-auto w-full px-1 bg-gray-600 text-left">
             <button
               class="font-bold rounded my-1 bg-gray-600 hover:bg-gray-500 rounded p-[1px]"
-              phx-click={JS.toggle_class("hidden", to: "#create_team_member-#{@team.slug}")}
+              phx-click={JS.toggle_class("hidden", to: "#edit-#{@new_team_member_id}")}
             >
               <svg
                 class="h-4 w-4 text-lime-500 hover:text-lime-400"
@@ -266,39 +225,14 @@ defmodule PmToolWeb.TeamComponent do
                 <line x1="23" y1="11" x2="17" y2="11" />
               </svg>
             </button>
-            <form
-              id={"create_team_member-#{@team.slug}"}
-              phx-submit="create_team_member"
-              phx-target={@myself}
-              class="text-right hidden"
-            >
-              <input
-                placeholder="Full Name"
-                name="team_member[name]"
-                type="text"
-                class="rounded-sm w-full py-0 px-1 mb-1"
+            <div id={"create_team_member-#{@team.slug}"}>
+              <.live_component
+                module={PmToolWeb.TeamMemberComponent}
+                id={@new_team_member_id}
+                team={@team}
+                team_member={%TeamMember{team_id: @team.id}}
               />
-              <input
-                placeholder="email@domain.tld"
-                name="team_member[email]"
-                type="email"
-                class="rounded-sm w-full py-0 px-1 mb-1"
-              />
-              <input type="hidden" name="team_member[team_slug]" value={@team.slug} />
-              <button
-                type="reset"
-                class="text-gray-100"
-                phx-click={JS.toggle_class("hidden", to: "#create_team_member-#{@team.slug}")}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                class="font-bold rounded my-1 px-2 text-gray-100 bg-lime-600 hover:bg-lime-500 rounded p-[1px]"
-              >
-                Add
-              </button>
-            </form>
+            </div>
           </div>
         </div>
       </div>
@@ -317,7 +251,7 @@ defmodule PmToolWeb.TeamComponent do
     assigns = assign(assigns, :save_button_name, save_button_name)
 
     ~H"""
-    <div id={"edit-"<>@id} class={"text-left w-full #{@show_team_edit}"}>
+    <div id={"edit-#{@id}"} class={"text-left w-full #{@show_team_edit}"}>
       <div class="inline-block w-full bg-gray-200 text-left border border-gray-500 p-1 rounded">
         <form phx-submit={@action} phx-target={@myself}>
           <input

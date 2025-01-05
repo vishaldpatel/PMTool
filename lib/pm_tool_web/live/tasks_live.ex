@@ -26,6 +26,8 @@ defmodule PmToolWeb.TasksLive do
           new_team_id={@new_team_id}
           teams={@teams}
           current_team={@current_team}
+          open_team_slugs={@open_team_slugs}
+          timestamp={@timestamp}
         />
       </div>
       <%= for project <- @open_projects do %>
@@ -120,6 +122,7 @@ defmodule PmToolWeb.TasksLive do
       |> assign(open_tasks: %{})
       |> assign(open_project_tasks: %{})
       |> assign(open_tag_tasks: %{})
+      |> assign(open_team_slugs: socket.assigns.user_preferences["open_team_slugs"] || [])
       |> assign(current_team_id: socket.assigns.user_preferences["current_team_id"] || nil)
       |> maybe_get_current_team()
       |> maybe_get_current_task(params)
@@ -236,6 +239,12 @@ defmodule PmToolWeb.TasksLive do
     )
   end
 
+  defp assign_new_timestamp_for_ids(socket) do
+    timestamp = DateTime.to_unix(DateTime.utc_now())
+
+    assign(socket, timestamp: timestamp)
+  end
+
   defp assign_new_team_id(socket) do
     timestamp = DateTime.to_unix(DateTime.utc_now())
 
@@ -280,8 +289,18 @@ defmodule PmToolWeb.TasksLive do
      |> get_projects()}
   end
 
-  def handle_info({:new_team_member_created}, socket) do
+  def handle_info({:team_member_deleted}, socket) do
     {:noreply, get_teams(socket)}
+  end
+
+  def handle_info({:team_member_updated, _team_member}, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_info({:new_team_member_created}, socket) do
+    {:noreply,
+     get_teams(socket)
+     |> assign_new_timestamp_for_ids()}
   end
 
   def handle_info({:new_team_created}, socket) do
@@ -339,6 +358,42 @@ defmodule PmToolWeb.TasksLive do
      socket
      |> assign(open_tags: List.delete(socket.assigns.open_tags, tag))
      |> assign(open_tag_tasks: Map.delete(socket.assigns.open_tag_tasks, tag))}
+  end
+
+  defp show_hide_team_members(socket, team_slug) do
+    if Enum.member?(socket.assigns.open_team_slugs, team_slug) do
+      hide_team_members(socket, team_slug)
+    else
+      show_team_members(socket, team_slug)
+    end
+  end
+
+  defp show_team_members(socket, team_slug) do
+    Accounts.set_preference(
+      socket.assigns.current_user,
+      "open_team_slugs",
+      [team_slug | socket.assigns.open_team_slugs]
+    )
+
+    team_slugs = [team_slug | socket.assigns.open_team_slugs]
+
+    {:noreply,
+     socket
+     |> assign(open_team_slugs: team_slugs)}
+  end
+
+  defp hide_team_members(socket, team_slug) do
+    Accounts.set_preference(
+      socket.assigns.current_user,
+      "open_team_slugs",
+      List.delete(socket.assigns.open_team_slugs, team_slug)
+    )
+
+    team_slugs = List.delete(socket.assigns.open_team_slugs, team_slug)
+
+    {:noreply,
+     socket
+     |> assign(open_team_slugs: team_slugs)}
   end
 
   defp show_project(socket, project_slug) do
@@ -406,6 +461,10 @@ defmodule PmToolWeb.TasksLive do
      |> assign(current_team_id: nil)
      |> assign_new_task_ids()
      |> get_tasks()}
+  end
+
+  def handle_event("show_hide_team_members", params, socket) do
+    show_hide_team_members(socket, params["team_slug"])
   end
 
   def handle_event("set_current_team", params, socket) do

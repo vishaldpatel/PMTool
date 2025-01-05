@@ -9,7 +9,7 @@ defmodule PmToolWeb.TeamsComponent do
     <div class="my-2">
       <button
         class="font-bold rounded"
-        phx-click={JS.toggle_class("hidden", to: "#edit-" <> @new_team_id)}
+        phx-click={JS.toggle_class("hidden", to: "#edit-#{@new_team_id}")}
       >
         <svg class="h-6 w-6 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
@@ -28,9 +28,12 @@ defmodule PmToolWeb.TeamsComponent do
             <.live_component
               module={PmToolWeb.TeamComponent}
               id={"team-#{team.slug}"}
+              new_team_member_id={"new-team-member-#{team.slug}-#{@timestamp}"}
               current_user={@current_user}
               team={team}
               is_current={@current_team != nil and @current_team.slug == team.slug}
+              show_team_members={if Enum.member?(@open_team_slugs, team.slug), do: "", else: "hidden"}
+              ,
             />
           <% end %>
         </ul>

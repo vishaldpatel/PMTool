@@ -57,6 +57,7 @@ defmodule PmTool.Teams do
   # Be able to get a Team
   def get_team_by_slug!(slug), do: Repo.get_by!(Team, slug: slug) |> Repo.preload([:team_members])
   def get_team!(id), do: Repo.get!(Team, id) |> Repo.preload([:team_members])
+  def get_team_member!(id), do: Repo.get!(TeamMember, id)
 
   # Be able to update a Team
   def update_team(%Team{} = team, attrs) do
@@ -68,6 +69,12 @@ defmodule PmTool.Teams do
   # Be able to delete a Team
   def delete_team(%Team{} = team) do
     Repo.delete(team)
+  end
+
+  def update_team_member(%TeamMember{} = team_member, team_member_params) do
+    team_member
+    |> TeamMember.changeset(team_member_params)
+    |> Repo.update()
   end
 
   # Add a user to a team
