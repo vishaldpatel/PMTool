@@ -56,7 +56,7 @@ defmodule PmTool.Tasks do
   def list_tasks(%User{} = user, teams) do
     query =
       from t in base_list_tasks_query(),
-        where: (t.creator_id == ^user.id and is_nil(t.team_id)) or t.team_id in ^teams,
+        where: t.creator_id == ^user.id or t.team_id in ^teams,
         order_by: [t.stage, t.task_order]
 
     velocity = determine_velocity(user)
