@@ -21,7 +21,7 @@ defmodule PmToolWeb.LaterTasksComponent do
           />
         </svg>
       </button>
-      <span class="font-semibold uppercase align-top ml-1 text-gray-400">Later</span>
+      <span class="font-semibold uppercase align-top ml-1 text-gray-400">Later, Brah 🤙</span>
 
       <form id="later_task_options" style="display: none;" phx-submit="delete_tasks">
         <button class="font-bold rounded">
