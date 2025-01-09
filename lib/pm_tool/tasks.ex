@@ -135,9 +135,11 @@ defmodule PmTool.Tasks do
 
   def determine_velocity(%Team{} = team) do
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
+    last_period_end_date = Date.utc_today() |> Date.end_of_week() |> Date.add(-7)
+    two_period_end_date = Date.add(last_period_end_date, -7)
 
     two_iterations =
-      Date.utc_today() |> Date.add(-7) |> DateTime.new!(just_before_midnight, "Etc/UTC")
+      two_period_end_date |> DateTime.new!(just_before_midnight, "Etc/UTC")
 
     query =
       from t in Task,
@@ -154,9 +156,11 @@ defmodule PmTool.Tasks do
 
   def determine_velocity(%User{} = user) do
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
+    last_period_end_date = Date.utc_today() |> Date.end_of_week() |> Date.add(-7)
+    two_period_end_date = Date.add(last_period_end_date, -7)
 
     two_iterations =
-      Date.utc_today() |> Date.add(-7) |> DateTime.new!(just_before_midnight, "Etc/UTC")
+      two_period_end_date |> DateTime.new!(just_before_midnight, "Etc/UTC")
 
     query =
       from t in Task,
