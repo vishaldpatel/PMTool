@@ -47,12 +47,17 @@ defmodule PmToolWeb.DoneTasksComponent do
       <%= if @tasks do %>
         <%= for group <- [:last, :two, :three, :earlier] do %>
           <%= if Enum.count(@tasks[group]) > 0 do %>
-            <%= if group == :last do %>
-              <div class="font-bold text-gray-400 uppercase text-xs mb-1 mt-[-18px] text-right">
-                Previous
-              </div>
-            <% else %>
-              <div class="font-bold text-gray-400 uppercase text-xs my-1 text-right">{group}</div>
+            <%= case group do %>
+              <% :last -> %>
+                <div class="font-bold text-gray-400 uppercase text-xs mb-1 mt-[-18px] text-right">
+                  Previous Week
+                </div>
+              <% :earlier -> %>
+                <div class="font-bold text-gray-400 uppercase text-xs my-1 text-right">{group}</div>
+              <% _ -> %>
+                <div class="font-bold text-gray-400 uppercase text-xs my-1 text-right">
+                  {group} weeks ago
+                </div>
             <% end %>
           <% end %>
           <ul phx-hook="Sortable" id={"#{@id}-group-#{group}"}>

@@ -80,11 +80,11 @@ defmodule PmToolWeb.NowAndNextTasksComponent do
         <%= for {index, current_tasks} <- @next_tasks do %>
           <%= if index == 1 do %>
             <div class="font-bold text-gray-400 uppercase text-xs my-1 text-right">
-              Next Iteration
+              Next Week
             </div>
           <% else %>
             <div class="font-bold text-gray-400 uppercase text-xs my-1 text-right">
-              {index} Iterations
+              {index} Weeks
             </div>
           <% end %>
           <ul phx-hook="Sortable" id={"#{@id}-group-#{index}"}>

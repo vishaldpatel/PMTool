@@ -55,12 +55,17 @@ defmodule PmToolWeb.TagTasksComponent do
         <h3 class="font-bold text-right text-sm px-2 text-gray-500">Done</h3>
         <%= for group <- [:last, :two, :three, :earlier] do %>
           <%= if Enum.count(@tasks[:Done][group]) > 0 do %>
-            <%= if group == :last do %>
-              <div class="font-bold text-gray-400 uppercase text-xs mb-1 mt-[-18px] text-right">
-                Previous
-              </div>
-            <% else %>
-              <div class="font-bold text-gray-400 uppercase text-xs my-1 text-right">{group}</div>
+            <%= case group do %>
+              <% :last -> %>
+                <div class="font-bold text-gray-400 uppercase text-xs mb-1 mt-[-18px] text-right">
+                  Previous Week
+                </div>
+              <% :earlier -> %>
+                <div class="font-bold text-gray-400 uppercase text-xs my-1 text-right">{group}</div>
+              <% _ -> %>
+                <div class="font-bold text-gray-400 uppercase text-xs my-1 text-right">
+                  {group} Weeks ago
+                </div>
             <% end %>
           <% end %>
           <ul phx-hook="Sortable" id={"#{@id}-group-#{group}"}>
