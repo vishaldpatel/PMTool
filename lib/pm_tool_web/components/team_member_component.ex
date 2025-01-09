@@ -122,8 +122,8 @@ defmodule PmToolWeb.TeamMemberComponent do
           />{@team_member.name}
         </div>
         <div class="inline-block flex-none">
-          <button
-            phx-click="show_team_tasks"
+          <!-- <button
+            phx-click="show_team_member_tasks"
             phx-value-team_slug={@team.slug}
             phx-value-teammember_id={@team_member.id}
             class="font-bold rounded my-1"
@@ -145,7 +145,7 @@ defmodule PmToolWeb.TeamMemberComponent do
               <rect x="7" y="7" width="3" height="9" />
               <rect x="14" y="7" width="3" height="5" />
             </svg>
-          </button>
+          </button> -->
         </div>
       </div>
       <.team_member_form
