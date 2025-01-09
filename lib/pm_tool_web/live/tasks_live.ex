@@ -192,7 +192,7 @@ defmodule PmToolWeb.TasksLive do
         _ ->
           Tasks.list_tasks(
             socket.assigns.current_user,
-            Enum.map(socket.assigns.teams, & &1.id)
+            socket.assigns.teams
           )
       end
 

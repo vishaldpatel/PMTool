@@ -54,36 +54,39 @@ defmodule PmTool.Tasks do
   end
 
   def list_tasks(%User{} = user, teams) do
+    team_ids = Enum.map(teams, & &1.id)
     query =
       from t in base_list_tasks_query(),
-        where: t.creator_id == ^user.id or t.team_id in ^teams,
+        where: t.creator_id == ^user.id or t.team_id in ^team_ids,
         order_by: [t.stage, t.task_order]
 
     velocity = determine_velocity(user)
+    team_velocities = for team <- teams, into: %{}, do: {team.id, determine_velocity(team)}
 
     Repo.all(query)
     |> Repo.preload(team: [:team_members])
     |> Repo.preload(:owner)
-    |> separate_tasks_into_stages(velocity)
+    |> separate_tasks_into_stages(velocity, team_velocities)
   end
 
   def list_tasks(%User{} = user, project_slug, teams) do
+    team_ids = Enum.map(teams, & &1.id)
     project = Projects.get_project_by_slug!(project_slug)
 
     query =
       from t in base_list_tasks_query(),
         where:
-          ((t.creator_id == ^user.id and is_nil(t.team_id)) or
-             t.team_id in ^teams) and
-            ^project.tag in t.project_tags,
+          (t.creator_id == ^user.id or t.team_id in ^team_ids) and
+          ^project.tag in t.project_tags,
         order_by: [t.stage, t.task_order]
 
     velocity = determine_velocity(user)
+    team_velocities = for team <- teams, into: %{}, do: {team.id, determine_velocity(team)}
 
     Repo.all(query)
     |> Repo.preload(team: [:team_members])
     |> Repo.preload(:owner)
-    |> separate_tasks_into_stages(velocity)
+    |> separate_tasks_into_stages(velocity, team_velocities)
   end
 
   def base_list_tasks_query() do
@@ -176,7 +179,7 @@ defmodule PmTool.Tasks do
     if velocity <= 20, do: 20, else: velocity
   end
 
-  def separate_tasks_into_stages(unsorted_tasks, velocity) do
+  def get_iteration_end_times() do
     # Limit the results until the estimate adds up to 30
     last_period_end_date = Date.utc_today() |> Date.end_of_week() |> Date.add(-7)
     two_period_end_date = Date.add(last_period_end_date, -7)
@@ -189,6 +192,131 @@ defmodule PmTool.Tasks do
     three_period_end = DateTime.new!(three_period_end_date, just_before_midnight, "Etc/UTC")
     earlier_end = DateTime.new!(earlier_end_date, just_before_midnight, "Etc/UTC")
 
+    {last_period_end, two_period_end, three_period_end, earlier_end} 
+  end
+
+  def sort_task(task, [total_estimate, current_period, tasks], iteration_end_times, velocity) do
+    {last_period_end, two_period_end, three_period_end, earlier_end} = iteration_end_times
+    status_updated_at = DateTime.from_naive!(task.status_updated_at, "Etc/UTC")
+    cond do
+      # If it was Accepted more than 7 days ago, then it is marked as Done
+      Enum.member?(["Accepted", "Closed"], task.status) and
+          DateTime.compare(status_updated_at, last_period_end) == :lt ->
+        cond do
+          DateTime.compare(status_updated_at, earlier_end) == :lt ->
+             [
+               total_estimate,
+               current_period,
+               Map.put(
+                 tasks,
+                 :Done,
+                 Map.put(tasks[:Done], :earlier, tasks[:Done][:earlier] ++ [task])
+               )
+             ]
+
+          DateTime.compare(status_updated_at, three_period_end) == :lt ->
+             [
+               total_estimate,
+               current_period,
+               Map.put(
+                 tasks,
+                 :Done,
+                 Map.put(tasks[:Done], :three, tasks[:Done][:three] ++ [task])
+               )
+             ]
+
+          DateTime.compare(status_updated_at, two_period_end) == :lt ->
+             [
+               total_estimate,
+               current_period,
+               Map.put(
+                 tasks,
+                 :Done,
+                 Map.put(tasks[:Done], :two, tasks[:Done][:two] ++ [task])
+               )
+             ]
+
+          true ->
+             [
+               total_estimate,
+               current_period,
+               Map.put(
+                 tasks,
+                 :Done,
+                 Map.put(tasks[:Done], :last, tasks[:Done][:last] ++ [task])
+               )
+             ]
+        end
+
+      task.stage == "Later" ->
+         [total_estimate, current_period, Map.put(tasks, :Later, tasks[:Later] ++ [task])]
+
+      total_estimate + task.estimate <= velocity or
+          (task.status != "Unstarted" and task.status != "Unappraised") ->
+         [
+           total_estimate + task.estimate,
+           current_period,
+           %{tasks | Now: tasks[:Now] ++ [task]}
+         ]
+
+      true ->
+        current_period =
+          case total_estimate + task.estimate > velocity * (current_period + 1) do
+            true ->
+              current_period + 1
+
+            false ->
+              current_period
+          end
+
+        tasks =
+          case tasks[:Next][current_period] do
+            nil ->
+              Map.put(tasks, :Next, Map.put(tasks[:Next], current_period, [task]))
+
+            current_period_tasks ->
+              Map.put(
+                tasks,
+                :Next,
+                Map.put(tasks[:Next], current_period, current_period_tasks ++ [task])
+              )
+          end
+
+        [total_estimate + task.estimate, current_period, tasks]
+    end
+  end
+
+  def separate_tasks_into_stages(unsorted_tasks, user_velocity, team_velocities) do
+    iteration_end_times = get_iteration_end_times()
+    team_estimates = for {team_id, _velocity} <- team_velocities, into: %{}, do: {team_id, 0}
+    team_periods = team_estimates
+    [_now_estimate, _current_period, _team_estimates, _team_periods, tasks] =
+      Enum.reduce_while(
+        unsorted_tasks,
+        [
+          0,
+          0,
+          team_estimates,
+          team_periods,
+          %{Now: [], Next: %{}, Done: %{last: [], two: [], three: [], earlier: []}, Later: []}
+        ],
+        fn task, acc ->
+          [user_estimate, current_period, team_estimates, team_periods, tasks] = acc
+          if is_nil(task.team_id) do
+            [user_estimate, current_period, tasks] = sort_task(task, [user_estimate, current_period, tasks], iteration_end_times, user_velocity)
+            {:cont, [user_estimate, current_period, team_estimates, team_periods, tasks]}
+          else
+            [team_estimate, current_period, tasks] = sort_task(task, [team_estimates[task.team_id], team_periods[task.team_id], tasks], iteration_end_times, team_velocities[task.team_id])
+            {:cont, [user_estimate, current_period, Map.put(team_estimates, task.team_id, team_estimate), Map.put(team_periods, task.team_id, current_period), tasks]}
+          end
+        end
+      )
+
+    tasks
+  end
+ 
+  def separate_tasks_into_stages(unsorted_tasks, velocity) do
+    iteration_end_times = get_iteration_end_times()
     [_now_estimate, _current_period, tasks] =
       Enum.reduce_while(
         unsorted_tasks,
@@ -198,101 +326,7 @@ defmodule PmTool.Tasks do
           %{Now: [], Next: %{}, Done: %{last: [], two: [], three: [], earlier: []}, Later: []}
         ],
         fn task, acc ->
-          [total_estimate, current_period, tasks] = acc
-          status_updated_at = DateTime.from_naive!(task.status_updated_at, "Etc/UTC")
-
-          cond do
-            # If it was Accepted more than 7 days ago, then it is marked as Done
-            Enum.member?(["Accepted", "Closed"], task.status) and
-                DateTime.compare(status_updated_at, last_period_end) == :lt ->
-              cond do
-                DateTime.compare(status_updated_at, earlier_end) == :lt ->
-                  {:cont,
-                   [
-                     total_estimate,
-                     current_period,
-                     Map.put(
-                       tasks,
-                       :Done,
-                       Map.put(tasks[:Done], :earlier, tasks[:Done][:earlier] ++ [task])
-                     )
-                   ]}
-
-                DateTime.compare(status_updated_at, three_period_end) == :lt ->
-                  {:cont,
-                   [
-                     total_estimate,
-                     current_period,
-                     Map.put(
-                       tasks,
-                       :Done,
-                       Map.put(tasks[:Done], :three, tasks[:Done][:three] ++ [task])
-                     )
-                   ]}
-
-                DateTime.compare(status_updated_at, two_period_end) == :lt ->
-                  {:cont,
-                   [
-                     total_estimate,
-                     current_period,
-                     Map.put(
-                       tasks,
-                       :Done,
-                       Map.put(tasks[:Done], :two, tasks[:Done][:two] ++ [task])
-                     )
-                   ]}
-
-                true ->
-                  {:cont,
-                   [
-                     total_estimate,
-                     current_period,
-                     Map.put(
-                       tasks,
-                       :Done,
-                       Map.put(tasks[:Done], :last, tasks[:Done][:last] ++ [task])
-                     )
-                   ]}
-              end
-
-            task.stage == "Later" ->
-              {:cont,
-               [total_estimate, current_period, Map.put(tasks, :Later, tasks[:Later] ++ [task])]}
-
-            total_estimate + task.estimate <= velocity or
-                (task.status != "Unstarted" and task.status != "Unappraised") ->
-              {:cont,
-               [
-                 total_estimate + task.estimate,
-                 current_period,
-                 %{tasks | Now: tasks[:Now] ++ [task]}
-               ]}
-
-            true ->
-              current_period =
-                case total_estimate + task.estimate > velocity * (current_period + 1) do
-                  true ->
-                    current_period + 1
-
-                  false ->
-                    current_period
-                end
-
-              tasks =
-                case tasks[:Next][current_period] do
-                  nil ->
-                    Map.put(tasks, :Next, Map.put(tasks[:Next], current_period, [task]))
-
-                  current_period_tasks ->
-                    Map.put(
-                      tasks,
-                      :Next,
-                      Map.put(tasks[:Next], current_period, current_period_tasks ++ [task])
-                    )
-                end
-
-              {:cont, [total_estimate + task.estimate, current_period, tasks]}
-          end
+          {:cont, sort_task(task, acc, iteration_end_times, velocity)}
         end
       )
 
