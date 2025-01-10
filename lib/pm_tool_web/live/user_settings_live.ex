@@ -5,12 +5,11 @@ defmodule PmToolWeb.UserSettingsLive do
 
   def render(assigns) do
     ~H"""
-    <.header class="text-center">
-      Account Settings
-      <:subtitle>Manage your account email address and password settings</:subtitle>
-    </.header>
-
-    <div class="space-y-12 divide-y">
+    <div class="mx-auto max-w-sm bg-white rounded-lg p-8">
+      <.header class="text-center">
+        Account Settings
+        <:subtitle>Manage your account email address and password settings</:subtitle>
+      </.header>
       <div>
         <.simple_form for={@name_form} id="name_form" phx-submit="update_name">
           <.input field={@name_form[:name]} type="text" label="Name" required />

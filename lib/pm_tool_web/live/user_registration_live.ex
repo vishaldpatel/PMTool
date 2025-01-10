@@ -6,7 +6,7 @@ defmodule PmToolWeb.UserRegistrationLive do
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-sm">
+    <div class="mx-auto max-w-sm bg-white rounded-lg p-8">
       <.header class="text-center">
         Register for an account
         <:subtitle>

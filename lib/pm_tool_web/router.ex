@@ -52,7 +52,7 @@ defmodule PmToolWeb.Router do
 
     live_session :redirect_if_user_is_authenticated,
       on_mount: [{PmToolWeb.UserAuth, :redirect_if_user_is_authenticated}] do
-      live "/users/register", UserRegistrationLive, :new
+      # live "/users/register", UserRegistrationLive, :new
       live "/users/log_in", UserLoginLive, :new
       live "/users/reset_password", UserForgotPasswordLive, :new
       live "/users/reset_password/:token", UserResetPasswordLive, :edit
@@ -71,11 +71,6 @@ defmodule PmToolWeb.Router do
 
       live "/tasks", TasksLive, :index
       live "/tasks/:slug", TasksLive, :expand_task
-
-      # live "/projects", ProjectLive.Index, :index
-      # live "/projects/new", ProjectLive.Index, :new
-      # live "/projects/:combo_slug", ProjectLive.Show, :show
-      # live "/projects/:combo_slug/edit", ProjectLive.Edit, :edit
     end
   end
 

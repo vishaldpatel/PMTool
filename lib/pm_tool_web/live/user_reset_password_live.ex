@@ -5,7 +5,7 @@ defmodule PmToolWeb.UserResetPasswordLive do
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-sm">
+    <div class="mx-auto max-w-sm bg-white rounded-lg p-8">
       <.header class="text-center">Reset Password</.header>
 
       <.simple_form

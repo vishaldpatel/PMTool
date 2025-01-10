@@ -3,16 +3,16 @@ defmodule PmToolWeb.UserLoginLive do
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-sm">
+    <div class="mx-auto max-w-sm bg-white rounded-lg p-8">
       <.header class="text-center">
         Log in to account
-        <:subtitle>
+        <!-- <:subtitle>
           Don't have an account?
           <.link navigate={~p"/users/register"} class="font-semibold text-brand hover:underline">
             Sign up
           </.link>
           for an account now.
-        </:subtitle>
+        </:subtitle> -->
       </.header>
 
       <.simple_form for={@form} id="login_form" action={~p"/users/log_in"} phx-update="ignore">
