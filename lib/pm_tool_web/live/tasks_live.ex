@@ -29,6 +29,7 @@ defmodule PmToolWeb.TasksLive do
           open_team_slugs={@open_team_slugs}
           timestamp={@timestamp}
         />
+        <.live_component module={PmToolWeb.SearchTagsComponent} id="search_tags" tags={@search_tags} />
       </div>
       <%= for project <- @open_projects do %>
         <.live_component
@@ -128,6 +129,7 @@ defmodule PmToolWeb.TasksLive do
       |> maybe_get_current_task(params)
       |> get_teams()
       |> get_tasks()
+      |> maybe_get_search_tags()
       |> assign_new_task_ids()
       |> assign(
         merge_now_and_next_tasks:
@@ -151,6 +153,16 @@ defmodule PmToolWeb.TasksLive do
       end
 
     {:ok, socket}
+  end
+
+  defp maybe_get_search_tags(socket) do
+    assign(socket,
+      search_tags:
+        Tasks.list_tags(
+          socket.assigns.current_user,
+          socket.assigns.teams
+        )
+    )
   end
 
   defp maybe_get_current_team(socket) do
@@ -203,7 +215,8 @@ defmodule PmToolWeb.TasksLive do
 
     socket =
       Enum.reduce(socket.assigns.open_tags, socket, fn tag, socket ->
-        tag_tasks = Tasks.list_tasks_for_tag(socket.assigns.current_user, tag)
+        tag_tasks =
+          Tasks.list_tasks_for_tag(socket.assigns.current_user, socket.assigns.teams, tag)
 
         assign(socket,
           open_tag_tasks: Map.put(socket.assigns.open_tag_tasks, tag, tag_tasks)

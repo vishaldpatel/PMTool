@@ -26,17 +26,23 @@ defmodule PmTool.Tasks do
     |> separate_tasks_into_stages(velocity)
   end
 
-  def list_tasks_for_tag(%User{} = user, tag) do
+  def list_tasks_for_tag(%User{} = user, teams, tag) do
+    team_ids = get_ids_from(teams)
+
     query =
-      from t in base_list_tasks_query(user),
-        where: ^tag in t.tags
+      from t in base_list_tasks_query(),
+        where:
+          (t.creator_id == ^user.id or t.team_id in ^team_ids) and
+            ^tag in t.tags,
+        order_by: [t.stage, t.task_order]
 
     velocity = determine_velocity(user)
+    team_velocities = for team <- teams, into: %{}, do: {team.id, determine_velocity(team)}
 
     Repo.all(query)
     |> Repo.preload(team: [:team_members])
     |> Repo.preload(:owner)
-    |> separate_tasks_into_stages(velocity)
+    |> separate_tasks_into_stages(velocity, team_velocities)
   end
 
   def list_tasks(%Team{} = team, project_slug) do
@@ -53,8 +59,12 @@ defmodule PmTool.Tasks do
     |> separate_tasks_into_stages(velocity)
   end
 
+  defp get_ids_from(objects) do
+    Enum.map(objects, & &1.id)
+  end
+
   def list_tasks(%User{} = user, teams) do
-    team_ids = Enum.map(teams, & &1.id)
+    team_ids = get_ids_from(teams)
 
     query =
       from t in base_list_tasks_query(),
@@ -71,7 +81,7 @@ defmodule PmTool.Tasks do
   end
 
   def list_tasks(%User{} = user, project_slug, teams) do
-    team_ids = Enum.map(teams, & &1.id)
+    team_ids = get_ids_from(teams)
     project = Projects.get_project_by_slug!(project_slug)
 
     query =
@@ -357,6 +367,18 @@ defmodule PmTool.Tasks do
       )
 
     tasks
+  end
+
+  def list_tags(%User{} = user, teams) do
+    team_ids = get_ids_from(teams)
+
+    Repo.all(
+      from t in Task, where: t.creator_id == ^user.id or t.team_id in ^team_ids, select: t.tags
+    )
+    |> List.flatten()
+    |> Enum.uniq()
+    |> Enum.sort()
+    |> Enum.filter(&(!is_nil(&1)))
   end
 
   # Be able to create a Task
