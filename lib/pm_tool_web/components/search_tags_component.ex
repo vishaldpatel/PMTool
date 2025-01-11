@@ -1,8 +1,6 @@
 defmodule PmToolWeb.SearchTagsComponent do
   use PmToolWeb, :live_component
 
-  alias PmTool.Tags
-
   def mount(socket) do
     {:ok,
      assign(socket,

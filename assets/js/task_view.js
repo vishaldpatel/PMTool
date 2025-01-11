@@ -21,12 +21,27 @@ export default class TaskView {
       let stage = event.detail.stage
       let task_options = task_options_for_stage(stage)
       let task_container = document.getElementById("show-"+event.detail.id)
+      let btns_add_to_project = document.getElementsByClassName("btn_add_to_project")
+      let btns_move_to_team = document.getElementsByClassName("btn_move_to_team")
+
       task_container.classList.toggle('bg-orange-500')
 
       if (document.querySelectorAll(`input[name="${stage}_task_slugs[]"]:checked`).length > 0) {
         task_options.style.display = "inline-block"
+        for (let x = 0; x < btns_add_to_project.length; x++) {
+          btns_add_to_project[x].style.display = "inline-block"
+        }
+        for (let x = 0; x < btns_move_to_team.length; x++) {
+          btns_move_to_team[x].style.display = "inline-block"
+        }
       } else {
         task_options.style.display = "none"
+        for (let x = 0; x < btns_add_to_project.length; x++) {
+          btns_add_to_project[x].style.display = "none"
+        }
+        for (let x = 0; x < btns_move_to_team.length; x++) {
+          btns_move_to_team[x].style.display = "none"
+        }
       }
 
       if (event.detail.project_slug) {
@@ -46,11 +61,48 @@ export default class TaskView {
         }
       }
 
+      let selected_tasks = []
+      let is_set = false
+      if (btns_add_to_project.length > 0) {
+        selected_tasks = btns_add_to_project[0].getAttributeNode("phx-value-selected_tasks").value
+      } else if (btns_move_to_team.length > 0) {
+        selected_tasks = btns_move_to_team[0].getAttributeNode("phx-value-selected_tasks").value
+      }
+      selected_tasks = selected_tasks == "" ? [] : selected_tasks.split(",")
+
       if (event.target.checked) {
         task_options.innerHTML += `<input type="hidden" name="task_slugs[]" value="${event.detail.slug}" id="chk-${event.detail.slug}">`
+        if (selected_tasks.length == 0) {
+          selected_tasks.push(event.detail.slug)
+        }
+        else if (selected_tasks.length >= 1) {
+          selected_tasks.push(event.detail.slug)
+          selected_tasks = selected_tasks.join(",")
+        }
+
+        for (let x = 0; x < btns_add_to_project.length; x++) {
+          btns_add_to_project[x].setAttribute("phx-value-selected_tasks", selected_tasks)
+        }
+        for (let x = 0; x < btns_move_to_team.length; x++) {
+          btns_move_to_team[x].setAttribute("phx-value-selected_tasks", selected_tasks)
+        }
       } else {
         // Remove element with id of chk-id
         document.getElementById(`chk-${event.detail.slug}`).remove()
+        if (selected_tasks.length > 0) {
+          const index = selected_tasks.indexOf(event.detail.slug);
+          if (index > -1) {
+            selected_tasks.splice(index, 1);
+            selected_tasks = selected_tasks.join(",")
+          }
+        }
+
+        for (let x = 0; x < btns_add_to_project.length; x++) {
+          btns_add_to_project[x].setAttribute("phx-value-selected_tasks", selected_tasks)
+        }
+        for (let x = 0; x < btns_move_to_team.length; x++) {
+          btns_move_to_team[x].setAttribute("phx-value-selected_tasks", selected_tasks)
+        }
       }
     }
 

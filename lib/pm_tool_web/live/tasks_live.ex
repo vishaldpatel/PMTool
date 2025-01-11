@@ -552,6 +552,35 @@ defmodule PmToolWeb.TasksLive do
     {:noreply, get_tasks(socket)}
   end
 
+  def handle_event("move_tasks_to_team", params, socket) do
+    task_slugs = String.split(params["selected_tasks"], ",")
+    team_slug = params["team_slug"]
+    team = Teams.get_team_by_slug!(team_slug)
+
+    Enum.each(task_slugs, fn task_slug ->
+      task = Tasks.get_task_by_slug!(task_slug)
+      Tasks.update_task(task, %{team_id: team.id})
+    end)
+
+    {:noreply, get_tasks(socket)}
+  end
+
+  def handle_event("add_tasks_to_project", params, socket) do
+    task_slugs = String.split(params["selected_tasks"], ",")
+    project_slug = params["project_slug"]
+    project = Projects.get_project_by_slug!(project_slug)
+
+    Enum.each(task_slugs, fn task_slug ->
+      task = Tasks.get_task_by_slug!(task_slug)
+
+      unless Enum.member?(task.project_tags, project.tag) do
+        Tasks.update_task(task, %{project_tags: [project.tag | task.project_tags]})
+      end
+    end)
+
+    {:noreply, get_tasks(socket)}
+  end
+
   def handle_event("delete_tasks", params, socket) do
     current_user = socket.assigns.current_user
     task_slugs = params["task_slugs"]

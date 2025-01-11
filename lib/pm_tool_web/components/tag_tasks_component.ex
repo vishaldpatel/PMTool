@@ -95,7 +95,7 @@ defmodule PmToolWeb.TagTasksComponent do
               hide_tag_tag={true}
             />
           <% end %>
-          <%= for task <- @tasks[:Next] do %>
+          <%= for task <- @tasks[:Next] |> Map.values() |> List.flatten() do %>
             <.live_component
               module={PmToolWeb.TaskComponents}
               no_move={task.status != "Unstarted"}

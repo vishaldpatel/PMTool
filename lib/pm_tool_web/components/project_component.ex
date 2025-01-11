@@ -19,12 +19,21 @@ defmodule PmToolWeb.ProjectComponent do
        open_project_slugs: [],
        actions: true,
        show_project: "flex",
-       show_project_edit: "hidden"
+       show_project_edit: "hidden",
+       tasks_selected: false
      )}
   end
 
   def update(assigns, socket) do
-    {:ok, assign(socket, assigns)}
+    btn_add_to_project_display =
+      if socket.assigns.tasks_selected, do: "inline-block", else: "none"
+
+    socket =
+      socket
+      |> assign(assigns)
+      |> assign(btn_add_to_project_display: btn_add_to_project_display)
+
+    {:ok, socket}
   end
 
   def handle_event("update_project", %{"project" => project_params}, socket) do
@@ -117,13 +126,12 @@ defmodule PmToolWeb.ProjectComponent do
                 class="font-bold rounded my-1"
               >
                 <svg
-                  class="h-4 w-4 text-orange-500 bg-gray-600 hover:bg-gray-500 rounded border-0"
+                  class="h-4 w-4 text-orange-500 fill-gray-600 hover:fill-orange-200 rounded border-0"
                   <svg
                   viewBox="0 0 24 24"
                   width="24"
                   height="24"
                   xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
                   stroke="currentColor"
                   stroke-width="2"
                   stroke-linecap="round"
@@ -131,6 +139,25 @@ defmodule PmToolWeb.ProjectComponent do
                 >
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                   <rect x="7" y="7" width="3" height="9" /> <rect x="14" y="7" width="3" height="5" />
+                </svg>
+              </button>
+              <button
+                phx-click="add_tasks_to_project"
+                phx-value-project_slug={@project.slug}
+                phx-value-selected_tasks={[]}
+                class="btn_add_to_project font-bold rounded my-1"
+                style={"display: #{@btn_add_to_project_display};"}
+              >
+                <svg
+                  class="h-4 w-4 text-orange-500 fill-gray-600 hover:fill-orange-200"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" /> <line x1="12" y1="8" x2="12" y2="16" />
+                  <line x1="8" y1="12" x2="16" y2="12" />
                 </svg>
               </button>
             <% end %>

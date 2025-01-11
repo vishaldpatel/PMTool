@@ -59,10 +59,6 @@ defmodule PmTool.Tasks do
     |> separate_tasks_into_stages(velocity)
   end
 
-  defp get_ids_from(objects) do
-    Enum.map(objects, & &1.id)
-  end
-
   def list_tasks(%User{} = user, teams) do
     team_ids = get_ids_from(teams)
 
@@ -98,6 +94,10 @@ defmodule PmTool.Tasks do
     |> Repo.preload(team: [:team_members])
     |> Repo.preload(:owner)
     |> separate_tasks_into_stages(velocity, team_velocities)
+  end
+
+  defp get_ids_from(objects) do
+    Enum.map(objects, & &1.id)
   end
 
   def base_list_tasks_query() do
