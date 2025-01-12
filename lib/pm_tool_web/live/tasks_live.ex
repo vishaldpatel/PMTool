@@ -18,6 +18,7 @@ defmodule PmToolWeb.TasksLive do
           new_project_id={@new_project_id}
           projects={@projects}
           open_project_slugs={@open_project_slugs}
+          project_progress={@project_progress}
         />
         <.live_component
           module={PmToolWeb.TeamsComponent}
@@ -139,6 +140,7 @@ defmodule PmToolWeb.TasksLive do
           end
       )
       |> get_projects()
+      |> get_project_progress()
       |> assign_new_project_id()
       |> assign_new_team_id()
 
@@ -195,6 +197,40 @@ defmodule PmToolWeb.TasksLive do
     |> assign(open_projects: Projects.get_projects!(socket.assigns.open_project_slugs))
   end
 
+  defp get_project_progress(socket) do
+    # For each project, get the number of tasks that are "Done" divided by the total number of tasks in the project
+    [done_project_tasks, total_project_tasks] =
+      Enum.reduce(socket.assigns.all_tasks, [%{}, %{}], fn task,
+                                                           [
+                                                             done_project_tasks,
+                                                             total_project_tasks
+                                                           ] ->
+        Enum.reduce(task.project_tags, [done_project_tasks, total_project_tasks], fn project_tag,
+                                                                                     [
+                                                                                       done_project_tasks,
+                                                                                       total_project_tasks
+                                                                                     ] ->
+          done_project_tasks =
+            if Enum.member?(["Accepted", "Closed"], task.status) do
+              total = done_project_tasks[project_tag] || 0
+              Map.put(done_project_tasks, project_tag, total + 1)
+            else
+              done_project_tasks
+            end
+
+          total = total_project_tasks[project_tag] || 0
+          total_project_tasks = Map.put(total_project_tasks, project_tag, total + 1)
+          [done_project_tasks, total_project_tasks]
+        end)
+      end)
+
+    socket
+    |> assign(
+      project_progress:
+        Map.new(done_project_tasks, fn {k, v} -> {k, v / total_project_tasks[k] * 100} end)
+    )
+  end
+
   defp get_tasks(socket) do
     tasks =
       case socket.assigns.current_team do
@@ -212,6 +248,12 @@ defmodule PmToolWeb.TasksLive do
     next_tasks = tasks[:Next]
     later_tasks = tasks[:Later]
     done_tasks = tasks[:Done]
+
+    all_tasks =
+      ((now_tasks ++
+          (next_tasks |> Map.values() |> List.flatten())) ++
+         later_tasks) ++
+        (done_tasks |> Map.values() |> List.flatten())
 
     socket =
       Enum.reduce(socket.assigns.open_tags, socket, fn tag, socket ->
@@ -248,7 +290,8 @@ defmodule PmToolWeb.TasksLive do
       done_tasks: done_tasks,
       now_tasks: now_tasks,
       next_tasks: next_tasks,
-      later_tasks: later_tasks
+      later_tasks: later_tasks,
+      all_tasks: all_tasks
     )
   end
 
@@ -299,7 +342,8 @@ defmodule PmToolWeb.TasksLive do
      socket
      |> assign(project: project)
      |> get_tasks()
-     |> get_projects()}
+     |> get_projects()
+     |> get_project_progress()}
   end
 
   def handle_info({:team_member_deleted}, socket) do
@@ -327,7 +371,8 @@ defmodule PmToolWeb.TasksLive do
      socket
      |> get_tasks()
      |> assign_new_task_ids()
-     |> assign_new_project_id()}
+     |> assign_new_project_id()
+     |> get_project_progress()}
   end
 
   def handle_info({:team_updated, team}, socket) do
@@ -340,7 +385,8 @@ defmodule PmToolWeb.TasksLive do
     {:noreply,
      socket
      |> assign(task: task)
-     |> get_tasks()}
+     |> get_tasks()
+     |> get_project_progress()}
   end
 
   defp show_tasks_with_tag(socket, tag) do
@@ -458,7 +504,8 @@ defmodule PmToolWeb.TasksLive do
      socket
      |> assign(current_team: team)
      |> assign(current_team_id: team.id)
-     |> get_tasks()}
+     |> get_tasks()
+     |> get_project_progress()}
   end
 
   def handle_event("unset_current_team", _params, socket) do
@@ -473,7 +520,8 @@ defmodule PmToolWeb.TasksLive do
      |> assign(current_team: nil)
      |> assign(current_team_id: nil)
      |> assign_new_task_ids()
-     |> get_tasks()}
+     |> get_tasks()
+     |> get_project_progress()}
   end
 
   def handle_event("show_hide_team_members", params, socket) do
@@ -549,7 +597,10 @@ defmodule PmToolWeb.TasksLive do
       "estimate_task" -> Tasks.estimate_task(task, params["estimate"])
     end
 
-    {:noreply, get_tasks(socket)}
+    {:noreply,
+     socket
+     |> get_tasks()
+     |> get_project_progress()}
   end
 
   def handle_event("move_tasks_to_team", params, socket) do
@@ -562,7 +613,10 @@ defmodule PmToolWeb.TasksLive do
       Tasks.update_task(task, %{team_id: team.id})
     end)
 
-    {:noreply, get_tasks(socket)}
+    {:noreply,
+     socket
+     |> get_tasks()
+     |> get_project_progress()}
   end
 
   def handle_event("add_tasks_to_project", params, socket) do
@@ -578,7 +632,10 @@ defmodule PmToolWeb.TasksLive do
       end
     end)
 
-    {:noreply, get_tasks(socket)}
+    {:noreply,
+     socket
+     |> get_tasks()
+     |> get_project_progress()}
   end
 
   def handle_event("delete_tasks", params, socket) do
@@ -598,7 +655,10 @@ defmodule PmToolWeb.TasksLive do
       Tasks.update_task(task, %{project_tags: List.delete(task.project_tags, project.tag)})
     end)
 
-    {:noreply, get_tasks(socket)}
+    {:noreply,
+     socket
+     |> get_tasks()
+     |> get_project_progress()}
   end
 
   def handle_event(
@@ -616,7 +676,10 @@ defmodule PmToolWeb.TasksLive do
       Tasks.update_task(task, %{project_tags: [project.tag | task.project_tags]})
     end
 
-    {:noreply, get_tasks(socket)}
+    {:noreply,
+     socket
+     |> get_tasks()
+     |> get_project_progress()}
   end
 
   def handle_event(
@@ -636,6 +699,9 @@ defmodule PmToolWeb.TasksLive do
       "move_below" -> Tasks.move_task_below(task, affected_task)
     end
 
-    {:noreply, get_tasks(socket)}
+    {:noreply,
+     socket
+     |> get_tasks()
+     |> get_project_progress()}
   end
 end

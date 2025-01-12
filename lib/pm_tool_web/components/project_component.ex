@@ -20,7 +20,8 @@ defmodule PmToolWeb.ProjectComponent do
        actions: true,
        show_project: "flex",
        show_project_edit: "hidden",
-       tasks_selected: false
+       tasks_selected: false,
+       project_progress: 0.0
      )}
   end
 
@@ -28,9 +29,14 @@ defmodule PmToolWeb.ProjectComponent do
     btn_add_to_project_display =
       if socket.assigns.tasks_selected, do: "inline-block", else: "none"
 
+    socket = assign(socket, assigns)
+
     socket =
       socket
-      |> assign(assigns)
+      |> assign(
+        project_progress_display:
+          socket.assigns.project_progress |> Decimal.from_float() |> Decimal.round(2)
+      )
       |> assign(btn_add_to_project_display: btn_add_to_project_display)
 
     {:ok, socket}
@@ -117,7 +123,26 @@ defmodule PmToolWeb.ProjectComponent do
           }
           class={"inline-block text-md w-full pl-1 pr-1 pt-0.5 text-gray-100 #{@show_project}"}
         >
-          <div class="inline-block just_title text-left flex-auto">{@project.name}</div>
+          <div class="inline-block just_title text-left flex-auto">
+            <svg class="h-4 w-4 inline mb-1 mr-[-1px]" viewBox="0 0 20 20">
+              <circle r="10" cx="10" cy="10" fill="lightgray">
+                <title class="text-xs">{"#{@project_progress_display}% Done"}</title>
+              </circle>
+              <circle
+                r="5"
+                cx="10"
+                cy="10"
+                fill="transparent"
+                stroke="darkcyan"
+                stroke-width="10"
+                stroke-dasharray={"#{@project_progress * 31.4 / 100} 31.4"}
+                transform="rotate(-90) translate(-20)"
+              >
+                <title class="text-xs">{"#{@project_progress_display}% Done"}</title>
+              </circle>
+            </svg>
+            {@project.name}
+          </div>
           <div class="inline-block flex-none">
             <%= unless Enum.member?(@open_project_slugs, @project.slug) do %>
               <button

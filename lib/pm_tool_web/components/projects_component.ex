@@ -32,6 +32,13 @@ defmodule PmToolWeb.ProjectsComponent do
               project={project}
               current_user={@current_user}
               open_project_slugs={@open_project_slugs}
+              project_progress={
+                if @project_progress[project.tag] do
+                  @project_progress[project.tag]
+                else
+                  0.0
+                end
+              }
             />
           <% end %>
         </ul>

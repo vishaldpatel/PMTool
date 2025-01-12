@@ -206,7 +206,7 @@ defmodule PmTool.Tasks do
     {last_period_end, two_period_end, three_period_end, earlier_end}
   end
 
-  def sort_task(task, [total_estimate, current_period, tasks], iteration_end_times, velocity) do
+  defp sort_task(task, [total_estimate, current_period, tasks], iteration_end_times, velocity) do
     {last_period_end, two_period_end, three_period_end, earlier_end} = iteration_end_times
     status_updated_at = DateTime.from_naive!(task.status_updated_at, "Etc/UTC")
 
@@ -268,7 +268,28 @@ defmodule PmTool.Tasks do
         [
           total_estimate + task.estimate,
           current_period,
-          %{tasks | Now: tasks[:Now] ++ [task]}
+          cond do
+            Enum.member?(["Accepted", "Closed"], task.status) ->
+              Map.put(
+                tasks,
+                :Now,
+                Map.put(tasks[:Now], :done, tasks[:Now][:done] ++ [task])
+              )
+
+            Enum.member?(["Started", "Rejected", "Finished", "Delivered"], task.status) ->
+              Map.put(
+                tasks,
+                :Now,
+                Map.put(tasks[:Now], :ongoing, tasks[:Now][:ongoing] ++ [task])
+              )
+
+            true ->
+              Map.put(
+                tasks,
+                :Now,
+                Map.put(tasks[:Now], :unstarted, tasks[:Now][:unstarted] ++ [task])
+              )
+          end
         ]
 
       true ->
@@ -298,7 +319,18 @@ defmodule PmTool.Tasks do
     end
   end
 
-  def separate_tasks_into_stages(unsorted_tasks, user_velocity, team_velocities) do
+  defp sort_and_merge_now_tasks(tasks) do
+    now_tasks = tasks[:Now]
+
+    now_tasks =
+      now_tasks
+      |> Map.put(:done, Enum.sort_by(now_tasks[:done], & &1.status_updated_at))
+      |> Map.put(:ongoing, Enum.sort_by(now_tasks[:ongoing], & &1.status_updated_at))
+
+    Map.put(tasks, :Now, (now_tasks[:done] ++ now_tasks[:ongoing]) ++ now_tasks[:unstarted])
+  end
+
+  defp separate_tasks_into_stages(unsorted_tasks, user_velocity, team_velocities) do
     iteration_end_times = get_iteration_end_times()
     team_estimates = for {team_id, _velocity} <- team_velocities, into: %{}, do: {team_id, 0}
     team_periods = team_estimates
@@ -311,7 +343,12 @@ defmodule PmTool.Tasks do
           0,
           team_estimates,
           team_periods,
-          %{Now: [], Next: %{}, Done: %{last: [], two: [], three: [], earlier: []}, Later: []}
+          %{
+            Now: %{done: [], ongoing: [], unstarted: []},
+            Next: %{},
+            Done: %{last: [], two: [], three: [], earlier: []},
+            Later: []
+          }
         ],
         fn task, acc ->
           [user_estimate, current_period, team_estimates, team_periods, tasks] = acc
@@ -347,10 +384,10 @@ defmodule PmTool.Tasks do
         end
       )
 
-    tasks
+    sort_and_merge_now_tasks(tasks)
   end
 
-  def separate_tasks_into_stages(unsorted_tasks, velocity) do
+  defp separate_tasks_into_stages(unsorted_tasks, velocity) do
     iteration_end_times = get_iteration_end_times()
 
     [_now_estimate, _current_period, tasks] =
@@ -359,14 +396,19 @@ defmodule PmTool.Tasks do
         [
           0,
           0,
-          %{Now: [], Next: %{}, Done: %{last: [], two: [], three: [], earlier: []}, Later: []}
+          %{
+            Now: %{done: [], ongoing: [], unstarted: []},
+            Next: %{},
+            Done: %{last: [], two: [], three: [], earlier: []},
+            Later: []
+          }
         ],
         fn task, acc ->
           {:cont, sort_task(task, acc, iteration_end_times, velocity)}
         end
       )
 
-    tasks
+    sort_and_merge_now_tasks(tasks)
   end
 
   def list_tags(%User{} = user, teams) do
