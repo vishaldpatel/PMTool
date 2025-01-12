@@ -319,15 +319,25 @@ defmodule PmTool.Tasks do
     end
   end
 
-  defp sort_and_merge_now_tasks(tasks) do
+  defp sort_and_merge_now_and_done_tasks(tasks) do
     now_tasks = tasks[:Now]
+    done_tasks = tasks[:Done]
 
     now_tasks =
       now_tasks
       |> Map.put(:done, Enum.sort_by(now_tasks[:done], & &1.status_updated_at))
       |> Map.put(:ongoing, Enum.sort_by(now_tasks[:ongoing], & &1.status_updated_at))
 
-    Map.put(tasks, :Now, (now_tasks[:done] ++ now_tasks[:ongoing]) ++ now_tasks[:unstarted])
+    done_tasks =
+      done_tasks
+      |> Map.put(:last, Enum.sort_by(done_tasks[:last], & &1.status_updated_at, :desc))
+      |> Map.put(:two, Enum.sort_by(done_tasks[:two], & &1.status_updated_at, :desc))
+      |> Map.put(:three, Enum.sort_by(done_tasks[:three], & &1.status_updated_at, :desc))
+      |> Map.put(:earlier, Enum.sort_by(done_tasks[:earlier], & &1.status_updated_at, :desc))
+
+    tasks
+    |> Map.put(:Now, (now_tasks[:done] ++ now_tasks[:ongoing]) ++ now_tasks[:unstarted])
+    |> Map.put(:Done, done_tasks)
   end
 
   defp separate_tasks_into_stages(unsorted_tasks, user_velocity, team_velocities) do
@@ -384,7 +394,7 @@ defmodule PmTool.Tasks do
         end
       )
 
-    sort_and_merge_now_tasks(tasks)
+    sort_and_merge_now_and_done_tasks(tasks)
   end
 
   defp separate_tasks_into_stages(unsorted_tasks, velocity) do
@@ -408,7 +418,7 @@ defmodule PmTool.Tasks do
         end
       )
 
-    sort_and_merge_now_tasks(tasks)
+    sort_and_merge_now_and_done_tasks(tasks)
   end
 
   def list_tags(%User{} = user, teams) do
