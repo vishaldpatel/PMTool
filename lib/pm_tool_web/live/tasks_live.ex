@@ -660,6 +660,7 @@ defmodule PmToolWeb.TasksLive do
     {:noreply,
      socket
      |> get_tasks()
+     |> assign_new_project_id()
      |> get_project_progress()}
   end
 
