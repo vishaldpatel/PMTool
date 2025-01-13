@@ -16,6 +16,7 @@ defmodule PmToolWeb.TasksLive do
           id="projects"
           current_user={@current_user}
           new_project_id={@new_project_id}
+          timestamp={@timestamp}
           projects={@projects}
           open_project_slugs={@open_project_slugs}
           project_progress={@project_progress}
@@ -635,6 +636,7 @@ defmodule PmToolWeb.TasksLive do
     {:noreply,
      socket
      |> get_tasks()
+     |> assign_new_project_id() # This should also reset the add to project button.
      |> get_project_progress()}
   end
 

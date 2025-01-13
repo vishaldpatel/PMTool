@@ -170,6 +170,7 @@ defmodule PmToolWeb.ProjectComponent do
                 phx-click="add_tasks_to_project"
                 phx-value-project_slug={@project.slug}
                 phx-value-selected_tasks={[]}
+                phx-value-timestamp={@timestamp}
                 class="btn_add_to_project font-bold rounded my-1"
                 style={"display: #{@btn_add_to_project_display};"}
               >
