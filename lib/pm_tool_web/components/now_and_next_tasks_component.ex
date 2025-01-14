@@ -66,7 +66,7 @@ defmodule PmToolWeb.NowAndNextTasksComponent do
           <%= for task <- @now_tasks do %>
             <.live_component
               module={PmToolWeb.TaskComponents}
-              no_move={task.status != "Unstarted"}
+              draggable={task.status == "Unstarted"}
               id={"task-#{task.slug}#{@timestamp}"}
               task={task}
               show_task={if @open_tasks[task.slug], do: "hidden", else: "flex"}
@@ -92,7 +92,7 @@ defmodule PmToolWeb.NowAndNextTasksComponent do
               <.live_component
                 module={PmToolWeb.TaskComponents}
                 id={"task-#{task.slug}#{@timestamp}"}
-                no_move={false}
+                draggable={true}
                 task={task}
                 show_task={if @open_tasks[task.slug], do: "hidden", else: "flex"}
                 show_task_edit={if @open_tasks[task.slug], do: "flex", else: "hidden"}

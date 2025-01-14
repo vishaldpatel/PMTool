@@ -66,7 +66,7 @@ defmodule PmToolWeb.DoneTasksComponent do
                 module={PmToolWeb.TaskComponents}
                 id={"task-#{task.slug}#{@timestamp}"}
                 task={task}
-                no_move={true}
+                draggable={false}
                 actions={false}
                 show_task={if @open_tasks[task.slug], do: "hidden", else: "flex"}
                 show_task_edit={if @open_tasks[task.slug], do: "flex", else: "hidden"}

@@ -27,7 +27,7 @@ defmodule PmToolWeb.TaskComponents do
      assign(socket,
        task: %Task{stage: "Now", estimate: 1, status: "Unappraised"},
        project: %Project{slug: nil},
-       no_move: false,
+       draggable: true,
        actions: true,
        show_task: "flex",
        show_task_edit: "hidden",
@@ -126,14 +126,14 @@ defmodule PmToolWeb.TaskComponents do
   defp show_task(assigns) do
     ~H"""
     <li class="text-left mt-0.5">
+      <%= if @draggable do %>
+        <div 
+          droppable="true"
+          class={"inline-block drop_box cursor-pointer border border-gray-500 text-right rounded bold flex bg-gray-700 w-full h-20 hidden"}
+        >&nbsp;</div>
+      <% end %>
       <div
-        draggable={
-          if @no_move == true do
-            "false"
-          else
-            "true"
-          end
-        }
+        draggable={if @draggable, do: "true", else: "false"}
         class={"inline-block draggable_task_item cursor-pointer border border-gray-500 text-right rounded bold flex #{status_colors(@task.status)}"}
       >
         <div

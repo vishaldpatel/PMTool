@@ -114,9 +114,12 @@ export default class TaskView {
 
   setup_drag_and_drop() {
     let _move_element = null
+    let _og_spot = null
     let _task_slug = null
     let _above_slug = null
     let _noq = 0
+    var _posX = null
+    var _posY = null
 
     function move_element_to(target) {
       if (target !== _move_element) {
@@ -134,26 +137,45 @@ export default class TaskView {
       }
     }
 
+    function mouseMoved() {
+      if (_posX !== window.event.clientX || _posY !== window.event.clientY) {
+        _posX = window.event.clientX
+        _posY = window.event.clientY
+        return true
+      }
+      return false
+    }
+
     function unsetPlaceholder(target) {
-      target.classList.remove("bg-orange-500")
-      target.classList.add("bg-gray-600")
-      target.classList.add("hover:bg-gray-500")
+      if (mouseMoved()) {
+        let item = target.parentNode.getElementsByClassName("draggable_task_item")[0]
+        if (item.classList.contains("hidden")) {
+          item.classList.remove("hidden")
+          target.parentNode.getElementsByClassName("drop_box")[0].classList.add("hidden")
+        }
+      }
     }
 
     function setPlaceholder(target) {
-      target.classList.remove("bg-gray-600")
-      target.classList.remove("hover:bg-gray-500")
-      target.classList.add("bg-orange-500")
+      if (mouseMoved()) {
+        target.parentNode.getElementsByClassName("draggable_task_item")[0].classList.toggle('hidden')
+        let drop_box = target.parentNode.getElementsByClassName("drop_box")[0]
+        if (drop_box.classList.contains("hidden")) {
+          drop_box.classList.remove("hidden")
+          drop_box.ondragleave = dragLeaveHandler
+          target.parentNode.getElementsByClassName("draggable_task_item")[0].add("hidden")
+        }
+        console.log(drop_box)
+      }
     }
 
     function dragEndHandler(e) {
-      e.preventDefault()
-      unsetPlaceholder(_move_element)
       _move_element = null
+      _og_spot.getElementsByClassName("draggable_task_item")[0].classList.toggle('hidden')
+      _og_spot.getElementsByClassName("drop_box")[0].classList.toggle('hidden')
     }
 
     function dropHandler(e) {
-      e.preventDefault()
       let project_element = e.target.closest(".droppable_project_target")
       if (project_element) {
         let _target_project_slug = project_element.querySelector(".project_slug").value
@@ -183,16 +205,15 @@ export default class TaskView {
     }
 
     function dragLeaveHandler(e) {
-      e.preventDefault()
       let project_element = e.target.closest(".droppable_project_target")
       if (project_element) {
         project_element.classList.remove("bg-orange-200")
       } else {
         let p = e.target.parentNode.parentNode
-        if (p.getAttribute("draggable") == "true") {
+        if (p.getAttribute("droppable") == "true") {
           unsetPlaceholder(p)
         }
-        else if (e.target.getAttribute("draggable") == "true") {
+        else if (e.target.getAttribute("droppable") == "true") {
           unsetPlaceholder(e.target)
         }
       }
@@ -207,29 +228,9 @@ export default class TaskView {
         let p = e.target.parentNode.parentNode
         if (p.getAttribute("draggable") == "true") {
           setPlaceholder(p)
-          move_element_to(p)
         }
         else if (e.target.getAttribute("draggable") == "true") {
           setPlaceholder(e.target)
-          move_element_to(e.target)
-        }
-      }
-    }
-
-    function dragOverHandler(e) {
-      e.preventDefault()
-      let project_element = e.target.closest(".droppable_project_target")
-      if (project_element) {
-        project_element.classList.add("bg-orange-200")
-      } else {
-        let p = e.target.parentNode.parentNode
-        if (p.getAttribute("draggable") == "true") {
-          setPlaceholder(p)
-          move_element_to(p)
-        }
-        else if (e.target.getAttribute("draggable") == "true") {
-          setPlaceholder(e.target)
-          move_element_to(e.target)
         }
       }
     }
@@ -238,7 +239,7 @@ export default class TaskView {
       e.dataTransfer.effectAllowed = "move"
       e.dataTransfer.setData("text/plain", null) // Thanks to bqlou for their comment.
       _move_element = e.target
-      setPlaceholder(e.target)
+      _og_spot = e.target.parentNode
     }
 
     function isBefore(el1, el2) {
@@ -252,7 +253,6 @@ export default class TaskView {
     function attach_drag_handlers(target) {
       target.ondragstart = dragStartHandler
       target.ondragenter = dragEnterHandler
-      target.ondragover = dragOverHandler
       target.ondragleave = dragLeaveHandler
       target.ondragend = dragEndHandler
       target.ondrop = dropHandler
@@ -260,10 +260,14 @@ export default class TaskView {
 
     function attach_drop_handlers(target) {
       target.ondrop = dropHandler
-      target.ondragover = dragOverHandler
       target.ondragenter = dragEnterHandler
       target.ondragleave = dragLeaveHandler
     }
+
+    let droppable_task_items = document.querySelectorAll(".drop_box")
+    droppable_task_items.forEach((item) => {
+      item.ondragleave = dragLeaveHandler
+    })
 
     // for each drop_target, add event listeners
     let draggable_task_items = document.querySelectorAll(".draggable_task_item")

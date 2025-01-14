@@ -74,7 +74,7 @@ defmodule PmToolWeb.TagTasksComponent do
                 module={PmToolWeb.TaskComponents}
                 id={"tag-#{@tag}-task-#{task.slug}#{@timestamp}"}
                 task={task}
-                no_move={true}
+                draggable={false}
                 actions={false}
                 show_task={if @open_tasks[task.slug], do: "hidden", else: "flex"}
                 show_task_edit={if @open_tasks[task.slug], do: "flex", else: "hidden"}
@@ -87,7 +87,7 @@ defmodule PmToolWeb.TagTasksComponent do
           <%= for task <- @tasks[:Now] do %>
             <.live_component
               module={PmToolWeb.TaskComponents}
-              no_move={task.status != "Unstarted"}
+              draggable={task.status == "Unstarted"}
               id={"tag-#{@tag}-task-#{task.slug}#{@timestamp}"}
               tag={@tag}
               task={task}
@@ -98,7 +98,7 @@ defmodule PmToolWeb.TagTasksComponent do
           <%= for task <- @tasks[:Next] |> Map.values() |> List.flatten() do %>
             <.live_component
               module={PmToolWeb.TaskComponents}
-              no_move={task.status != "Unstarted"}
+              draggable={task.status == "Unstarted"}
               id={"tag-#{@tag}-task-#{task.slug}#{@timestamp}"}
               tag={@tag}
               task={task}
@@ -115,7 +115,7 @@ defmodule PmToolWeb.TagTasksComponent do
               id={"tag-#{@tag}-task-#{task.slug}#{@timestamp}"}
               tag={@tag}
               task={task}
-              no_move={false}
+              draggable={true}
               hide_tag_tag={true}
             />
           <% end %>

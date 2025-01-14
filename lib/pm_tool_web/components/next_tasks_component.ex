@@ -44,7 +44,7 @@ defmodule PmToolWeb.NextTasksComponent do
               <.live_component
                 module={PmToolWeb.TaskComponents}
                 id={"task-#{task.slug}#{@timestamp}"}
-                no_move={false}
+                draggable={true}
                 task={task}
                 show_task={if @open_tasks[task.slug], do: "hidden", else: "flex"}
                 show_task_edit={if @open_tasks[task.slug], do: "flex", else: "hidden"}

@@ -64,7 +64,7 @@ defmodule PmToolWeb.NowTasksComponent do
           <%= for task <- @tasks do %>
             <.live_component
               module={PmToolWeb.TaskComponents}
-              no_move={task.status != "Unstarted"}
+              draggable={task.status == "Unstarted"}
               id={"task-#{task.slug}#{@timestamp}"}
               task={task}
               actions={true}

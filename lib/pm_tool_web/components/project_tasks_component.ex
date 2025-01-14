@@ -64,7 +64,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
               id={"project-#{@project.slug}-task-#{task.slug}#{@timestamp}"}
               project={@project}
               task={task}
-              no_move={true}
+              draggable={false}
               actions={false}
               hide_project_tag={true}
             />
@@ -75,7 +75,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
           <%= for task <- @tasks[:Now] do %>
             <.live_component
               module={PmToolWeb.TaskComponents}
-              no_move={task.status != "Unstarted"}
+              draggable={task.status == "Unstarted"}
               id={"project-#{@project.slug}-task-#{task.slug}#{@timestamp}"}
               project={@project}
               task={task}
@@ -86,7 +86,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
           <%= for task <- @tasks[:Next] |> Map.values() |> List.flatten() do %>
             <.live_component
               module={PmToolWeb.TaskComponents}
-              no_move={task.status != "Unstarted"}
+              draggable={task.status == "Unstarted"}
               id={"project-#{@project.slug}-task-#{task.slug}#{@timestamp}"}
               project={@project}
               task={task}
@@ -103,7 +103,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
               id={"project-#{@project.slug}-task-#{task.slug}#{@timestamp}"}
               project={@project}
               task={task}
-              no_move={false}
+              draggable={true}
               hide_project_tag={true}
             />
           <% end %>
