@@ -636,7 +636,8 @@ defmodule PmToolWeb.TasksLive do
     {:noreply,
      socket
      |> get_tasks()
-     |> assign_new_project_id() # This should also reset the add to project button.
+     # This should also reset the add to project button.
+     |> assign_new_project_id()
      |> get_project_progress()}
   end
 

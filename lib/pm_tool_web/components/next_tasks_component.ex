@@ -6,7 +6,9 @@ defmodule PmToolWeb.NextTasksComponent do
   def render(assigns) do
     ~H"""
     <div class="mr-2 text-left w-80 flex-shrink-0">
-      <span class="font-semibold uppercase align-top ml-1 text-gray-400">Next</span>
+      <span class="font-semibold uppercase align-top ml-1 text-gray-400 droppable_task_list">
+        Next
+      </span>
 
       <form id="next_task_options" style="display: none;" phx-submit="delete_tasks">
         <button class="font-bold rounded">

@@ -125,13 +125,7 @@ defmodule PmToolWeb.TaskComponents do
 
   defp show_task(assigns) do
     ~H"""
-    <li class="text-left mt-0.5">
-      <%= if @draggable do %>
-        <div 
-          droppable="true"
-          class={"inline-block drop_box cursor-pointer border border-gray-500 text-right rounded bold flex bg-gray-700 w-full h-20 hidden"}
-        >&nbsp;</div>
-      <% end %>
+    <li class="task_list_item text-left mt-0.5">
       <div
         draggable={if @draggable, do: "true", else: "false"}
         class={"inline-block draggable_task_item cursor-pointer border border-gray-500 text-right rounded bold flex #{status_colors(@task.status)}"}
