@@ -118,8 +118,9 @@ export default class TaskView {
     let _task_slug = null
     let _above_slug = null
     let _noq = 0
-    var _posX = null
-    var _posY = null
+    let _posX = null
+    let _posY = null
+    let _drop_was_made = false
 
     function findTarget(target, our_class) {
       if ((target.classList) && (target.classList.contains(our_class))) {
@@ -141,7 +142,7 @@ export default class TaskView {
 
     function isBefore(e1li, e2li) {
       if ((e2li !== null) && (e2li.parentNode === e1li.parentNode))
-        for (var cur = e1li.previousSibling; cur && cur.nodeType !== Node.DOCUMENT_NODE; cur = cur.previousSibling)
+        for (let cur = e1li.previousSibling; cur && cur.nodeType !== Node.DOCUMENT_NODE; cur = cur.previousSibling)
           if (cur === e2li)
             return true
       return false
@@ -190,9 +191,21 @@ export default class TaskView {
       }
       _move_element = null
       _currently_over = null
+
+      if (!_drop_was_made) {
+        window.dispatchEvent(
+          new CustomEvent("move_task", {
+            detail: {
+              action: "cancel"
+            }
+          })
+        )
+      }
+      _drop_was_made = false
     }
 
     function dropHandler(e) {
+      _drop_was_made = true
       let project_element = e.target.closest(".droppable_project_target")
       if (project_element) {
         let _target_project_slug = project_element.querySelector(".project_slug").value
@@ -254,8 +267,8 @@ export default class TaskView {
 
     function attach_drop_handlers(target) {
       target.ondrop = dropHandler
-      target.ondragover = dragOverHandler
-      target.ondragleave = dragLeaveHandler
+      target.ondragenter = dragOverProjectHandler
+      target.ondragleave = dragLeaveProjectHandler
     }
 
     // for each drop_target, add event listeners
@@ -264,7 +277,7 @@ export default class TaskView {
       attach_drag_handlers(item)
     })
 
-    let droppable_project_targets = document.querySelectorAll(".droppable_project_target")
+    let droppable_project_targets = [...document.getElementsByClassName(".droppable_project_target")]
     droppable_project_targets.forEach((item) => {
       attach_drop_handlers(item)
     })

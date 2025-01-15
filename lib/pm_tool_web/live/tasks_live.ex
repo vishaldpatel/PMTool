@@ -708,4 +708,18 @@ defmodule PmToolWeb.TasksLive do
      |> get_tasks()
      |> get_project_progress()}
   end
+
+  def handle_event(
+        "move_task",
+        %{
+          "action" => "cancel",
+        } = _params,
+        socket
+      ) do
+
+    {:noreply,
+     socket
+     |> get_tasks()
+     |> get_project_progress()}
+  end
 end
