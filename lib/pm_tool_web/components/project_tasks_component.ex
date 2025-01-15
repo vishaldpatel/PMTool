@@ -51,7 +51,6 @@ defmodule PmToolWeb.ProjectTasksComponent do
         </button>
       </form>
       <div
-        droppable="true"
         id={"project-tasks-#{@project.slug}"}
         class="droppable_project_target bg-gray-800 rounded-md"
       >
@@ -60,7 +59,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
         <ul>
           <%= for task <- @tasks[:Done] |> Map.values() |> List.flatten() do %>
             <.live_component
-              module={PmToolWeb.TaskComponents}
+              module={PmToolWeb.TaskComponent}
               id={"project-#{@project.slug}-task-#{task.slug}#{@timestamp}"}
               project={@project}
               task={task}
@@ -74,7 +73,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
         <ul>
           <%= for task <- @tasks[:Now] do %>
             <.live_component
-              module={PmToolWeb.TaskComponents}
+              module={PmToolWeb.TaskComponent}
               draggable={task.status == "Unstarted"}
               id={"project-#{@project.slug}-task-#{task.slug}#{@timestamp}"}
               project={@project}
@@ -85,7 +84,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
           <% end %>
           <%= for task <- @tasks[:Next] |> Map.values() |> List.flatten() do %>
             <.live_component
-              module={PmToolWeb.TaskComponents}
+              module={PmToolWeb.TaskComponent}
               draggable={task.status == "Unstarted"}
               id={"project-#{@project.slug}-task-#{task.slug}#{@timestamp}"}
               project={@project}
@@ -99,7 +98,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
         <ul>
           <%= for task <- @tasks[:Later] do %>
             <.live_component
-              module={PmToolWeb.TaskComponents}
+              module={PmToolWeb.TaskComponent}
               id={"project-#{@project.slug}-task-#{task.slug}#{@timestamp}"}
               project={@project}
               task={task}

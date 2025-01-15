@@ -1,4 +1,4 @@
-defmodule PmToolWeb.TaskComponents do
+defmodule PmToolWeb.TaskComponent do
   use PmToolWeb, :live_component
 
   alias Phoenix.LiveView.JS

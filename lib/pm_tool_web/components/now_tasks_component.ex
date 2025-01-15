@@ -63,7 +63,7 @@ defmodule PmToolWeb.NowTasksComponent do
         <ul phx-hook="Sortable" id={@id}>
           <%= for task <- @tasks do %>
             <.live_component
-              module={PmToolWeb.TaskComponents}
+              module={PmToolWeb.TaskComponent}
               draggable={task.status == "Unstarted"}
               id={"task-#{task.slug}#{@timestamp}"}
               task={task}
@@ -75,7 +75,7 @@ defmodule PmToolWeb.NowTasksComponent do
         </ul>
       <% end %>
       <.live_component
-        module={PmToolWeb.TaskComponents}
+        module={PmToolWeb.TaskComponent}
         id={@new_task_id}
         current_user={@current_user}
         current_team={@current_team}

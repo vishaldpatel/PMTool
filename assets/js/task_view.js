@@ -122,24 +122,6 @@ export default class TaskView {
     let _posY = null
     let _drop_was_made = false
 
-    function findTarget(target, our_class) {
-      if ((target.classList) && (target.classList.contains(our_class))) {
-        return target
-      } else if (target.parentNode.classList.contains(our_class)) {
-        return target.parentNode
-      } else if (target.parentNode.parentNode.classList.contains(our_class)) {
-        return target.parentNode.parentNode
-      } else if (target.parentNode.parentNode.parentNode.classList.contains(our_class)) {
-        return target.parentNode.parentNode.parentNode
-      } else if (target.parentNode.parentNode.parentNode.parentNode.classList.contains(our_class)) {
-        return target.parentNode.parentNode.parentNode.parentNode
-      } else if (target.parentNode.parentNode.parentNode.parentNode.parentNode.classList.contains(our_class)) {
-        return target.parentNode.parentNode.parentNode.parentNode.parentNode
-      } else {
-        return null
-      }
-    }
-
     function isBefore(e1li, e2li) {
       if ((e2li !== null) && (e2li.parentNode === e1li.parentNode))
         for (let cur = e1li.previousSibling; cur && cur.nodeType !== Node.DOCUMENT_NODE; cur = cur.previousSibling)
@@ -150,8 +132,8 @@ export default class TaskView {
 
     function maybe_move_element_to(target) {
       if (target !== _move_element) {
-        let target_li = findTarget(target, "task_list_item");
-        let subject_li = findTarget(_move_element, "task_list_item");
+        let target_li = target.closest(".task_list_item")
+        let subject_li = _move_element.closest(".task_list_item")
         if (isBefore(target_li, subject_li)) {
           // og element is above target
           let next_sibling = target_li.nextSibling
@@ -205,37 +187,28 @@ export default class TaskView {
     }
 
     function dropHandler(e) {
-      _drop_was_made = true
       let project_element = e.target.closest(".droppable_project_target")
+      let target_project_slug = null
       if (project_element) {
-        let _target_project_slug = project_element.querySelector(".project_slug").value
-        project_element.classList.remove("bg-orange-200")
-        _task_slug = _move_element.querySelector(".task_slug").value
-        window.dispatchEvent(
-          new CustomEvent("move_task", {
-            detail: {
-              task_slug: _task_slug, 
-              target_project_slug: _target_project_slug 
-            }
-          })
-        )
-      } else {
-        let p = findTarget(e.target)
-        unsetPlaceholder(p)
-        window.dispatchEvent(
-          new CustomEvent("move_task", {
-            detail: {
-              active_task_slug: _task_slug, 
-              affected_task_slug: _above_slug, 
-              action: _noq
-            }
-          })
-        )
+        target_project_slug = project_element.querySelector(".project_slug").value
       }
+      _drop_was_made = true
+      let p = e.target
+      unsetPlaceholder(p)
+      window.dispatchEvent(
+        new CustomEvent("move_task", {
+          detail: {
+            active_task_slug: _task_slug, 
+            affected_task_slug: _above_slug, 
+            target_project_slug: target_project_slug,
+            action: _noq
+          }
+        })
+      )
     }
 
     function dragLeaveHandler(e) {
-      let p = findTarget(e.target, "draggable_task_item")
+      let p = e.target.closest(".draggable_task_item")
       if (p) {
         unsetPlaceholder(p)
       }
@@ -243,7 +216,7 @@ export default class TaskView {
 
     function dragOverHandler(e) {
       e.preventDefault()
-      let p = findTarget(e.target, "draggable_task_item")
+      let p = e.target.closest(".draggable_task_item")
       if (p) {
         _currently_over = p
         maybe_move_element_to(p)
@@ -254,7 +227,7 @@ export default class TaskView {
     function dragStartHandler(e) {
       e.dataTransfer.effectAllowed = "move"
       e.dataTransfer.setData("text/plain", null) // Thanks to bqlou for their comment.
-      _move_element = findTarget(e.target, "draggable_task_item")
+      _move_element = e.target.closest(".draggable_task_item")
     }
 
     function attach_drag_handlers(target) {
@@ -265,21 +238,10 @@ export default class TaskView {
       target.ondrop = dropHandler
     }
 
-    function attach_drop_handlers(target) {
-      target.ondrop = dropHandler
-      target.ondragenter = dragOverProjectHandler
-      target.ondragleave = dragLeaveProjectHandler
-    }
-
     // for each drop_target, add event listeners
     let draggable_task_items = [...document.getElementsByClassName("draggable_task_item")]
     draggable_task_items.forEach((item) => {
       attach_drag_handlers(item)
-    })
-
-    let droppable_project_targets = [...document.getElementsByClassName(".droppable_project_target")]
-    droppable_project_targets.forEach((item) => {
-      attach_drop_handlers(item)
     })
   }
 

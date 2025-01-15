@@ -63,7 +63,7 @@ defmodule PmToolWeb.DoneTasksComponent do
           <ul phx-hook="Sortable" id={"#{@id}-group-#{group}"}>
             <%= for task <- @tasks[group] do %>
               <.live_component
-                module={PmToolWeb.TaskComponents}
+                module={PmToolWeb.TaskComponent}
                 id={"task-#{task.slug}#{@timestamp}"}
                 task={task}
                 draggable={false}

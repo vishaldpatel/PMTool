@@ -46,11 +46,7 @@ defmodule PmToolWeb.TagTasksComponent do
           </svg>
         </button>
       </form>
-      <div
-        droppable="true"
-        id={"tag-tasks-#{@tag}"}
-        class="droppable_tag_target bg-gray-800 rounded-md"
-      >
+      <div id={"tag-tasks-#{@tag}"} class="bg-gray-800 rounded-md">
         <input type="hidden" name="tag" class="tag" value={@tag} />
         <h3 class="font-bold text-right text-sm px-2 text-gray-500">Done</h3>
         <%= for group <- [:last, :two, :three, :earlier] do %>
@@ -71,7 +67,7 @@ defmodule PmToolWeb.TagTasksComponent do
           <ul phx-hook="Sortable" id={"#{@id}-group-#{group}"}>
             <%= for task <- @tasks[:Done][group] do %>
               <.live_component
-                module={PmToolWeb.TaskComponents}
+                module={PmToolWeb.TaskComponent}
                 id={"tag-#{@tag}-task-#{task.slug}#{@timestamp}"}
                 task={task}
                 draggable={false}
@@ -86,7 +82,7 @@ defmodule PmToolWeb.TagTasksComponent do
         <ul>
           <%= for task <- @tasks[:Now] do %>
             <.live_component
-              module={PmToolWeb.TaskComponents}
+              module={PmToolWeb.TaskComponent}
               draggable={task.status == "Unstarted"}
               id={"tag-#{@tag}-task-#{task.slug}#{@timestamp}"}
               tag={@tag}
@@ -97,7 +93,7 @@ defmodule PmToolWeb.TagTasksComponent do
           <% end %>
           <%= for task <- @tasks[:Next] |> Map.values() |> List.flatten() do %>
             <.live_component
-              module={PmToolWeb.TaskComponents}
+              module={PmToolWeb.TaskComponent}
               draggable={task.status == "Unstarted"}
               id={"tag-#{@tag}-task-#{task.slug}#{@timestamp}"}
               tag={@tag}
@@ -111,7 +107,7 @@ defmodule PmToolWeb.TagTasksComponent do
         <ul>
           <%= for task <- @tasks[:Later] do %>
             <.live_component
-              module={PmToolWeb.TaskComponents}
+              module={PmToolWeb.TaskComponent}
               id={"tag-#{@tag}-task-#{task.slug}#{@timestamp}"}
               tag={@tag}
               task={task}

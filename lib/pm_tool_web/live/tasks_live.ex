@@ -668,55 +668,40 @@ defmodule PmToolWeb.TasksLive do
   def handle_event(
         "move_task",
         %{
-          "task_slug" => task_slug,
-          "target_project_slug" => project_slug
-        } = _params,
-        socket
-      ) do
-    task = Tasks.get_task_by_slug!(task_slug)
-    project = Projects.get_project_by_slug!(project_slug)
-
-    unless Enum.member?(task.project_tags, project.tag) do
-      Tasks.update_task(task, %{project_tags: [project.tag | task.project_tags]})
-    end
-
-    {:noreply,
-     socket
-     |> get_tasks()
-     |> get_project_progress()}
-  end
-
-  def handle_event(
-        "move_task",
-        %{
           "action" => action,
           "active_task_slug" => active_task_slug,
-          "affected_task_slug" => affected_task_slug
+          "affected_task_slug" => affected_task_slug,
+          "target_project_slug" => project_slug
         } = _params,
         socket
       ) do
     task = Tasks.get_task_by_slug!(active_task_slug)
     affected_task = Tasks.get_task_by_slug!(affected_task_slug)
+    project = if is_nil(project_slug), do: nil, else: Projects.get_project_by_slug!(project_slug)
 
-    case action do
-      "move_above" -> Tasks.move_task_above(task, affected_task)
-      "move_below" -> Tasks.move_task_below(task, affected_task)
+    if is_nil(project) or
+         (Enum.member?(task.project_tags, project.tag) and
+            Enum.member?(affected_task.project_tags, project.tag)) do
+      case action do
+        "move_above" -> Tasks.move_task_above(task, affected_task)
+        "move_below" -> Tasks.move_task_below(task, affected_task)
+      end
     end
 
     {:noreply,
      socket
      |> get_tasks()
+     |> assign_new_task_ids()
      |> get_project_progress()}
   end
 
   def handle_event(
         "move_task",
         %{
-          "action" => "cancel",
+          "action" => "cancel"
         } = _params,
         socket
       ) do
-
     {:noreply,
      socket
      |> get_tasks()
