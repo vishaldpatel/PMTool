@@ -148,6 +148,7 @@ defmodule PmToolWeb.ProjectComponent do
               <button
                 phx-click="show_project_tasks"
                 phx-value-project_slug={@project.slug}
+                title="Show Project Tasks"
                 class="font-bold rounded my-1"
               >
                 <svg
@@ -168,6 +169,7 @@ defmodule PmToolWeb.ProjectComponent do
               </button>
               <button
                 phx-click="add_tasks_to_project"
+                title="Add Selected Tasks To This Project"
                 phx-value-project_slug={@project.slug}
                 phx-value-selected_tasks={[]}
                 phx-value-timestamp={@timestamp}

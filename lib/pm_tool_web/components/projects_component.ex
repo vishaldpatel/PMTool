@@ -10,9 +10,15 @@ defmodule PmToolWeb.ProjectsComponent do
     <div>
       <button
         class="font-bold rounded"
+        title="Start New Project"
         phx-click={JS.toggle_class("hidden", to: "#edit-" <> @new_project_id)}
       >
-        <svg class="h-6 w-6 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg
+          class="h-6 w-6 text-cyan-500 hover:text-cyan-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"

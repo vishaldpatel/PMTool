@@ -5,12 +5,13 @@ defmodule PmToolWeb.ProjectTasksComponent do
     ~H"""
     <div class="mr-2 text-left w-80 flex-shrink-0">
       <button
+        title={"Hide #{@project.name} Tasks"}
         class="font-bold rounded"
         phx-click="hide_project_tasks"
         phx-value-project_slug={@project.slug}
       >
         <svg
-          class="h-6 w-6 text-orange-500"
+          class="h-6 w-6 text-orange-500 hover:text-orange-400"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -31,9 +32,9 @@ defmodule PmToolWeb.ProjectTasksComponent do
         phx-submit="remove_tasks_from_project"
         phx-value-project_slug={@project.slug}
       >
-        <button class="font-bold rounded">
+        <button title={"Remove Tasks from #{@project.name}"} class="font-bold rounded">
           <svg
-            class="h-6 w-6 text-orange-400"
+            class="h-6 w-6 text-orange-400 hover:text-orange-600"
             width="24"
             height="24"
             viewBox="0 0 24 24"

@@ -129,10 +129,13 @@ defmodule PmToolWeb.TeamComponent do
           >
             <div class="inline-block just_title text-left flex-auto">{@team.name}</div>
             <div class="inline-block flex-none">
-              <button phx-click={
-                JS.toggle_class("hidden", to: "#teammates-#{@id}")
-                |> JS.push("show_hide_team_members", value: %{"team_slug" => @team.slug})
-              }>
+              <button
+                title="Show / Hide Team Members"
+                phx-click={
+                  JS.toggle_class("hidden", to: "#teammates-#{@id}")
+                  |> JS.push("show_hide_team_members", value: %{"team_slug" => @team.slug})
+                }
+              >
                 <svg
                   class="h-4 w-4 text-amber-500 hover:text-amber-400 bg-gray-600 hover:bg-gray-500 rounded border-0"
                   fill="none"
@@ -148,7 +151,11 @@ defmodule PmToolWeb.TeamComponent do
                 </svg>
               </button>
               <%= if @is_current == true do %>
-                <button class="font-bold rounded my-1" phx-click="unset_current_team">
+                <button
+                  title={"Show #{@team.name} Tasks Only"}
+                  class="font-bold rounded my-1"
+                  phx-click="unset_current_team"
+                >
                   <svg
                     class="h-4 w-4 text-orange-700 bg-orange-200 hover:bg-orange-300 rounded border-0"
                     <svg
@@ -169,6 +176,7 @@ defmodule PmToolWeb.TeamComponent do
                 </button>
               <% else %>
                 <button
+                  title={"Show #{@team.name} Tasks Only"}
                   phx-click="set_current_team"
                   phx-value-team_slug={@team.slug}
                   class="font-bold rounded my-1"
@@ -193,6 +201,7 @@ defmodule PmToolWeb.TeamComponent do
                 </button>
                 <button
                   phx-click="move_tasks_to_team"
+                  title={"Assign Selected Tasks To #{@team.name}"}
                   phx-value-team_slug={@team.slug}
                   phx-value-selected_tasks={[]}
                   class="btn_move_to_team font-bold rounded my-1"
@@ -235,6 +244,7 @@ defmodule PmToolWeb.TeamComponent do
           <% end %>
           <div class="flex-auto w-full px-1 bg-gray-600 text-left">
             <button
+              title="Add A Team Member"
               class="font-bold rounded my-1 bg-gray-600 hover:bg-gray-500 rounded p-[1px]"
               phx-click={JS.toggle_class("hidden", to: "#edit-#{@new_team_member_id}")}
             >

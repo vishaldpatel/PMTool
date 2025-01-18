@@ -34,6 +34,7 @@ defmodule PmToolWeb.TagComponent do
     ~H"""
     <div class="inline">
       <button
+        title={"Show #{@tag} Tasks Only"}
         phx-click="tag_clicked"
         phx-value-tag={@tag}
         phx-value-tag-type={@tag_type}
@@ -59,7 +60,11 @@ defmodule PmToolWeb.TagComponent do
         <div class="tags inline">
           <div class="tag inline">
             <input type="hidden" name={"#{@type}[tag]"} value={@tag} />
-            <button type="button" class={"remove_tag px-1 mb-1 text-xs font-xs #{@color}"}>
+            <button
+              title="Remove Tag"
+              type="button"
+              class={"remove_tag px-1 mb-1 text-xs font-xs #{@color}"}
+            >
               <span>&#10005; &#10072;</span>
               <span class="italic">{@tag}</span>
             </button>

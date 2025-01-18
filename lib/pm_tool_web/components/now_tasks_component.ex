@@ -8,10 +8,16 @@ defmodule PmToolWeb.NowTasksComponent do
     ~H"""
     <div class="mr-2 text-left w-80 flex-shrink-0 droppable_task_list">
       <button
+        title="Create New Task"
         class="font-bold rounded"
         phx-click={JS.toggle_class("hidden", to: "#edit-#{@new_task_id}")}
       >
-        <svg class="h-6 w-6 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg
+          class="h-6 w-6 text-cyan-500 hover:text-cyan-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -21,9 +27,13 @@ defmodule PmToolWeb.NowTasksComponent do
         </svg>
       </button>
 
-      <button class="font-bold rounded" phx-click="merge_now_and_next_tasks">
+      <button
+        title="Merge Now and Next Tasks"
+        class="font-bold rounded"
+        phx-click="merge_now_and_next_tasks"
+      >
         <svg
-          class="h-6 w-6 text-red-500"
+          class="h-6 w-6 text-red-500 hover:text-red-400"
           width="24"
           height="24"
           viewBox="0 0 24 24"
@@ -40,9 +50,9 @@ defmodule PmToolWeb.NowTasksComponent do
       <span class="font-semibold uppercase align-top ml-1 text-gray-400">Now</span>
 
       <form id="now_task_options" style="display: none;" phx-submit="delete_tasks">
-        <button class="font-bold rounded">
+        <button title="Delete Selected Tasks" class="font-bold rounded">
           <svg
-            class="h-6 w-6 text-red-500"
+            class="h-6 w-6 text-red-500 hover:text-red-400"
             width="24"
             height="24"
             viewBox="0 0 24 24"

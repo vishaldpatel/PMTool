@@ -4,9 +4,14 @@ defmodule PmToolWeb.TagTasksComponent do
   def render(assigns) do
     ~H"""
     <div class="mr-2 text-left w-80 flex-shrink-0">
-      <button class="font-bold rounded" phx-click="hide_tag_tasks" phx-value-tag={@tag}>
+      <button
+        title={"Hide #{@tag} Tasks"}
+        class="font-bold rounded"
+        phx-click="hide_tag_tasks"
+        phx-value-tag={@tag}
+      >
         <svg
-          class="h-6 w-6 text-orange-500"
+          class="h-6 w-6 text-orange-500 hover:text-orange-400"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -27,9 +32,9 @@ defmodule PmToolWeb.TagTasksComponent do
         phx-submit="remove_tag_from_tasks"
         phx-value-tag={@tag}
       >
-        <button class="font-bold rounded">
+        <button title={"Remove Tag #{@tag} from Selected Tasks"} class="font-bold rounded">
           <svg
-            class="h-6 w-6 text-orange-400"
+            class="h-6 w-6 text-orange-400 hover:text-orange-600"
             width="24"
             height="24"
             viewBox="0 0 24 24"

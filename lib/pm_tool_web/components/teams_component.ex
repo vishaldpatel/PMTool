@@ -9,9 +9,15 @@ defmodule PmToolWeb.TeamsComponent do
     <div class="my-2">
       <button
         class="font-bold rounded"
+        title="Make New Team"
         phx-click={JS.toggle_class("hidden", to: "#edit-#{@new_team_id}")}
       >
-        <svg class="h-6 w-6 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg
+          class="h-6 w-6 text-cyan-500 hover:text-cyan-400"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
           <path
             stroke-linecap="round"
             stroke-linejoin="round"

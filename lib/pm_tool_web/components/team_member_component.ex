@@ -192,6 +192,7 @@ defmodule PmToolWeb.TeamMemberComponent do
         <input type="hidden" name="team_member[id]" value={@team_member.id} />
         <%= if @team_member.id do %>
           <button
+            title={"Remove #{@team_member.name} from #{@team.name}"}
             type="button"
             phx-click={JS.toggle_class("hidden", to: "#delete-#{@id}")}
             class="float-left mt-2 ml-1"
@@ -215,6 +216,7 @@ defmodule PmToolWeb.TeamMemberComponent do
           </button>
           <button
             type="button"
+            title={"Confirm removal of #{@team_member.name} from #{@team.name}"}
             id={"delete-#{@id}"}
             phx-click="delete_team_member"
             phx-value-id={@team_member.id}
