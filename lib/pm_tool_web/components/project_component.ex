@@ -153,7 +153,6 @@ defmodule PmToolWeb.ProjectComponent do
               >
                 <svg
                   class="h-4 w-4 text-orange-500 fill-gray-600 hover:fill-orange-200 rounded border-0"
-                  <svg
                   viewBox="0 0 24 24"
                   width="24"
                   height="24"
@@ -167,28 +166,28 @@ defmodule PmToolWeb.ProjectComponent do
                   <rect x="7" y="7" width="3" height="9" /> <rect x="14" y="7" width="3" height="5" />
                 </svg>
               </button>
-              <button
-                phx-click="add_tasks_to_project"
-                title="Add Selected Tasks To This Project"
-                phx-value-project_slug={@project.slug}
-                phx-value-selected_tasks={[]}
-                phx-value-timestamp={@timestamp}
-                class="btn_add_to_project font-bold rounded my-1"
-                style={"display: #{@btn_add_to_project_display};"}
-              >
-                <svg
-                  class="h-4 w-4 text-orange-500 fill-gray-600 hover:fill-orange-200"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <circle cx="12" cy="12" r="10" /> <line x1="12" y1="8" x2="12" y2="16" />
-                  <line x1="8" y1="12" x2="16" y2="12" />
-                </svg>
-              </button>
             <% end %>
+            <button
+              phx-click="add_tasks_to_project"
+              title="Add Selected Tasks To This Project"
+              phx-value-project_slug={@project.slug}
+              phx-value-selected_tasks={[]}
+              phx-value-timestamp={@timestamp}
+              class="btn_add_to_project font-bold rounded my-1"
+              style={"display: #{@btn_add_to_project_display};"}
+            >
+              <svg
+                class="h-4 w-4 text-orange-500 fill-gray-600 hover:fill-orange-200"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" /> <line x1="12" y1="8" x2="12" y2="16" />
+                <line x1="8" y1="12" x2="16" y2="12" />
+              </svg>
+            </button>
           </div>
         </div>
         <.project_form
