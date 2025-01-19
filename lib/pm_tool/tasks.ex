@@ -567,6 +567,14 @@ defmodule PmTool.Tasks do
     Repo.delete(task)
   end
 
+  def move_tasks_with_slugs_to_stage(user, slugs, stage) do
+    query =
+      from t in Task,
+        where: t.creator_id == ^user.id and t.slug in ^slugs
+
+    Repo.update_all(query, set: [stage: stage])
+  end
+
   def delete_tasks_with_slugs(user, slugs) do
     query =
       from t in Task,

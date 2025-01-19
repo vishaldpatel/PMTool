@@ -641,12 +641,22 @@ defmodule PmToolWeb.TasksLive do
      |> get_project_progress()}
   end
 
-  def handle_event("delete_tasks", params, socket) do
+  def handle_event("task_actions", params, socket) do
     current_user = socket.assigns.current_user
     task_slugs = params["task_slugs"]
-    Tasks.delete_tasks_with_slugs(current_user, task_slugs)
+    action = params["action"]
 
-    {:noreply, get_tasks(socket)}
+    case action do
+      "delete_tasks" -> Tasks.delete_tasks_with_slugs(current_user, task_slugs)
+      "move_to_later" -> Tasks.move_tasks_with_slugs_to_stage(current_user, task_slugs, "Later")
+      "move_to_now" -> Tasks.move_tasks_with_slugs_to_stage(current_user, task_slugs, "Now")
+      _ -> nil
+    end
+
+    {:noreply,
+     socket
+     |> assign_new_project_id()
+     |> get_tasks()}
   end
 
   def handle_event("remove_tasks_from_project", params, socket) do

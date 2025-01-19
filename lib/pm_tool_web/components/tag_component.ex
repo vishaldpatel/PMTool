@@ -19,7 +19,13 @@ defmodule PmToolWeb.TagComponent do
     {
       :ok,
       assign(socket, assigns)
-      |> assign(:tooltip, (if Map.has_key?(assigns, :tooltip), do: assigns.tooltip, else: "Show #{assigns.tag} Tasks"))
+      |> assign(
+        :tooltip,
+        if(Map.has_key?(assigns, :tooltip),
+          do: assigns.tooltip,
+          else: "Show #{assigns.tag} Tasks"
+        )
+      )
     }
   end
 

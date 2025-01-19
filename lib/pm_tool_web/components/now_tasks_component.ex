@@ -49,8 +49,13 @@ defmodule PmToolWeb.NowTasksComponent do
       </button>
       <span class="font-semibold uppercase align-top ml-1 text-gray-400">Now</span>
 
-      <form id="now_task_options" style="display: none;" phx-submit="delete_tasks">
-        <button title="Delete Selected Tasks" class="font-bold rounded">
+      <form id="now_task_options" style="display: none;" phx-submit="task_actions">
+        <button
+          title="Delete Selected Tasks"
+          name="action"
+          value="delete_tasks"
+          class="font-bold rounded"
+        >
           <svg
             class="h-6 w-6 text-red-500 hover:text-red-400"
             width="24"
@@ -66,6 +71,31 @@ defmodule PmToolWeb.NowTasksComponent do
             <line x1="10" y1="11" x2="10" y2="17" /> <line x1="14" y1="11" x2="14" y2="17" />
             <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
             <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+          </svg>
+        </button>
+        <button
+          title="Move Selected Tasks To The Later Pile"
+          name="action"
+          value="move_to_later"
+          class="font-bold rounded"
+        >
+          <svg
+            class="h-6 w-6 text-sky-500 hover:text-sky-400"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            stroke-width="2"
+            stroke="currentColor"
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path stroke="none" d="M0 0h24v24H0z" /> <path d="M10 4l2 1l2 -1m-2 -2v6.5l3 1.72" />
+            <path d="M10 4l2 1l2 -1m-2 -2v6.5l3 1.72" transform="rotate(60 12 12)" />
+            <path d="M10 4l2 1l2 -1m-2 -2v6.5l3 1.72" transform="rotate(120 12 12)" />
+            <path d="M10 4l2 1l2 -1m-2 -2v6.5l3 1.72" transform="rotate(180 12 12)" />
+            <path d="M10 4l2 1l2 -1m-2 -2v6.5l3 1.72" transform="rotate(240 12 12)" />
+            <path d="M10 4l2 1l2 -1m-2 -2v6.5l3 1.72" transform="rotate(300 12 12)" />
           </svg>
         </button>
       </form>

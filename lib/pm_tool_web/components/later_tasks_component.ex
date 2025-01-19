@@ -29,8 +29,13 @@ defmodule PmToolWeb.LaterTasksComponent do
       </button>
       <span class="font-semibold uppercase align-top ml-1 text-gray-400">Later, Brah 🤙</span>
 
-      <form id="later_task_options" style="display: none;" phx-submit="delete_tasks">
-        <button title="Delete Selected Tasks" class="font-bold rounded">
+      <form id="later_task_options" style="display: none;" phx-submit="task_actions">
+        <button
+          title="Delete Selected Tasks"
+          name="action"
+          value="delete_tasks"
+          class="font-bold rounded"
+        >
           <svg
             class="h-6 w-6 text-red-500 hover:text-red-400"
             width="24"
@@ -46,6 +51,29 @@ defmodule PmToolWeb.LaterTasksComponent do
             <line x1="10" y1="11" x2="10" y2="17" /> <line x1="14" y1="11" x2="14" y2="17" />
             <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
             <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+          </svg>
+        </button>
+        <button
+          title="Delete Selected Tasks"
+          title="Move Selected Tasks to the Now / Next Section"
+          name="action"
+          value="move_to_now"
+          class="font-bold rounded"
+        >
+          <svg
+            class="h-6 w-6 text-orange-500 hover:text-orange-300"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M17 18a5 5 0 0 0-10 0" /> <line x1="12" y1="2" x2="12" y2="9" />
+            <line x1="4.22" y1="10.22" x2="5.64" y2="11.64" /> <line x1="1" y1="18" x2="3" y2="18" />
+            <line x1="21" y1="18" x2="23" y2="18" />
+            <line x1="18.36" y1="11.64" x2="19.78" y2="10.22" />
+            <line x1="23" y1="22" x2="1" y2="22" /> <polyline points="8 6 12 2 16 6" />
           </svg>
         </button>
       </form>
