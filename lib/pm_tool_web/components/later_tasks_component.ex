@@ -54,8 +54,7 @@ defmodule PmToolWeb.LaterTasksComponent do
           </svg>
         </button>
         <button
-          title="Delete Selected Tasks"
-          title="Move Selected Tasks to the Now / Next Section"
+          title="Move Selected Tasks to Now / Next Pile"
           name="action"
           value="move_to_now"
           class="font-bold rounded"
