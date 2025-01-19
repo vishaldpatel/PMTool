@@ -9,7 +9,7 @@ defmodule PmToolWeb.LaterTasksComponent do
     ~H"""
     <div class="mr-2 text-left w-80 flex-shrink-0 droppable_task_list">
       <button
-        title="Create New Task"
+        title="Create New Task To Get Done Later"
         class="font-bold rounded"
         phx-click={JS.toggle_class("hidden", to: "#edit-#{@new_task_id}")}
       >
