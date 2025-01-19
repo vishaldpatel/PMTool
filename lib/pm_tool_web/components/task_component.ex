@@ -158,6 +158,7 @@ defmodule PmToolWeb.TaskComponent do
                 tag={@task.team.name}
                 tag_type="team"
                 tag_slug={@task.team.slug}
+                tooltip={"Show #{@task.team.name} Tasks Only"}
               />
             <% end %>
             <.live_component

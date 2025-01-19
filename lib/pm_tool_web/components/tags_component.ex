@@ -41,6 +41,7 @@ defmodule PmToolWeb.TagsComponent do
     <div class="inline">
       <%= for tag <- @tags do %>
         <button
+          title={"Show #{tag} Tasks"}
           phx-click="tag_clicked"
           phx-value-tag={tag}
           phx-value-tag-type={@tag_type}

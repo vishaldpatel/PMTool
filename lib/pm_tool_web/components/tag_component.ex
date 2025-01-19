@@ -19,6 +19,7 @@ defmodule PmToolWeb.TagComponent do
     {
       :ok,
       assign(socket, assigns)
+      |> assign(:tooltip, (if Map.has_key?(assigns, :tooltip), do: assigns.tooltip, else: "Show #{assigns.tag} Tasks"))
     }
   end
 
@@ -34,7 +35,7 @@ defmodule PmToolWeb.TagComponent do
     ~H"""
     <div class="inline">
       <button
-        title={"Show #{@tag} Tasks Only"}
+        title={@tooltip}
         phx-click="tag_clicked"
         phx-value-tag={@tag}
         phx-value-tag-type={@tag_type}
