@@ -191,74 +191,39 @@ defmodule PmTool.Tasks do
   end
 
   def get_iteration_end_times() do
-    # Limit the results until the estimate adds up to 30
-    last_period_end_date = Date.utc_today() |> Date.end_of_week() |> Date.add(-7)
-    two_period_end_date = Date.add(last_period_end_date, -7)
-    three_period_end_date = Date.add(last_period_end_date, -14)
-    earlier_end_date = Date.add(last_period_end_date, -21)
-
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
-    last_period_end = DateTime.new!(last_period_end_date, just_before_midnight, "Etc/UTC")
-    two_period_end = DateTime.new!(two_period_end_date, just_before_midnight, "Etc/UTC")
-    three_period_end = DateTime.new!(three_period_end_date, just_before_midnight, "Etc/UTC")
-    earlier_end = DateTime.new!(earlier_end_date, just_before_midnight, "Etc/UTC")
 
-    {last_period_end, two_period_end, three_period_end, earlier_end}
+    iteration_ends =
+      Enum.map(1..4, fn slot ->
+        Date.utc_today()
+        |> Date.end_of_week()
+        |> Date.add(-7 * slot)
+        |> DateTime.new!(just_before_midnight)
+      end)
   end
 
   defp sort_task(task, [total_estimate, current_period, tasks], iteration_end_times, velocity) do
-    {last_period_end, two_period_end, three_period_end, earlier_end} = iteration_end_times
+    [last_period_end | _] = iteration_end_times
     status_updated_at = DateTime.from_naive!(task.status_updated_at, "Etc/UTC")
+    slots = [{3, :earlier}, {2, :three}, {1, :two}, {0, :last}]
 
     cond do
       # If it was Accepted more than 7 days ago, then it is marked as Done
       Enum.member?(["Accepted", "Closed"], task.status) and
           DateTime.compare(status_updated_at, last_period_end) == :lt ->
-        cond do
-          DateTime.compare(status_updated_at, earlier_end) == :lt ->
+        Enum.find_value(slots, fn {slot, period_name} ->
+          if DateTime.compare(status_updated_at, Enum.fetch!(iteration_end_times, slot)) == :lt do
             [
               total_estimate,
               current_period,
               Map.put(
                 tasks,
                 :Done,
-                Map.put(tasks[:Done], :earlier, tasks[:Done][:earlier] ++ [task])
+                Map.put(tasks[:Done], period_name, tasks[:Done][period_name] ++ [task])
               )
             ]
-
-          DateTime.compare(status_updated_at, three_period_end) == :lt ->
-            [
-              total_estimate,
-              current_period,
-              Map.put(
-                tasks,
-                :Done,
-                Map.put(tasks[:Done], :three, tasks[:Done][:three] ++ [task])
-              )
-            ]
-
-          DateTime.compare(status_updated_at, two_period_end) == :lt ->
-            [
-              total_estimate,
-              current_period,
-              Map.put(
-                tasks,
-                :Done,
-                Map.put(tasks[:Done], :two, tasks[:Done][:two] ++ [task])
-              )
-            ]
-
-          true ->
-            [
-              total_estimate,
-              current_period,
-              Map.put(
-                tasks,
-                :Done,
-                Map.put(tasks[:Done], :last, tasks[:Done][:last] ++ [task])
-              )
-            ]
-        end
+          end
+        end)
 
       task.stage == "Later" ->
         [total_estimate, current_period, Map.put(tasks, :Later, tasks[:Later] ++ [task])]
