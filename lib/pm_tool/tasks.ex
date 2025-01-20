@@ -193,13 +193,12 @@ defmodule PmTool.Tasks do
   def get_iteration_end_times() do
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
 
-    iteration_ends =
-      Enum.map(1..4, fn slot ->
-        Date.utc_today()
-        |> Date.end_of_week()
-        |> Date.add(-7 * slot)
-        |> DateTime.new!(just_before_midnight)
-      end)
+    Enum.map(1..4, fn slot ->
+      Date.utc_today()
+      |> Date.end_of_week()
+      |> Date.add(-7 * slot)
+      |> DateTime.new!(just_before_midnight)
+    end)
   end
 
   defp sort_task(task, [total_estimate, current_period, tasks], iteration_end_times, velocity) do
