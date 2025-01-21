@@ -18,8 +18,12 @@ defmodule PmToolWeb.TaskComponent do
     "Closed" => "bg-gray-900 hover:bg-gray-800"
   }
 
-  defp status_colors(status) do
-    @status_colors[status]
+  defp bg_colors(%Task{status: status} = task) do
+    if task.is_milestone != true do
+      @status_colors[status]
+    else
+      "bg-sky-800 hover:bg-sky-700 border-sky-700 pb-[2px]"
+    end
   end
 
   def mount(socket) do
@@ -135,7 +139,7 @@ defmodule PmToolWeb.TaskComponent do
     <li class="task_list_item text-left mt-0.5">
       <div
         draggable={if @draggable, do: "true", else: "false"}
-        class={"inline-block draggable_task_item cursor-pointer border border-gray-500 text-right rounded bold flex #{status_colors(@task.status)}"}
+        class={"inline-block draggable_task_item cursor-pointer border border-gray-600 text-right rounded bold flex #{bg_colors(@task)}"}
       >
         <div
           id={"show-#{@id}"}
@@ -148,13 +152,15 @@ defmodule PmToolWeb.TaskComponent do
           class={"inline-block text-md w-full pl-1 pr-1 text-gray-100 #{@show_task}"}
         >
           <div class="inline-block just_title text-left flex-auto">
-            <%= if Ecto.assoc_loaded?(@task.owner) and @task.owner do %>
-              <img
-                alt={@task.owner.name}
-                title={@task.owner.name}
-                class="w-4 h-4 rounded-full inline align-middle mb-[2px] mr-[-2px]"
-                src={"/images/team_members/#{@task.owner.email}.png"}
-              />
+            <%= if not @task.is_milestone == true do %>
+              <%= if Ecto.assoc_loaded?(@task.owner) and @task.owner do %>
+                <img
+                  alt={@task.owner.name}
+                  title={@task.owner.name}
+                  class="w-4 h-4 rounded-full inline align-middle mb-[2px] mr-[-2px]"
+                  src={"/images/team_members/#{@task.owner.email}.png"}
+                />
+              <% end %>
             <% end %>
             {@task.name}
             <%= if @due_days do %>
@@ -211,158 +217,160 @@ defmodule PmToolWeb.TaskComponent do
               tags={@task.tags}
             />
           </div>
-          <div class="inline-block flex-none m-auto relative">
-            <%= if @actions == true do %>
-              <%= if @task.status == "Delivered" do %>
-                <button
-                  phx-click="task_action"
-                  phx-value-action="accept_task"
-                  phx-value-task_slug={@task.slug}
-                  class="bg-sky-600 hover:bg-sky-500 text-white text-xs px-1 my-1 rounded"
-                >
-                  Accept
-                </button>
-                <button
-                  phx-click="task_action"
-                  phx-value-action="reject_task"
-                  phx-value-task_slug={@task.slug}
-                  class="bg-red-600 hover:bg-red-500 text-white text-xs px-1 my-1 rounded"
-                >
-                  Reject
-                </button>
-              <% end %>
-              <%= if @task.status == "Finished" do %>
-                <button
-                  phx-click="task_action"
-                  phx-value-action="deliver_task"
-                  phx-value-task_slug={@task.slug}
-                  class="bg-emerald-800 hover:bg-emerald-600 text-white text-xs px-1 my-1 rounded"
-                >
-                  Deliver
-                </button>
-              <% end %>
-              <%= if @task.status == "Started" do %>
-                <button
-                  phx-click="task_action"
-                  phx-value-action="finish_task"
-                  phx-value-task_slug={@task.slug}
-                  class="bg-lime-700 hover:bg-lime-500 text-white text-xs px-1 my-1 rounded"
-                >
-                  Finish
-                </button>
-              <% end %>
-              <%= if @task.status == "Unstarted" or @task.status == "Rejected" do %>
-                <button
-                  phx-click="task_action"
-                  phx-value-action="start_task"
-                  phx-value-task_slug={@task.slug}
-                  class="bg-yellow-700 hover:bg-yellow-500 text-white text-xs px-1 my-1 rounded"
-                >
-                  Start
-                </button>
-              <% end %>
-              <%= if @task.status == "Unappraised" do %>
-                <span class="estimate_number text-bold inline-block absolute text-orange-200 top-0 left-0 text-xs">
-                </span>
-                <svg
-                  width="29"
-                  height="20"
-                  class="estimation_station inline-block rounded-bl-sm rounded-tr-sm mb-[2px]"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect
-                    y="15"
-                    x="0"
-                    width="4"
-                    height="5"
-                    value="1"
+          <input type="hidden" class="task_slug" value={@task.slug} />
+          <%= if @task.is_milestone != true do %>
+            <div class="inline-block flex-none m-auto relative">
+              <%= if @actions == true do %>
+                <%= if @task.status == "Delivered" do %>
+                  <button
                     phx-click="task_action"
-                    phx-value-action="estimate_task"
+                    phx-value-action="accept_task"
                     phx-value-task_slug={@task.slug}
-                    phx-value-estimate="1"
-                    class="estimator fill-yellow-300 hover:fill-yellow-500"
-                  />
-                  <rect
-                    y="13"
-                    x="5"
-                    width="4"
-                    height="7"
-                    value="2"
+                    class="bg-sky-600 hover:bg-sky-500 text-white text-xs px-1 my-1 rounded"
+                  >
+                    Accept
+                  </button>
+                  <button
                     phx-click="task_action"
-                    phx-value-action="estimate_task"
+                    phx-value-action="reject_task"
                     phx-value-task_slug={@task.slug}
-                    phx-value-estimate="2"
-                    class="estimator fill-yellow-300 hover:fill-yellow-500"
-                  />
-                  <rect
-                    y="10"
-                    x="10"
-                    width="4"
-                    height="10"
-                    value="4"
+                    class="bg-red-600 hover:bg-red-500 text-white text-xs px-1 my-1 rounded"
+                  >
+                    Reject
+                  </button>
+                <% end %>
+                <%= if @task.status == "Finished" do %>
+                  <button
                     phx-click="task_action"
-                    phx-value-action="estimate_task"
+                    phx-value-action="deliver_task"
                     phx-value-task_slug={@task.slug}
-                    phx-value-estimate="4"
-                    class="estimator fill-orange-300 hover:fill-orange-500"
-                  />
-                  <rect
-                    y="8"
-                    x="15"
-                    width="4"
-                    height="12"
-                    value="6"
+                    class="bg-emerald-800 hover:bg-emerald-600 text-white text-xs px-1 my-1 rounded"
+                  >
+                    Deliver
+                  </button>
+                <% end %>
+                <%= if @task.status == "Started" do %>
+                  <button
                     phx-click="task_action"
-                    phx-value-action="estimate_task"
+                    phx-value-action="finish_task"
                     phx-value-task_slug={@task.slug}
-                    phx-value-estimate="6"
-                    class="estimator fill-orange-300 hover:fill-orange-500"
-                  />
-                  <rect
-                    y="5"
-                    x="20"
-                    width="4"
-                    height="15"
-                    value="8"
+                    class="bg-lime-700 hover:bg-lime-500 text-white text-xs px-1 my-1 rounded"
+                  >
+                    Finish
+                  </button>
+                <% end %>
+                <%= if @task.status == "Unstarted" or @task.status == "Rejected" do %>
+                  <button
                     phx-click="task_action"
-                    phx-value-action="estimate_task"
+                    phx-value-action="start_task"
                     phx-value-task_slug={@task.slug}
-                    phx-value-estimate="8"
-                    class="estimator fill-orange-300 hover:fill-orange-500"
-                  />
-                  <rect
-                    y="0"
-                    x="25"
-                    width="4"
+                    class="bg-yellow-700 hover:bg-yellow-500 text-white text-xs px-1 my-1 rounded"
+                  >
+                    Start
+                  </button>
+                <% end %>
+                <%= if @task.status == "Unappraised" do %>
+                  <span class="estimate_number text-bold inline-block absolute text-orange-200 top-0 left-0 text-xs">
+                  </span>
+                  <svg
+                    width="29"
                     height="20"
-                    value="12"
-                    phx-click="task_action"
-                    phx-value-action="estimate_task"
-                    phx-value-task_slug={@task.slug}
-                    phx-value-estimate="12"
-                    class="estimator fill-red-500 hover:fill-red-600"
-                  />
-                </svg>
+                    class="estimation_station inline-block rounded-bl-sm rounded-tr-sm mb-[2px]"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <rect
+                      y="15"
+                      x="0"
+                      width="4"
+                      height="5"
+                      value="1"
+                      phx-click="task_action"
+                      phx-value-action="estimate_task"
+                      phx-value-task_slug={@task.slug}
+                      phx-value-estimate="1"
+                      class="estimator fill-yellow-300 hover:fill-yellow-500"
+                    />
+                    <rect
+                      y="13"
+                      x="5"
+                      width="4"
+                      height="7"
+                      value="2"
+                      phx-click="task_action"
+                      phx-value-action="estimate_task"
+                      phx-value-task_slug={@task.slug}
+                      phx-value-estimate="2"
+                      class="estimator fill-yellow-300 hover:fill-yellow-500"
+                    />
+                    <rect
+                      y="10"
+                      x="10"
+                      width="4"
+                      height="10"
+                      value="4"
+                      phx-click="task_action"
+                      phx-value-action="estimate_task"
+                      phx-value-task_slug={@task.slug}
+                      phx-value-estimate="4"
+                      class="estimator fill-orange-300 hover:fill-orange-500"
+                    />
+                    <rect
+                      y="8"
+                      x="15"
+                      width="4"
+                      height="12"
+                      value="6"
+                      phx-click="task_action"
+                      phx-value-action="estimate_task"
+                      phx-value-task_slug={@task.slug}
+                      phx-value-estimate="6"
+                      class="estimator fill-orange-300 hover:fill-orange-500"
+                    />
+                    <rect
+                      y="5"
+                      x="20"
+                      width="4"
+                      height="15"
+                      value="8"
+                      phx-click="task_action"
+                      phx-value-action="estimate_task"
+                      phx-value-task_slug={@task.slug}
+                      phx-value-estimate="8"
+                      class="estimator fill-orange-300 hover:fill-orange-500"
+                    />
+                    <rect
+                      y="0"
+                      x="25"
+                      width="4"
+                      height="20"
+                      value="12"
+                      phx-click="task_action"
+                      phx-value-action="estimate_task"
+                      phx-value-task_slug={@task.slug}
+                      phx-value-estimate="12"
+                      class="estimator fill-red-500 hover:fill-red-600"
+                    />
+                  </svg>
+                <% end %>
               <% end %>
-            <% end %>
-            <input type="hidden" class="task_slug" value={@task.slug} />
-            <input
-              type="checkbox"
-              name={"#{@task.stage}_task_slugs[]"}
-              class="rounded"
-              style="margin-bottom: 2px;"
-              phx-click={
-                JS.dispatch("task_checkbox_clicked",
-                  detail: %{
-                    id: @id,
-                    slug: @task.slug,
-                    stage: @task.stage,
-                    project_slug: @project.slug
-                  }
-                )
-              }
-            />
-          </div>
+              <input
+                type="checkbox"
+                name={"#{@task.stage}_task_slugs[]"}
+                class="rounded"
+                style="margin-bottom: 2px;"
+                phx-click={
+                  JS.dispatch("task_checkbox_clicked",
+                    detail: %{
+                      id: @id,
+                      slug: @task.slug,
+                      stage: @task.stage,
+                      project_slug: @project.slug
+                    }
+                  )
+                }
+              />
+            </div>
+          <% end %>
         </div>
         <.task_form
           task={@task}
