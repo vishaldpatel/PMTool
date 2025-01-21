@@ -33,6 +33,8 @@ defmodule PmTool.Tasks.Task do
     field :status_updated_at, :utc_datetime
     field :tags, {:array, :string}, default: []
     field :project_tags, {:array, :string}, default: []
+    field :is_milestone, :boolean, default: false
+    field :due_date, :date
 
     belongs_to :creator, PmTool.Accounts.User
     belongs_to :owner, PmTool.Teams.TeamMember
@@ -58,6 +60,8 @@ defmodule PmTool.Tasks.Task do
       :task_order,
       :estimate,
       :project_tags,
+      :is_milestone,
+      :due_date,
       :tags
     ])
     |> validate_required([:name, :creator_id])

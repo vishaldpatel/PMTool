@@ -48,7 +48,7 @@ defmodule PmToolWeb.TagComponent do
         phx-value-tag-slug={@tag_slug}
         type="button"
         class={
-          "mr-[3px] inline-flex items-center px-1 text-xs font-xs italic #{@color} align-text-top mt-0.5" 
+          "mr-[3px] inline-flex items-center px-1 text-xs font-xs italic #{@color} m-auto" 
         }
       >
         {@tag}

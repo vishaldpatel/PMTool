@@ -40,6 +40,13 @@ defmodule PmToolWeb.TaskComponent do
     socket = assign(socket, assigns)
 
     socket =
+      if socket.assigns.task.due_date do
+        assign(socket, due_days: Date.diff(socket.assigns.task.due_date, Date.utc_today()))
+      else
+        assign(socket, due_days: nil)
+      end
+
+    socket =
       if is_nil(socket.assigns.task.id) and socket.assigns.current_team do
         assign(socket,
           task:
@@ -150,11 +157,37 @@ defmodule PmToolWeb.TaskComponent do
               />
             <% end %>
             {@task.name}
+            <%= if @due_days do %>
+              <%= cond do %>
+                <% @due_days == 0 -> %>
+                  <span
+                    title={"Due today: #{@task.due_date}"}
+                    class="inline-block text-xs text-black m-auto px-1 bg-yellow-500 rounded border-[1px] border-gray-100"
+                  >
+                    Today
+                  </span>
+                <% @due_days < 0 -> %>
+                  <span
+                    title={"It was due on #{@task.due_date}"}
+                    class="inline-block text-xs text-white m-auto px-1 bg-red-600 rounded border-[1px] border-yellow-500"
+                  >
+                    Late
+                  </span>
+                <% @due_days > 0 -> %>
+                  <span
+                    title={"Due in #{@due_days} days on #{@task.due_date}"}
+                    class="inline-block text-xs text-gray-200 m-auto px-1 rounded bg-sky-700 border-[1px] border-white"
+                  >
+                    {@due_days}
+                  </span>
+                <% true -> %>
+              <% end %>
+            <% end %>
             <%= if Ecto.assoc_loaded?(@task.team) and @task.team do %>
               <.live_component
                 id={"show-team-tags-#{@id}"}
                 module={PmToolWeb.TagComponent}
-                color="text-gray-900 bg-orange-400 hover:bg-orange-300"
+                color="text-orange-100 bg-orange-800 hover:bg-orange-600"
                 tag={@task.team.name}
                 tag_type="team"
                 tag_slug={@task.team.slug}
@@ -378,6 +411,17 @@ defmodule PmToolWeb.TaskComponent do
             value={@task.name}
             class="rounded-sm w-full py-0 px-1 mb-1"
           /><br />
+          <input
+            class="py-0 mb-1"
+            type="checkbox"
+            name="task[is_milestone]"
+            checked={@task.is_milestone == true}
+            value="true"
+          />
+          <label for="milestone">Milestone</label>
+          <br />
+          <label for="due_date">Due Date</label>
+          <input class="py-0 mb-1" type="date" name="task[due_date]" value={@task.due_date} /><br />
           <textarea
             placeholder="Task Description"
             name="task[description]"

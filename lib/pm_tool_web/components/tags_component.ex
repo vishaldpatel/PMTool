@@ -47,7 +47,7 @@ defmodule PmToolWeb.TagsComponent do
           phx-value-tag-type={@tag_type}
           type="button"
           class={
-            "mt-0.5 inline-flex items-center px-1 text-xs font-xs italic #{@color} align-text-top italic" 
+            "mt-0.5 inline-flex items-center px-1 text-xs font-xs italic #{@color} m-auto italic" 
           }
         >
           {tag}

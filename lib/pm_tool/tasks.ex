@@ -397,11 +397,30 @@ defmodule PmTool.Tasks do
     |> Enum.filter(&(!is_nil(&1)))
   end
 
+  defp set_milestone_attr(attrs) do
+    if not Map.has_key?(attrs, "is_milestone") do
+      Map.put(attrs, "is_milestone", false)
+    else
+      attrs
+    end
+  end
+
   # Be able to create a Task
   def create_task(attrs \\ %{}) do
+    attrs = set_milestone_attr(attrs)
+
     %Task{}
     |> Task.changeset(attrs)
     |> Repo.insert()
+  end
+
+  # Be able to update a Task
+  def update_task(%Task{} = task, attrs) do
+    attrs = set_milestone_attr(attrs)
+
+    task
+    |> Task.changeset(attrs)
+    |> Repo.update()
   end
 
   # Be able to get a Task
@@ -489,13 +508,6 @@ defmodule PmTool.Tasks do
         })
       end
     )
-  end
-
-  # Be able to update a Task
-  def update_task(%Task{} = task, attrs) do
-    task
-    |> Task.changeset(attrs)
-    |> Repo.update()
   end
 
   def start_task(%Task{} = task) do
