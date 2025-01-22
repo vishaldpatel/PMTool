@@ -437,37 +437,46 @@ defmodule PmTool.Tasks do
   # Get Task by slug
   def get_task_by_slug!(slug), do: Repo.get_by!(Task, slug: slug)
 
-  def move_task_above(%Task{} = task, %Task{} = above_task) do
+  def move_task_above(%Task{} = task, %Task{} = target_task) do
     prev_order = task.task_order
-    new_order = above_task.task_order
+    target_order = target_task.task_order
 
-    query =
-      from t in Task,
-        where: t.task_order >= ^new_order
-
-    query =
-      if task.stage == above_task.stage do
-        where(query, [t], t.task_order < ^prev_order)
-      else
-        query
-      end
-
-    Repo.update_all(query, inc: [task_order: 1])
-    update_task(task, %{"task_order" => new_order, "stage" => above_task.stage})
+    if prev_order > target_order do
+      query =
+        from t in Task,
+          where: t.task_order >= ^target_order and 
+              t.task_order < ^prev_order
+      Repo.update_all(query, inc: [task_order: 1])
+      update_task(task, %{"task_order" => target_order, "stage" => target_task.stage})
+    else
+      query =
+        from t in Task,
+        where: t.task_order < ^target_order and
+            t.task_order >= ^prev_order
+      Repo.update_all(query, inc: [task_order: -1])
+      update_task(task, %{"task_order" => target_order - 1, "stage" => target_task.stage})
+    end
   end
 
-  def move_task_below(%Task{} = task, %Task{} = below_task) do
-    new_order = below_task.task_order + 1
+  def move_task_below(%Task{} = task, %Task{} = target_task) do
+    prev_order = task.task_order
+    target_order = target_task.task_order
 
-    query =
-      from t in Task,
-        where:
-          t.stage == ^below_task.stage and
-            t.task_order > ^new_order
-
-    Repo.update_all(query, inc: [task_order: 1])
-
-    update_task(task, %{"task_order" => new_order, "stage" => below_task.stage})
+    if prev_order < target_order do
+      query =
+        from t in Task,
+          where: t.task_order <= ^target_order and 
+              t.task_order > ^prev_order
+      Repo.update_all(query, inc: [task_order: -1])
+      update_task(task, %{"task_order" => target_order, "stage" => target_task.stage})
+    else
+      query =
+        from t in Task,
+        where: t.task_order > ^target_order and
+            t.task_order <= ^prev_order
+      Repo.update_all(query, inc: [task_order: 1])
+      update_task(task, %{"task_order" => target_order + 1, "stage" => target_task.stage})
+    end
   end
 
   def get_max_task_order_for(%User{} = creator, stage) do
