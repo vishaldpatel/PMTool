@@ -159,6 +159,7 @@ defmodule PmTool.Tasks do
       from t in Task,
         where:
           t.team_id == ^team.id and
+            t.is_milestone != true and
             t.status == "Accepted" and
             t.status_updated_at >= ^two_iterations,
         select: sum(t.estimate)
@@ -181,6 +182,7 @@ defmodule PmTool.Tasks do
         where:
           t.creator_id == ^user.id and
             is_nil(t.team_id) and
+            t.is_milestone != true and
             t.status == "Accepted" and
             t.status_updated_at >= ^two_iterations,
         select: sum(t.estimate)
@@ -208,10 +210,16 @@ defmodule PmTool.Tasks do
 
     cond do
       # If it was Accepted more than 7 days ago, then it is marked as Done
-      Enum.member?(["Accepted", "Closed"], task.status) and
-          DateTime.compare(status_updated_at, last_period_end) == :lt ->
+      (task.is_milestone == true and not is_nil(task.due_date) and
+         Date.diff(task.due_date, last_period_end) < 0) or
+          (Enum.member?(["Accepted", "Closed"], task.status) and
+             DateTime.compare(status_updated_at, last_period_end) == :lt) ->
         Enum.find_value(slots, fn {slot, period_name} ->
-          if DateTime.compare(status_updated_at, Enum.fetch!(iteration_end_times, slot)) == :lt do
+          iteration_end_time = Enum.fetch!(iteration_end_times, slot)
+
+          if DateTime.compare(status_updated_at, iteration_end_time) == :lt or
+               (task.is_milestone == true and not is_nil(task.due_date) and
+                  Date.diff(task.due_date, iteration_end_time) <= 0) do
             [
               total_estimate,
               current_period,
@@ -224,11 +232,12 @@ defmodule PmTool.Tasks do
           end
         end)
 
-      task.stage == "Later" ->
+      task.stage == "Later" and not (task.is_milestone == true and not is_nil(task.due_date)) ->
         [total_estimate, current_period, Map.put(tasks, :Later, tasks[:Later] ++ [task])]
 
       total_estimate + task.estimate <= velocity or
-          (task.status != "Unstarted" and task.status != "Unappraised") ->
+        (task.status != "Unstarted" and task.status != "Unappraised") or
+          task.is_milestone == true ->
         [
           total_estimate + task.estimate,
           current_period,
@@ -291,6 +300,7 @@ defmodule PmTool.Tasks do
       now_tasks
       |> Map.put(:done, Enum.sort_by(now_tasks[:done], & &1.status_updated_at))
       |> Map.put(:ongoing, Enum.sort_by(now_tasks[:ongoing], & &1.status_updated_at))
+      |> Map.put(:unstarted, Enum.sort_by(now_tasks[:unstarted], & &1.task_order))
 
     done_tasks =
       done_tasks
@@ -397,18 +407,8 @@ defmodule PmTool.Tasks do
     |> Enum.filter(&(!is_nil(&1)))
   end
 
-  defp set_milestone_attr(attrs) do
-    if not Map.has_key?(attrs, "is_milestone") do
-      Map.put(attrs, "is_milestone", false)
-    else
-      attrs
-    end
-  end
-
   # Be able to create a Task
   def create_task(attrs \\ %{}) do
-    attrs = set_milestone_attr(attrs)
-
     %Task{}
     |> Task.changeset(attrs)
     |> Repo.insert()
@@ -416,8 +416,6 @@ defmodule PmTool.Tasks do
 
   # Be able to update a Task
   def update_task(%Task{} = task, attrs) do
-    attrs = set_milestone_attr(attrs)
-
     task
     |> Task.changeset(attrs)
     |> Repo.update()
@@ -435,20 +433,11 @@ defmodule PmTool.Tasks do
 
     query =
       from t in Task,
-        where:
-          t.stage == ^above_task.stage and
-            t.task_order >= ^new_order
-
-    query =
-      if not is_nil(above_task.team_id) do
-        where(query, [t], t.team_id == ^above_task.team_id)
-      else
-        where(query, [t], t.creator_id == ^above_task.creator_id)
-      end
+        where: t.task_order >= ^new_order
 
     query =
       if task.stage == above_task.stage do
-        where(query, [t], t.task_order <= ^prev_order)
+        where(query, [t], t.task_order < ^prev_order)
       else
         query
       end
@@ -464,14 +453,7 @@ defmodule PmTool.Tasks do
       from t in Task,
         where:
           t.stage == ^below_task.stage and
-            t.task_order >= ^new_order
-
-    query =
-      if not is_nil(below_task.team_id) do
-        where(query, [t], t.team_id == ^below_task.team_id)
-      else
-        where(query, [t], t.creator_id == ^below_task.creator_id)
-      end
+            t.task_order > ^new_order
 
     Repo.update_all(query, inc: [task_order: 1])
 

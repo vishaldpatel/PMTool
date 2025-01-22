@@ -72,6 +72,7 @@ defmodule PmTool.Tasks.Task do
     |> validate_inclusion(:stage, @stages)
     |> validate_inclusion(:status, @statuses)
     |> validate_inclusion(:estimate, @estimates)
+    |> maybe_set_milestone()
     |> maybe_set_estimate()
     |> maybe_set_task_order()
     |> maybe_set_status_updated_at()
@@ -105,6 +106,16 @@ defmodule PmTool.Tasks.Task do
       end
     else
       changeset
+    end
+  end
+
+  defp maybe_set_milestone(changeset) do
+    cond do
+      is_nil(changeset.data.is_milestone) and is_nil(get_field(changeset, :is_milestone)) ->
+        put_change(changeset, :is_milestone, false)
+
+      true ->
+        changeset
     end
   end
 

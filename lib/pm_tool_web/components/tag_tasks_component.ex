@@ -88,7 +88,9 @@ defmodule PmToolWeb.TagTasksComponent do
           <%= for task <- @tasks[:Now] do %>
             <.live_component
               module={PmToolWeb.TaskComponent}
-              draggable={task.status == "Unstarted"}
+              draggable={
+                task.status == "Unstarted" or (task.is_milestone == true and is_nil(task.due_date))
+              }
               id={"tag-#{@tag}-task-#{task.slug}#{@timestamp}"}
               tag={@tag}
               task={task}
@@ -99,7 +101,9 @@ defmodule PmToolWeb.TagTasksComponent do
           <%= for task <- @tasks[:Next] |> Map.values() |> List.flatten() do %>
             <.live_component
               module={PmToolWeb.TaskComponent}
-              draggable={task.status == "Unstarted"}
+              draggable={
+                task.status == "Unstarted" or (task.is_milestone == true and is_nil(task.due_date))
+              }
               id={"tag-#{@tag}-task-#{task.slug}#{@timestamp}"}
               tag={@tag}
               task={task}

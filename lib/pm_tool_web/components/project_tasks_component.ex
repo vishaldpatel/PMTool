@@ -75,7 +75,9 @@ defmodule PmToolWeb.ProjectTasksComponent do
           <%= for task <- @tasks[:Now] do %>
             <.live_component
               module={PmToolWeb.TaskComponent}
-              draggable={task.status == "Unstarted"}
+              draggable={
+                task.status == "Unstarted" or (task.is_milestone == true and is_nil(task.due_date))
+              }
               id={"project-#{@project.slug}-task-#{task.slug}#{@timestamp}"}
               project={@project}
               task={task}
@@ -86,7 +88,9 @@ defmodule PmToolWeb.ProjectTasksComponent do
           <%= for task <- @tasks[:Next] |> Map.values() |> List.flatten() do %>
             <.live_component
               module={PmToolWeb.TaskComponent}
-              draggable={task.status == "Unstarted"}
+              draggable={
+                task.status == "Unstarted" or (task.is_milestone == true and is_nil(task.due_date))
+              }
               id={"project-#{@project.slug}-task-#{task.slug}#{@timestamp}"}
               project={@project}
               task={task}

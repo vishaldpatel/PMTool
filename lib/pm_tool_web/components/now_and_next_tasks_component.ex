@@ -106,7 +106,9 @@ defmodule PmToolWeb.NowAndNextTasksComponent do
           <%= for task <- @now_tasks do %>
             <.live_component
               module={PmToolWeb.TaskComponent}
-              draggable={task.status == "Unstarted"}
+              draggable={
+                task.status == "Unstarted" or (task.is_milestone == true and is_nil(task.due_date))
+              }
               id={"task-#{task.slug}#{@timestamp}"}
               task={task}
               show_task={if @open_tasks[task.slug], do: "hidden", else: "flex"}
