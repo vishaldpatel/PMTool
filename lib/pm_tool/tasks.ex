@@ -70,7 +70,10 @@ defmodule PmTool.Tasks do
     velocity = determine_velocity(user)
     team_velocities = for team <- teams, into: %{}, do: {team.id, determine_velocity(team)}
 
-    Repo.all(query)
+    tasks =
+      Repo.all(query)
+
+    tasks
     |> Repo.preload(team: [:team_members])
     |> Repo.preload(:owner)
     |> separate_tasks_into_stages(velocity, team_velocities)
@@ -208,6 +211,14 @@ defmodule PmTool.Tasks do
     status_updated_at = DateTime.from_naive!(task.status_updated_at, "Etc/UTC")
     slots = [{3, :earlier}, {2, :three}, {1, :two}, {0, :last}]
 
+    task =
+      case task.is_milestone == true do
+        true ->
+          Map.put(task, :estimate, 0)
+        false ->
+          task
+      end
+
     cond do
       # If it was Accepted more than 7 days ago, then it is marked as Done
       (task.is_milestone == true and not is_nil(task.due_date) and
@@ -236,8 +247,7 @@ defmodule PmTool.Tasks do
         [total_estimate, current_period, Map.put(tasks, :Later, tasks[:Later] ++ [task])]
 
       total_estimate + task.estimate <= velocity or
-        (task.status != "Unstarted" and task.status != "Unappraised") or
-          task.is_milestone == true ->
+          (task.status != "Unstarted" and task.status != "Unappraised") ->
         [
           total_estimate + task.estimate,
           current_period,
