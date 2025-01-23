@@ -70,10 +70,7 @@ defmodule PmTool.Tasks do
     velocity = determine_velocity(user)
     team_velocities = for team <- teams, into: %{}, do: {team.id, determine_velocity(team)}
 
-    tasks =
-      Repo.all(query)
-
-    tasks
+    Repo.all(query)
     |> Repo.preload(team: [:team_members])
     |> Repo.preload(:owner)
     |> separate_tasks_into_stages(velocity, team_velocities)
@@ -215,6 +212,7 @@ defmodule PmTool.Tasks do
       case task.is_milestone == true do
         true ->
           Map.put(task, :estimate, 0)
+
         false ->
           task
       end
@@ -245,6 +243,36 @@ defmodule PmTool.Tasks do
 
       task.stage == "Later" and not (task.is_milestone == true and not is_nil(task.due_date)) ->
         [total_estimate, current_period, Map.put(tasks, :Later, tasks[:Later] ++ [task])]
+
+      # Manage milestones separately because they need
+      # more flexibility to move about.
+      task.is_milestone == true ->
+        [
+          total_estimate + task.estimate,
+          current_period,
+          cond do
+            task.status == "Accepted" ->
+              Map.put(
+                tasks,
+                :Now,
+                Map.put(tasks[:Now], :ongoing, tasks[:Now][:ongoing] ++ [task])
+              )
+
+            current_period == 0 ->
+              Map.put(
+                tasks,
+                :Now,
+                Map.put(tasks[:Now], :unstarted, tasks[:Now][:unstarted] ++ [task])
+              )
+
+            true ->
+              Map.put(
+                tasks,
+                :Next,
+                Map.put(tasks[:Next], current_period, tasks[:Next][current_period] ++ [task])
+              )
+          end
+        ]
 
       total_estimate + task.estimate <= velocity or
           (task.status != "Unstarted" and task.status != "Unappraised") ->
@@ -444,15 +472,19 @@ defmodule PmTool.Tasks do
     if prev_order > target_order do
       query =
         from t in Task,
-          where: t.task_order >= ^target_order and 
+          where:
+            t.task_order >= ^target_order and
               t.task_order < ^prev_order
+
       Repo.update_all(query, inc: [task_order: 1])
       update_task(task, %{"task_order" => target_order, "stage" => target_task.stage})
     else
       query =
         from t in Task,
-        where: t.task_order < ^target_order and
-            t.task_order >= ^prev_order
+          where:
+            t.task_order < ^target_order and
+              t.task_order >= ^prev_order
+
       Repo.update_all(query, inc: [task_order: -1])
       update_task(task, %{"task_order" => target_order - 1, "stage" => target_task.stage})
     end
@@ -465,15 +497,19 @@ defmodule PmTool.Tasks do
     if prev_order < target_order do
       query =
         from t in Task,
-          where: t.task_order <= ^target_order and 
+          where:
+            t.task_order <= ^target_order and
               t.task_order > ^prev_order
+
       Repo.update_all(query, inc: [task_order: -1])
       update_task(task, %{"task_order" => target_order, "stage" => target_task.stage})
     else
       query =
         from t in Task,
-        where: t.task_order > ^target_order and
-            t.task_order <= ^prev_order
+          where:
+            t.task_order > ^target_order and
+              t.task_order <= ^prev_order
+
       Repo.update_all(query, inc: [task_order: 1])
       update_task(task, %{"task_order" => target_order + 1, "stage" => target_task.stage})
     end

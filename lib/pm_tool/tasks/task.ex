@@ -26,11 +26,14 @@ defmodule PmTool.Tasks.Task do
     field :name, :string
     field :description, :string
     field :stage, :string
-    field :status, :string
+    field :status, :string, default: "Unappraised"
     field :slug, :string
     field :task_order, :integer
     field :estimate, :integer
-    field :status_updated_at, :utc_datetime
+
+    field :status_updated_at, :utc_datetime,
+      default: DateTime.truncate(DateTime.utc_now(), :second)
+
     field :tags, {:array, :string}, default: []
     field :project_tags, {:array, :string}, default: []
     field :is_milestone, :boolean, default: false
@@ -161,7 +164,7 @@ defmodule PmTool.Tasks.Task do
   end
 
   def maybe_set_estimate(changeset) do
-    if get_field(changeset, :status) == "Unappraised" and changed?(changeset, :status) do
+    if changed?(changeset, :status) and get_field(changeset, :status) == "Unappraised" do
       put_change(changeset, :estimate, 1)
     else
       changeset
@@ -170,14 +173,14 @@ defmodule PmTool.Tasks.Task do
 
   defp maybe_set_status(changeset) do
     cond do
-      get_field(changeset, :id) == nil and get_field(changeset, :status) == "Unappraised" ->
-        changeset
+      changed?(changeset, :is_milestone) and get_field(changeset, :is_milestone) == true ->
+        put_change(changeset, :status, "Unstarted")
+
+      changeset.data.is_milestone == true and get_field(changeset, :status) != "Accepted" ->
+        put_change(changeset, :status, "Unstarted")
 
       changed?(changeset, :estimate) ->
         put_change(changeset, :status, "Unstarted")
-
-      get_field(changeset, :status) == nil ->
-        put_change(changeset, :status, "Unappraised")
 
       true ->
         changeset
