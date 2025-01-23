@@ -192,7 +192,7 @@ defmodule PmTool.Tasks do
     if velocity <= 20, do: 20, else: velocity
   end
 
-  def get_iteration_end_times() do
+  def get_past_iteration_end_times() do
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
 
     Enum.map(1..4, fn slot ->
@@ -247,8 +247,10 @@ defmodule PmTool.Tasks do
       # Manage milestones separately because they need
       # more flexibility to move about.
       task.is_milestone == true ->
+        current_period = div(total_estimate + task.estimate, velocity)
+
         [
-          total_estimate + task.estimate,
+          total_estimate,
           current_period,
           cond do
             task.status == "Accepted" ->
@@ -258,12 +260,38 @@ defmodule PmTool.Tasks do
                 Map.put(tasks[:Now], :ongoing, tasks[:Now][:ongoing] ++ [task])
               )
 
+            not is_nil(task.due_date) ->
+              due_period = div(Date.diff(task.due_date, last_period_end), 7)
+              due_period_tasks = tasks[:Next][due_period]
+
+              cond do
+                due_period == 0 ->
+                  Map.put(
+                    tasks,
+                    :Now,
+                    Map.put(tasks[:Now], :unstarted, tasks[:Now][:unstarted] ++ [task])
+                  )
+
+                is_nil(due_period_tasks) ->
+                  Map.put(tasks, :Next, Map.put(tasks[:Next], due_period, [task]))
+
+                true ->
+                  Map.put(
+                    tasks,
+                    :Next,
+                    Map.put(tasks[:Next], due_period, due_period_tasks ++ [task])
+                  )
+              end
+
             current_period == 0 ->
               Map.put(
                 tasks,
                 :Now,
                 Map.put(tasks[:Now], :unstarted, tasks[:Now][:unstarted] ++ [task])
               )
+
+            is_nil(tasks[:Next][current_period]) ->
+              Map.put(tasks, :Next, Map.put(tasks[:Next], current_period, [task]))
 
             true ->
               Map.put(
@@ -304,14 +332,7 @@ defmodule PmTool.Tasks do
         ]
 
       true ->
-        current_period =
-          case total_estimate + task.estimate > velocity * (current_period + 1) do
-            true ->
-              current_period + 1
-
-            false ->
-              current_period
-          end
+        current_period = div(total_estimate + task.estimate, velocity)
 
         tasks =
           case tasks[:Next][current_period] do
@@ -353,7 +374,7 @@ defmodule PmTool.Tasks do
   end
 
   defp separate_tasks_into_stages(unsorted_tasks, user_velocity, team_velocities) do
-    iteration_end_times = get_iteration_end_times()
+    iteration_end_times = get_past_iteration_end_times()
     team_estimates = for {team_id, _velocity} <- team_velocities, into: %{}, do: {team_id, 0}
     team_periods = team_estimates
 
@@ -410,7 +431,7 @@ defmodule PmTool.Tasks do
   end
 
   defp separate_tasks_into_stages(unsorted_tasks, velocity) do
-    iteration_end_times = get_iteration_end_times()
+    iteration_end_times = get_past_iteration_end_times()
 
     [_now_estimate, _current_period, tasks] =
       Enum.reduce_while(
