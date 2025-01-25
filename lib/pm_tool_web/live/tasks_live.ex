@@ -126,35 +126,6 @@ defmodule PmToolWeb.TasksLive do
 
   def mount(params, _session, socket) do
     if is_nil(socket.root_pid) do
-      socket = socket
-      |> assign(
-        user_preferences: %{},
-        open_project_slugs: [],
-        open_projects: [],
-        open_tags: [],
-        open_tasks: %{},
-        open_project_tasks: %{},
-        open_tag_tasks: %{},
-        open_team_slugs: [],
-        current_team_id: nil,
-        search_tags: [],
-        current_team: nil,
-        teams: [],
-        merge_now_and_next_tasks: false,
-        projects: [],
-        project_progress: %{},
-        task: nil,
-        later_tasks: nil,
-        done_tasks: %{},
-        now_tasks: %{},
-        next_tasks: nil,
-        new_project_id: "new-project-0",
-        new_team_id: "new-team-0",
-        timestamp: 0,
-        new_now_task_id: "new-now-task-0",
-        new_next_task_id: "new-next-task-0",
-        new_now_next_task_id: "new-now-next-task-0",
-        new_later_task_id: "new-later-task-0")
       {:ok, render_with(socket, &render_empty/1)}
     else
       socket =
