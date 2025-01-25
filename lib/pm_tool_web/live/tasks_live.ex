@@ -113,49 +113,80 @@ defmodule PmToolWeb.TasksLive do
   end
 
   def mount(params, _session, socket) do
-    socket =
-      socket
-      |> assign(user_preferences: Accounts.get_preferences(socket.assigns.current_user))
+    if is_nil(socket.root_pid) do
+      {
+        :ok,
+        socket
+        |> assign(
+          user_preferences: %{},
+          open_project_slugs: [],
+          open_projects: [],
+          open_tags: [],
+          open_tasks: %{},
+          open_project_tasks: %{},
+          open_tag_tasks: %{},
+          open_team_slugs: [],
+          current_team_id: nil,
+          search_tags: [],
+          current_team: nil,
+          teams: [],
+          merge_now_and_next_tasks: false,
+          projects: [],
+          project_progress: %{},
+          task: nil,
+          later_tasks: nil,
+          done_tasks: %{},
+          now_tasks: %{},
+          next_tasks: nil)
+        |> assign_new_project_id()
+        |> assign_new_team_id()
+        |> assign_new_task_ids()
+      }
+    else
+      socket =
+        socket
+        |> assign(user_preferences: Accounts.get_preferences(socket.assigns.current_user))
 
-    socket =
-      socket
-      |> assign(open_project_slugs: socket.assigns.user_preferences["open_project_slugs"] || [])
-      |> assign(open_projects: [])
-      |> assign(open_tags: socket.assigns.user_preferences["open_tags"] || [])
-      |> assign(open_tasks: %{})
-      |> assign(open_project_tasks: %{})
-      |> assign(open_tag_tasks: %{})
-      |> assign(open_team_slugs: socket.assigns.user_preferences["open_team_slugs"] || [])
-      |> assign(current_team_id: socket.assigns.user_preferences["current_team_id"] || nil)
-      |> maybe_get_current_team()
-      |> maybe_get_current_task(params)
-      |> get_teams()
-      |> get_tasks()
-      |> maybe_get_search_tags()
-      |> assign_new_task_ids()
-      |> assign(
-        merge_now_and_next_tasks:
-          case socket.assigns.user_preferences["merge_now_and_next_tasks"] do
-            false -> false
-            _ -> true
-          end
-      )
-      |> get_projects()
-      |> get_project_progress()
-      |> assign_new_project_id()
-      |> assign_new_team_id()
+      socket =
+        socket
+        |> assign(open_project_slugs: socket.assigns.user_preferences["open_project_slugs"] || [])
+        |> assign(open_projects: [])
+        |> assign(open_tags: socket.assigns.user_preferences["open_tags"] || [])
+        |> assign(open_tasks: %{})
+        |> assign(open_project_tasks: %{})
+        |> assign(open_tag_tasks: %{})
+        |> assign(open_team_slugs: socket.assigns.user_preferences["open_team_slugs"] || [])
+        |> assign(current_team_id: socket.assigns.user_preferences["current_team_id"] || nil)
+        |> maybe_get_current_team()
+        |> maybe_get_current_task(params)
+        |> get_teams()
+        |> get_tasks()
+        |> maybe_get_search_tags()
+        |> assign_new_task_ids()
+        |> assign(
+          merge_now_and_next_tasks:
+            case socket.assigns.user_preferences["merge_now_and_next_tasks"] do
+              false -> false
+              _ -> true
+            end
+        )
+        |> get_projects()
+        |> get_project_progress()
+        |> assign_new_project_id()
+        |> assign_new_team_id()
 
-    socket =
-      case params["slug"] do
-        nil ->
-          assign(socket, task: nil)
+      socket =
+        case params["slug"] do
+          nil ->
+            assign(socket, task: nil)
 
-        slug ->
-          task = Tasks.get_task_by_slug!(slug)
-          assign(socket, task: task)
-      end
+          slug ->
+            task = Tasks.get_task_by_slug!(slug)
+            assign(socket, task: task)
+        end
 
-    {:ok, socket}
+      {:ok, socket}
+    end
   end
 
   defp maybe_get_search_tags(socket) do
