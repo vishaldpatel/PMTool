@@ -137,10 +137,14 @@ defmodule PmToolWeb.TasksLive do
           later_tasks: nil,
           done_tasks: %{},
           now_tasks: %{},
-          next_tasks: nil)
-        |> assign_new_project_id()
-        |> assign_new_team_id()
-        |> assign_new_task_ids()
+          next_tasks: nil,
+          new_project_id: "new-project-0",
+          new_team_id: "new-team-0",
+          timestamp: 0,
+          new_now_task_id: "new-now-task-0",
+          new_next_task_id: "new-next-task-0",
+          new_now_next_task_id: "new-now-next-task-0",
+          new_later_task_id: "new-later-task-0")
       }
     else
       socket =
