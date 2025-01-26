@@ -217,6 +217,8 @@ defmodule PmTool.Tasks do
           task
       end
 
+    new_total_estimate = total_estimate + task.estimate
+
     cond do
       # If it was Accepted more than 7 days ago, then it is marked as Done
       (task.is_milestone == true and not is_nil(task.due_date) and
@@ -247,7 +249,7 @@ defmodule PmTool.Tasks do
       # Manage milestones separately because they need
       # more flexibility to move about.
       task.is_milestone == true ->
-        current_period = div(total_estimate + task.estimate, velocity)
+        current_period = div(new_total_estimate, velocity)
 
         [
           total_estimate,
@@ -302,10 +304,10 @@ defmodule PmTool.Tasks do
           end
         ]
 
-      total_estimate + task.estimate <= velocity or
+      new_total_estimate <= velocity or
           (task.status != "Unstarted" and task.status != "Unappraised") ->
         [
-          total_estimate + task.estimate,
+          new_total_estimate,
           current_period,
           cond do
             Enum.member?(["Accepted", "Closed"], task.status) ->
@@ -332,7 +334,7 @@ defmodule PmTool.Tasks do
         ]
 
       true ->
-        current_period = div(total_estimate + task.estimate, velocity)
+        current_period = div(new_total_estimate, velocity)
 
         tasks =
           case tasks[:Next][current_period] do
@@ -347,7 +349,7 @@ defmodule PmTool.Tasks do
               )
           end
 
-        [total_estimate + task.estimate, current_period, tasks]
+        [new_total_estimate, current_period, tasks]
     end
   end
 
@@ -373,6 +375,15 @@ defmodule PmTool.Tasks do
     |> Map.put(:Done, done_tasks)
   end
 
+  def zero_tasks() do
+    %{
+      Now: %{done: [], ongoing: [], unstarted: []},
+      Next: %{},
+      Done: %{last: [], two: [], three: [], earlier: []},
+      Later: []
+    }
+  end
+
   defp separate_tasks_into_stages(unsorted_tasks, user_velocity, team_velocities) do
     iteration_end_times = get_past_iteration_end_times()
     team_estimates = for {team_id, _velocity} <- team_velocities, into: %{}, do: {team_id, 0}
@@ -386,12 +397,7 @@ defmodule PmTool.Tasks do
           0,
           team_estimates,
           team_periods,
-          %{
-            Now: %{done: [], ongoing: [], unstarted: []},
-            Next: %{},
-            Done: %{last: [], two: [], three: [], earlier: []},
-            Later: []
-          }
+          zero_tasks()
         ],
         fn task, acc ->
           [user_estimate, current_period, team_estimates, team_periods, tasks] = acc
@@ -439,12 +445,7 @@ defmodule PmTool.Tasks do
         [
           0,
           0,
-          %{
-            Now: %{done: [], ongoing: [], unstarted: []},
-            Next: %{},
-            Done: %{last: [], two: [], three: [], earlier: []},
-            Later: []
-          }
+          zero_tasks()
         ],
         fn task, acc ->
           {:cont, sort_task(task, acc, iteration_end_times, velocity)}

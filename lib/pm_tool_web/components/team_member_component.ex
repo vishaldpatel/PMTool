@@ -43,7 +43,17 @@ defmodule PmToolWeb.TeamMemberComponent do
              show_team_member_edit: "hidden"
            )}
 
-        {:error, _changeset} ->
+        {:error, nil} ->
+          {:noreply,
+           assign(socket,
+             team: socket.assigns.team,
+             team_member: socket.assigns.team_member,
+             id: "team-member-#{team.slug}#{timestamp}",
+             show_team_member: "flex",
+             show_team_member_edit: "hidden"
+           )}
+
+        _ ->
           {:noreply,
            assign(socket,
              show_team_member: "hidden",

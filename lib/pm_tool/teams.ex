@@ -72,9 +72,13 @@ defmodule PmTool.Teams do
   end
 
   def update_team_member(%TeamMember{} = team_member, team_member_params) do
-    team_member
-    |> TeamMember.changeset(team_member_params)
-    |> Repo.update()
+    changeset = TeamMember.changeset(team_member, team_member_params)
+
+    if not is_nil(changeset) and changeset.valid? do
+      Repo.update(changeset)
+    else
+      {:error, changeset}
+    end
   end
 
   # Add a user to a team
