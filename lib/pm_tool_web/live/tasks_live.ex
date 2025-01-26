@@ -1,7 +1,6 @@
 defmodule PmToolWeb.TasksLive do
   use PmToolWeb, :live_view
 
-  alias Phoenix.LiveView.AsyncResult
   alias PmTool.Tasks
   alias PmTool.Teams
   alias PmTool.Teams.Team
