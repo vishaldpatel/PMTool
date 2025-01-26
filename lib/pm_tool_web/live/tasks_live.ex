@@ -143,68 +143,63 @@ defmodule PmToolWeb.TasksLive do
     if not connected?(socket) do
       {:ok, render_with(socket, &render_empty/1)}
     else
-      socket =
-        socket
-        |> assign(user_preferences: Accounts.get_preferences(current_user))
+      user_preferences = Accounts.get_preferences(current_user)
+      open_project_slugs = user_preferences["open_project_slugs"] || []
+      open_tags = user_preferences["open_tags"] || []
+      teams = Teams.list_teams(current_user)
+
+      current_team =
+        case user_preferences["current_team_id"] do
+          nil -> nil
+          team_id -> Teams.get_team!(team_id)
+        end
 
       socket =
         socket
-        |> assign(open_project_slugs: socket.assigns.user_preferences["open_project_slugs"] || [])
+        |> assign(user_preferences: user_preferences)
+        |> assign(open_project_slugs: open_project_slugs)
+        |> assign(projects: [])
+        |> assign(search_tags: [])
         |> assign(open_projects: [])
-        |> assign(open_tags: socket.assigns.user_preferences["open_tags"] || [])
+        |> assign(open_tags: open_tags)
         |> assign(open_tasks: %{})
         |> assign(open_project_tasks: %{})
         |> assign(open_tag_tasks: %{})
-        |> assign(open_team_slugs: socket.assigns.user_preferences["open_team_slugs"] || [])
-        |> assign(current_team_id: socket.assigns.user_preferences["current_team_id"] || nil)
+        |> assign(open_team_slugs: user_preferences["open_team_slugs"] || [])
         |> assign(tasks: %{Now: %{}, Next: %{}, Done: %{}})
         |> assign(project_progress: %{})
-        |> maybe_get_current_team()
+        |> assign(teams: teams)
+        |> assign(current_team: current_team)
         |> maybe_get_current_task(params)
-        |> get_teams()
-
-      teams = socket.assigns.teams
-      open_tags = socket.assigns.open_tags
-      current_team = socket.assigns.current_team
-      open_project_slugs = socket.assigns.open_project_slugs
-
-      socket =
-        socket
-        |> assign_async(:open_tag_tasks, fn ->
-          {:ok, %{open_tag_tasks: get_tasks_for_tags(current_user, teams, open_tags)}}
+        |> start_async(:get_open_tag_tasks, fn ->
+          get_tasks_for_tags(current_user, teams, open_tags)
         end)
-        |> assign_async(:open_project_tasks, fn ->
-          {:ok,
-           %{
-             open_project_tasks:
-               get_tasks_for_open_projects(current_user, current_team, teams, open_project_slugs)
-           }}
+        |> start_async(:get_open_project_tasks, fn ->
+          get_tasks_for_open_projects(current_user, current_team, teams, open_project_slugs)
         end)
         |> start_async(:get_main_tasks, fn ->
           get_now_next_later_and_done_tasks(current_user, current_team, teams)
         end)
-        |> maybe_get_search_tags()
-        |> assign_new_task_ids()
+        |> start_async(:get_projects, fn -> Projects.list_projects_for(current_user) end)
+        |> start_async(:get_open_projects, fn -> Projects.get_projects!(open_project_slugs) end)
         |> assign(
           merge_now_and_next_tasks:
-            case socket.assigns.user_preferences["merge_now_and_next_tasks"] do
+            case user_preferences["merge_now_and_next_tasks"] do
               false -> false
               _ -> true
             end
         )
-        |> get_projects()
+        |> start_async(:get_search_tags, fn -> Tasks.list_tags(current_user, teams) end)
         |> assign_new_project_id()
         |> assign_new_team_id()
-
-      socket =
-        case params["slug"] do
-          nil ->
-            assign(socket, task: nil)
-
-          slug ->
-            task = Tasks.get_task_by_slug!(slug)
-            assign(socket, task: task)
-        end
+        |> assign_new_task_ids()
+        |> assign(
+          task:
+            case params["slug"] do
+              nil -> nil
+              slug -> Tasks.get_task_by_slug!(slug)
+            end
+        )
 
       {:ok, socket}
     end
@@ -219,24 +214,29 @@ defmodule PmToolWeb.TasksLive do
     {:noreply, socket}
   end
 
-  defp maybe_get_search_tags(socket) do
-    assign(socket,
-      search_tags:
-        Tasks.list_tags(
-          socket.assigns.current_user,
-          socket.assigns.teams
-        )
-    )
+  def handle_async(:get_open_tag_tasks, {:ok, open_tag_tasks}, socket) do
+    socket = assign(socket, open_tag_tasks: open_tag_tasks)
+    {:noreply, socket}
   end
 
-  defp maybe_get_current_team(socket) do
-    case socket.assigns.current_team_id do
-      nil ->
-        assign(socket, current_team: nil)
+  def handle_async(:get_open_project_tasks, {:ok, open_project_tasks}, socket) do
+    socket = assign(socket, open_project_tasks: open_project_tasks)
+    {:noreply, socket}
+  end
 
-      team_id ->
-        assign(socket, current_team: Teams.get_team!(team_id))
-    end
+  def handle_async(:get_open_projects, {:ok, open_projects}, socket) do
+    socket = assign(socket, open_projects: open_projects)
+    {:noreply, socket}
+  end
+
+  def handle_async(:get_projects, {:ok, projects}, socket) do
+    socket = assign(socket, projects: projects)
+    {:noreply, socket}
+  end
+
+  def handle_async(:get_search_tags, {:ok, tags}, socket) do
+    socket = assign(socket, search_tags: tags)
+    {:noreply, socket}
   end
 
   defp maybe_get_current_task(socket, params) do
@@ -567,7 +567,6 @@ defmodule PmToolWeb.TasksLive do
     {:noreply,
      socket
      |> assign(current_team: team)
-     |> assign(current_team_id: team.id)
      |> get_tasks()
      |> get_project_progress()}
   end
@@ -582,7 +581,6 @@ defmodule PmToolWeb.TasksLive do
     {:noreply,
      socket
      |> assign(current_team: nil)
-     |> assign(current_team_id: nil)
      |> assign_new_task_ids()
      |> get_tasks()
      |> get_project_progress()}
