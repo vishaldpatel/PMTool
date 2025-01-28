@@ -217,7 +217,8 @@ defmodule PmToolWeb.ProjectComponent do
       <div class="inline-block w-full bg-gray-200 text-left border border-gray-500 p-1 rounded">
         <form phx-submit={@action} phx-target={@myself}>
           <input
-            placeholder="Project Name"
+            title="Project Name is required"
+            placeholder="*Project Name"
             name="project[name]"
             type="text"
             value={@project.name}
