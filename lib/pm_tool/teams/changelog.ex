@@ -1,8 +1,8 @@
-defmodule PmTool.Teams.TeamLog do
+defmodule PmTool.Teams.Changelog do
   use Ecto.Schema
   import Ecto.Changeset
 
-  schema "team_logs" do
+  schema "changelog" do
     field :action, :string
     field :name, :string
 
@@ -14,8 +14,8 @@ defmodule PmTool.Teams.TeamLog do
   end
 
   @doc false
-  def changeset(team_log, attrs) do
-    team_log
+  def changeset(changelog, attrs) do
+    changelog
     |> cast(attrs, [:action, :name, :team_id, :user_id, :task_id])
     |> validate_required([:action, :name, :team_id, :user_id])
   end
