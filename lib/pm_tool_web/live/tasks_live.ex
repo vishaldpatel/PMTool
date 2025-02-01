@@ -672,7 +672,8 @@ defmodule PmToolWeb.TasksLive do
 
     Enum.each(task_slugs, fn task_slug ->
       task = Tasks.get_task_by_slug!(task_slug)
-      Tasks.update_task(task, %{team_id: team.id})
+
+      Tasks.update_task(task, %{current_user_id: socket.assigns.current_user.id, team_id: team.id})
     end)
 
     {:noreply,
@@ -691,7 +692,10 @@ defmodule PmToolWeb.TasksLive do
       task = Tasks.get_task_by_slug!(task_slug)
 
       unless Enum.member?(task.project_tags, project.tag) do
-        Tasks.update_task(task, %{project_tags: [project.tag | task.project_tags]})
+        Tasks.update_task(task, %{
+          current_user_id: socket.assigns.current_user.id,
+          project_tags: [project.tag | task.project_tags]
+        })
       end
     end)
 
@@ -727,7 +731,11 @@ defmodule PmToolWeb.TasksLive do
 
     Enum.each(task_slugs, fn task_slug ->
       task = Tasks.get_task_by_slug!(task_slug)
-      Tasks.update_task(task, %{project_tags: List.delete(task.project_tags, project.tag)})
+
+      Tasks.update_task(task, %{
+        current_user_id: socket.assigns.current_user.id,
+        project_tags: List.delete(task.project_tags, project.tag)
+      })
     end)
 
     {:noreply,
@@ -755,8 +763,8 @@ defmodule PmToolWeb.TasksLive do
          (Enum.member?(task.project_tags, project.tag) and
             Enum.member?(affected_task.project_tags, project.tag)) do
       case action do
-        "move_above" -> Tasks.move_task_above(task, affected_task)
-        "move_below" -> Tasks.move_task_below(task, affected_task)
+        "move_above" -> Tasks.move_task_above(task, affected_task, socket.assigns.current_user)
+        "move_below" -> Tasks.move_task_below(task, affected_task, socket.assigns.current_user)
       end
     end
 

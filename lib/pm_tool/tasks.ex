@@ -9,6 +9,8 @@ defmodule PmTool.Tasks do
   alias PmTool.Teams.Team
   alias PmTool.Accounts.User
   alias PmTool.Projects
+  alias PmTool.Teams.TeamMember
+  alias PmTool.Teams.Change
 
   def list_tasks(%User{} = user) do
     velocity = determine_velocity(user)
@@ -487,7 +489,7 @@ defmodule PmTool.Tasks do
   # Get Task by slug
   def get_task_by_slug!(slug), do: Repo.get_by!(Task, slug: slug)
 
-  def move_task_above(%Task{} = task, %Task{} = target_task) do
+  def move_task_above(%Task{} = task, %Task{} = target_task, %User{} = user) do
     prev_order = task.task_order
     target_order = target_task.task_order
 
@@ -499,7 +501,12 @@ defmodule PmTool.Tasks do
               t.task_order < ^prev_order
 
       Repo.update_all(query, inc: [task_order: 1])
-      update_task(task, %{"task_order" => target_order, "stage" => target_task.stage})
+
+      update_task(task, %{
+        "task_order" => target_order,
+        "stage" => target_task.stage,
+        "current_user_id" => user.id
+      })
     else
       query =
         from t in Task,
@@ -508,11 +515,16 @@ defmodule PmTool.Tasks do
               t.task_order >= ^prev_order
 
       Repo.update_all(query, inc: [task_order: -1])
-      update_task(task, %{"task_order" => target_order - 1, "stage" => target_task.stage})
+
+      update_task(task, %{
+        "task_order" => target_order - 1,
+        "stage" => target_task.stage,
+        "current_user_id" => user.id
+      })
     end
   end
 
-  def move_task_below(%Task{} = task, %Task{} = target_task) do
+  def move_task_below(%Task{} = task, %Task{} = target_task, %User{} = user) do
     prev_order = task.task_order
     target_order = target_task.task_order
 
@@ -524,7 +536,12 @@ defmodule PmTool.Tasks do
               t.task_order > ^prev_order
 
       Repo.update_all(query, inc: [task_order: -1])
-      update_task(task, %{"task_order" => target_order, "stage" => target_task.stage})
+
+      update_task(task, %{
+        "task_order" => target_order,
+        "stage" => target_task.stage,
+        "current_user_id" => user.id
+      })
     else
       query =
         from t in Task,
@@ -533,7 +550,12 @@ defmodule PmTool.Tasks do
               t.task_order <= ^prev_order
 
       Repo.update_all(query, inc: [task_order: 1])
-      update_task(task, %{"task_order" => target_order + 1, "stage" => target_task.stage})
+
+      update_task(task, %{
+        "task_order" => target_order + 1,
+        "stage" => target_task.stage,
+        "current_user_id" => user.id
+      })
     end
   end
 
@@ -598,23 +620,71 @@ defmodule PmTool.Tasks do
   end
 
   # Be able to delete a Task
-  def delete_task(%Task{} = task) do
-    Repo.delete(task)
+  def delete_task(%Task{} = task, %User{} = current_user) do
+    task
+    |> Task.changeset(%{current_user_id: current_user.id})
+    |> Repo.delete()
   end
 
   def move_tasks_with_slugs_to_stage(user, slugs, stage) do
+    team_ids_query = from tm in TeamMember, where: tm.email == ^user.email, select: tm.team_id
+    team_ids = Repo.all(team_ids_query)
+
     query =
       from t in Task,
-        where: t.creator_id == ^user.id and t.slug in ^slugs
+        where: (t.creator_id == ^user.id or t.team_id in ^team_ids) and t.slug in ^slugs
 
-    Repo.update_all(query, set: [stage: stage])
+    multi_pass =
+      Ecto.Multi.new()
+      |> Ecto.Multi.update_all(:move_tasks, query,
+        set: [stage: stage, updated_at: DateTime.truncate(DateTime.utc_now(), :second)]
+      )
+
+    multi_pass =
+      Enum.reduce(Repo.all(query), multi_pass, fn task, acc ->
+        acc
+        |> Ecto.Multi.insert(
+          "change_#{task.id}",
+          %Change{
+            action: "update",
+            name: task.name,
+            description: "#{user.name} moved #{task.name} to #{stage}",
+            user_id: user.id,
+            team_id: task.team_id,
+            task_id: task.id
+          }
+        )
+      end)
+
+    Repo.transaction(multi_pass)
   end
 
   def delete_tasks_with_slugs(user, slugs) do
+    team_ids_query = from tm in TeamMember, where: tm.email == ^user.email, select: tm.team_id
+    team_ids = Repo.all(team_ids_query)
+
     query =
       from t in Task,
-        where: t.creator_id == ^user.id and t.slug in ^slugs
+        where: (t.creator_id == ^user.id or t.team_id in ^team_ids) and t.slug in ^slugs
 
-    Repo.delete_all(query)
+    deleted_tasks = Repo.all(query)
+    multi_pass = Ecto.Multi.new() |> Ecto.Multi.delete_all(:delete_tasks, query)
+
+    multi_pass =
+      Enum.reduce(deleted_tasks, multi_pass, fn task, acc ->
+        acc
+        |> Ecto.Multi.insert(
+          "change_#{task.id}",
+          %Change{
+            action: "deleted",
+            name: task.name,
+            description: "#{user.name} deleted task #{task.name}",
+            user_id: user.id,
+            team_id: task.team_id
+          }
+        )
+      end)
+
+    Repo.transaction(multi_pass)
   end
 end

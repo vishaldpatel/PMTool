@@ -112,6 +112,7 @@ defmodule PmToolWeb.NowTasksComponent do
               actions={true}
               show_task={if @open_tasks[task.slug], do: "hidden", else: "flex"}
               show_task_edit={if @open_tasks[task.slug], do: "flex", else: "hidden"}
+              current_user={@current_user}
             />
           <% end %>
         </ul>

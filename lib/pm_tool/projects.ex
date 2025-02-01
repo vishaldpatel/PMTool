@@ -10,8 +10,6 @@ defmodule PmTool.Projects do
   alias PmTool.Teams
 
   alias PmTool.Projects.Project
-  alias PmTool.Projects.TeamProject
-  alias PmTool.Teams.Team
   alias PmTool.Accounts.User
 
   def list_project_tags_for_team_ids(teams) do
@@ -50,12 +48,6 @@ defmodule PmTool.Projects do
     %Project{}
     |> Project.changeset(attrs)
     |> Repo.insert()
-  end
-
-  def add_team_to_project(%Project{} = project, %Team{} = team) do
-    %TeamProject{}
-    |> TeamProject.changeset(%{project_id: project.id, team_id: team.id})
-    |> Repo.insert_or_update()
   end
 
   def update_project(%Project{} = project, attrs) do

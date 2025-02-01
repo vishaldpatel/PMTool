@@ -40,6 +40,9 @@ defmodule PmToolWeb.TeamComponent do
     if team_params["slug"] == socket.assigns.team.slug do
       timestamp = DateTime.to_unix(DateTime.utc_now())
 
+      team_params =
+        %{"current_user_id" => socket.assigns.current_user.id} |> Enum.into(team_params)
+
       case Teams.update_team(socket.assigns.team, team_params) do
         {:ok, %Team{} = updated_team} ->
           send(self(), {:team_updated, updated_team})
@@ -65,6 +68,7 @@ defmodule PmToolWeb.TeamComponent do
   def handle_event("create_team", %{"team" => team_params}, socket) do
     team_params =
       %{
+        "current_user_id" => socket.assigns.current_user.id,
         "creator_id" => socket.assigns.current_user.id,
         "owner_id" => socket.assigns.current_user.id
       }
@@ -240,6 +244,7 @@ defmodule PmToolWeb.TeamComponent do
               id={"team-member-#{@team.slug}-#{member.id}"}
               team={@team}
               team_member={member}
+              current_user={@current_user}
             />
           <% end %>
           <div class="flex-auto w-full px-1 bg-gray-600 text-left">
@@ -268,6 +273,7 @@ defmodule PmToolWeb.TeamComponent do
                 id={@new_team_member_id}
                 team={@team}
                 team_member={%TeamMember{team_id: @team.id}}
+                current_user={@current_user}
               />
             </div>
           </div>

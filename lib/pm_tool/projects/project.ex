@@ -11,7 +11,6 @@ defmodule PmTool.Projects.Project do
     field :tags, {:array, :string}
 
     belongs_to :creator, PmTool.Accounts.User
-    many_to_many :teams, PmTool.Teams.Team, join_through: PmTool.Projects.TeamProject
 
     timestamps()
   end

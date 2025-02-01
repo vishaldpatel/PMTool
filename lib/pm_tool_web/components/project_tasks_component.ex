@@ -67,6 +67,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
               draggable={false}
               actions={false}
               hide_project_tag={true}
+              current_user={@current_user}
             />
           <% end %>
         </ul>
@@ -83,6 +84,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
               task={task}
               actions={true}
               hide_project_tag={true}
+              current_user={@current_user}
             />
           <% end %>
           <%= for task <- @tasks[:Next] |> Map.values() |> List.flatten() do %>
@@ -96,6 +98,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
               task={task}
               actions={true}
               hide_project_tag={true}
+              current_user={@current_user}
             />
           <% end %>
         </ul>
@@ -109,6 +112,7 @@ defmodule PmToolWeb.ProjectTasksComponent do
               task={task}
               draggable={true}
               hide_project_tag={true}
+              current_user={@current_user}
             />
           <% end %>
         </ul>

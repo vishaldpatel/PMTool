@@ -77,6 +77,9 @@ defmodule PmToolWeb.TaskComponent do
     if task_params["slug"] == socket.assigns.task.slug do
       timestamp = DateTime.to_unix(DateTime.utc_now())
 
+      task_params =
+        %{"current_user_id" => socket.assigns.current_user.id} |> Enum.into(task_params)
+
       case Tasks.update_task(socket.assigns.task, task_params) do
         {:ok, %Task{} = updated_task} ->
           send(self(), {:task_updated, updated_task})
@@ -104,11 +107,13 @@ defmodule PmToolWeb.TaskComponent do
       case socket.assigns.current_team do
         nil ->
           %{
+            "current_user_id" => socket.assigns.current_user.id,
             "creator_id" => socket.assigns.current_user.id
           }
 
         %Team{} = team ->
           %{
+            "current_user_id" => socket.assigns.current_user.id,
             "creator_id" => socket.assigns.current_user.id,
             "team_id" => team.id
           }

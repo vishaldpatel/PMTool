@@ -28,6 +28,9 @@ defmodule PmToolWeb.TeamMemberComponent do
     timestamp = DateTime.to_unix(DateTime.utc_now())
     team = Teams.get_team_by_slug!(team_member_params["team_slug"])
 
+    team_member_params =
+      %{"current_user_id" => socket.assigns.current_user.id} |> Enum.into(team_member_params)
+
     if team.id == socket.assigns.team.id do
       case Teams.update_team_member(
              socket.assigns.team_member,
@@ -74,6 +77,7 @@ defmodule PmToolWeb.TeamMemberComponent do
 
     result =
       team_member_params
+      |> Map.put("current_user_id", socket.assigns.current_user.id)
       |> Map.put("role", "member")
       |> Map.put("team_id", team.id)
       |> Teams.create_team_member()
@@ -90,7 +94,7 @@ defmodule PmToolWeb.TeamMemberComponent do
     team_member = Teams.get_team_member!(team_member_params["id"])
 
     if team_member.id == socket.assigns.team_member.id do
-      Teams.remove_team_member(team_member)
+      Teams.remove_team_member(team_member, socket.assigns.current_user)
       send(self(), {:team_member_deleted})
     end
 

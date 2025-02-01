@@ -5,6 +5,7 @@ defmodule PmTool.Tasks.Task do
   alias PmTool.Tasks
   alias PmTool.Accounts.User
   alias PmTool.Teams.Team
+  alias PmTool.Teams.Change
 
   @stages ["Later", "Now"]
   @statuses [
@@ -23,6 +24,7 @@ defmodule PmTool.Tasks.Task do
   def stages, do: @stages
 
   schema "tasks" do
+    field :current_user_id, :integer, virtual: true
     field :name, :string
     field :description, :string
     field :stage, :string
@@ -43,6 +45,7 @@ defmodule PmTool.Tasks.Task do
     belongs_to :owner, PmTool.Teams.TeamMember
     belongs_to :team, PmTool.Teams.Team
 
+    has_many :changes, PmTool.Teams.Change
     has_many :blockers, PmTool.Tasks.Blocker
     has_many :comments, PmTool.Comments.TaskComment
 
@@ -53,6 +56,7 @@ defmodule PmTool.Tasks.Task do
   def changeset(task, attrs) do
     task
     |> cast(attrs, [
+      :current_user_id,
       :name,
       :description,
       :stage,
@@ -67,7 +71,7 @@ defmodule PmTool.Tasks.Task do
       :due_date,
       :tags
     ])
-    |> validate_required([:name, :creator_id])
+    |> validate_required([:name, :creator_id, :current_user_id])
     |> slugify()
     |> unique_constraint(:slug)
     |> maybe_set_stage()
@@ -82,6 +86,7 @@ defmodule PmTool.Tasks.Task do
     |> validate_required([:stage, :status, :task_order])
     |> validate_empty_tags(attrs)
     |> validate_empty_project_tags(attrs)
+    |> add_history()
   end
 
   defp validate_empty_tags(changeset, attrs) do
@@ -193,5 +198,117 @@ defmodule PmTool.Tasks.Task do
     else
       changeset
     end
+  end
+
+  defp add_history(changeset) do
+    current_user = PmTool.Accounts.get_user!(get_field(changeset, :current_user_id))
+
+    current_team_member =
+      if get_field(changeset, :team_id),
+        do:
+          PmTool.Teams.get_team_member!(
+            %Team{id: get_field(changeset, :team_id)},
+            current_user
+          ),
+        else: nil
+
+    current_name =
+      if current_team_member,
+        do: current_team_member.name,
+        else: current_user.name
+
+    owner =
+      if changed?(changeset, :owner_id),
+        do: PmTool.Teams.get_team_member!(get_field(changeset, :owner_id)),
+        else: nil
+
+    new_team =
+      if changed?(changeset, :team_id),
+        do: PmTool.Teams.get_team!(get_field(changeset, :team_id)),
+        else: nil
+
+    changeset
+    |> prepare_changes(fn changeset ->
+      description =
+        case changeset.action do
+          :insert ->
+            if is_nil(owner) or current_team_member.id == owner.id do
+              "#{current_name} created #{get_field(changeset, :name)}"
+            else
+              "#{current_name} created #{get_field(changeset, :name)} for #{owner.name}"
+            end
+
+          :update ->
+            Enum.reduce(changeset.changes, "#{current_name}", fn {key, value}, acc ->
+              description =
+                case key do
+                  :name ->
+                    "Updated name to #{value}"
+
+                  :owner_id ->
+                    "Assigned to #{owner.name}"
+
+                  :team_id ->
+                    "Assigned to the #{new_team.name} team"
+
+                  :is_milestone ->
+                    if value == true, do: "Marked as milestone", else: "Unmarked as milestone"
+
+                  :due_date ->
+                    "Set due date to #{value}"
+
+                  :estimate ->
+                    "Set estimate to #{value} hours"
+
+                  :status ->
+                    "#{value} Task"
+
+                  :stage ->
+                    "Moved task to #{value}"
+
+                  :description ->
+                    "the description"
+
+                  :project_tags ->
+                    if value != [],
+                      do: "Unset project associations.",
+                      else: "Updated project associations to #{Enum.join(value, ", ")}"
+
+                  :tags ->
+                    if value != [],
+                      do: "Unset tags.",
+                      else: "Updated tags to #{Enum.join(value, ", ")}"
+
+                  :task_order ->
+                    "Updated task priority"
+
+                  :current_user_id ->
+                    ""
+
+                  _ ->
+                    "#{key} to #{value}"
+                end
+
+              Enum.join([acc, description], ", ")
+            end)
+
+          :delete ->
+            "#{current_name} deleted task: #{get_field(changeset, :name)}"
+
+          _ ->
+            nil
+        end
+
+      changeset.repo.insert!(%Change{
+        action: "#{changeset.action}",
+        name: changeset.data.name || get_field(changeset, :name),
+        task_id: get_field(changeset, :id),
+        team_id: get_field(changeset, :team_id),
+        user_id: current_user.id,
+        description: description
+      })
+
+      changeset
+    end)
   end
 end

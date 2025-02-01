@@ -59,6 +59,9 @@ defmodule PmTool.Teams do
   def get_team!(id), do: Repo.get!(Team, id) |> Repo.preload([:team_members])
   def get_team_member!(id), do: Repo.get!(TeamMember, id)
 
+  def get_team_member!(%Team{} = team, %User{} = user),
+    do: Repo.get_by(TeamMember, team_id: team.id, email: user.email)
+
   # Be able to update a Team
   def update_team(%Team{} = team, attrs) do
     team
@@ -67,8 +70,10 @@ defmodule PmTool.Teams do
   end
 
   # Be able to delete a Team
-  def delete_team(%Team{} = team) do
-    Repo.delete(team)
+  def delete_team(%Team{} = team, %User{} = current_user) do
+    team
+    |> Team.changeset(%{current_user_id: current_user.id})
+    |> Repo.delete()
   end
 
   def update_team_member(%TeamMember{} = team_member, team_member_params) do
@@ -88,20 +93,23 @@ defmodule PmTool.Teams do
     |> Repo.insert()
   end
 
-  def create_team_member(%Team{} = team, %User{} = user, role \\ "member") do
+  def create_team_member(%Team{} = team, %User{} = user, %User{} = current_user, role \\ "member") do
     %TeamMember{}
     |> TeamMember.changeset(%{
       team_id: team.id,
       user_id: user.id,
       role: role,
       email: user.email,
-      name: user.name
+      name: user.name,
+      current_user_id: current_user.id
     })
     |> Repo.insert()
   end
 
   # Remove a user from a team
-  def remove_team_member(%TeamMember{} = team_member) do
-    Repo.delete(team_member)
+  def remove_team_member(%TeamMember{} = team_member, %User{} = current_user) do
+    team_member
+    |> TeamMember.changeset(%{current_user_id: current_user.id})
+    |> Repo.delete()
   end
 end
