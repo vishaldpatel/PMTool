@@ -17,7 +17,7 @@ defmodule PmToolWeb.CoreComponents do
   use Phoenix.Component
 
   alias Phoenix.LiveView.JS
-  import PmToolWeb.Gettext
+  use Gettext, backend: PmToolWeb.Gettext
 
   @doc """
   Renders a modal.

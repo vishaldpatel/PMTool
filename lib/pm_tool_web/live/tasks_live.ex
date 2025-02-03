@@ -30,6 +30,7 @@ defmodule PmToolWeb.TasksLive do
           current_team={@current_team}
           open_team_slugs={@open_team_slugs}
           timestamp={@timestamp}
+          show_changelog={@show_changelog}
         />
         <.live_component module={PmToolWeb.SearchTagsComponent} id="search_tags" tags={@search_tags} />
       </div>
@@ -52,6 +53,14 @@ defmodule PmToolWeb.TasksLive do
           tasks={@open_tag_tasks[tag]}
           open_tasks={@open_tasks}
           timestamp={@timestamp}
+        />
+      <% end %>
+      <%= if @show_changelog do %>
+        <.live_component
+          module={PmToolWeb.ChangesComponent}
+          id="changelog"
+          title="Changelog"
+          changes={@changes}
         />
       <% end %>
       <%= if @merge_now_and_next_tasks do %>
@@ -146,6 +155,7 @@ defmodule PmToolWeb.TasksLive do
       user_preferences = Accounts.get_preferences(current_user)
       open_project_slugs = user_preferences["open_project_slugs"] || []
       open_tags = user_preferences["open_tags"] || []
+      task_slugs_for_changes = user_preferences["task_slugs_for_changes"] || []
       teams = Teams.list_teams(current_user)
 
       current_team =
@@ -161,10 +171,13 @@ defmodule PmToolWeb.TasksLive do
         |> assign(projects: [])
         |> assign(search_tags: [])
         |> assign(open_projects: [])
+        |> assign(changes: [])
+        |> assign(task_slugs_for_changes: %{})
         |> assign(open_tags: open_tags)
         |> assign(open_tasks: %{})
         |> assign(open_project_tasks: %{})
         |> assign(open_tag_tasks: %{})
+        |> assign(show_changelog: user_preferences["show_changelog"] || false)
         |> assign(open_team_slugs: user_preferences["open_team_slugs"] || [])
         |> assign(tasks: %{Now: %{}, Next: %{}, Done: %{}})
         |> assign(project_progress: %{})
@@ -190,6 +203,9 @@ defmodule PmToolWeb.TasksLive do
             end
         )
         |> start_async(:get_search_tags, fn -> Tasks.list_tags(current_user, teams) end)
+        |> start_async(:get_changes, fn ->
+          Teams.list_changes(current_user, current_team, task_slugs_for_changes)
+        end)
         |> assign_new_project_id()
         |> assign_new_team_id()
         |> assign_new_task_ids()
@@ -203,6 +219,16 @@ defmodule PmToolWeb.TasksLive do
 
       {:ok, socket}
     end
+  end
+
+  def handle_async(:get_projects, {:ok, projects}, socket) do
+    socket = assign(socket, projects: projects)
+    {:noreply, socket}
+  end
+
+  def handle_async(:get_search_tags, {:ok, tags}, socket) do
+    socket = assign(socket, search_tags: tags)
+    {:noreply, socket}
   end
 
   def handle_async(:get_main_tasks, {:ok, tasks}, socket) do
@@ -229,13 +255,12 @@ defmodule PmToolWeb.TasksLive do
     {:noreply, socket}
   end
 
-  def handle_async(:get_projects, {:ok, projects}, socket) do
-    socket = assign(socket, projects: projects)
-    {:noreply, socket}
-  end
+  def handle_async(:get_changes, {:ok, {user_or_team_changes, task_changes}}, socket) do
+    socket =
+      socket
+      |> assign(changes: user_or_team_changes)
+      |> assign(task_changes: task_changes)
 
-  def handle_async(:get_search_tags, {:ok, tags}, socket) do
-    socket = assign(socket, search_tags: tags)
     {:noreply, socket}
   end
 
@@ -606,6 +631,14 @@ defmodule PmToolWeb.TasksLive do
     hide_tasks_with_tag(socket, params["tag"])
   end
 
+  def handle_event("hide_changelog", _params, socket) do
+    set_changelog_visibility(socket, false)
+  end
+
+  def handle_event("show_changelog", _params, socket) do
+    set_changelog_visibility(socket, true)
+  end
+
   def handle_event("tag_clicked", params, socket) do
     case params["tag-type"] do
       "team" ->
@@ -649,14 +682,15 @@ defmodule PmToolWeb.TasksLive do
   def handle_event("task_action", params, socket) do
     task_slug = params["task_slug"]
     task = Tasks.get_task_by_slug!(task_slug)
+    current_user = socket.assigns.current_user
 
     case params["action"] do
-      "start_task" -> Tasks.start_task(task)
-      "finish_task" -> Tasks.finish_task(task)
-      "deliver_task" -> Tasks.deliver_task(task)
-      "accept_task" -> Tasks.accept_task(task)
-      "reject_task" -> Tasks.reject_task(task)
-      "estimate_task" -> Tasks.estimate_task(task, params["estimate"])
+      "start_task" -> Tasks.start_task(task, current_user)
+      "finish_task" -> Tasks.finish_task(task, current_user)
+      "deliver_task" -> Tasks.deliver_task(task, current_user)
+      "accept_task" -> Tasks.accept_task(task, current_user)
+      "reject_task" -> Tasks.reject_task(task, current_user)
+      "estimate_task" -> Tasks.estimate_task(task, params["estimate"], current_user)
     end
 
     {:noreply,
@@ -786,5 +820,17 @@ defmodule PmToolWeb.TasksLive do
      socket
      |> get_tasks()
      |> get_project_progress()}
+  end
+
+  def set_changelog_visibility(socket, value) do
+    Accounts.set_preference(
+      socket.assigns.current_user,
+      "show_changelog",
+      value
+    )
+
+    {:noreply,
+     socket
+     |> assign(show_changelog: value)}
   end
 end

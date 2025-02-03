@@ -239,57 +239,61 @@ defmodule PmTool.Tasks.Task do
             end
 
           :update ->
-            Enum.reduce(changeset.changes, "#{current_name}", fn {key, value}, acc ->
+            Enum.reduce(changeset.changes, "#{current_name} Changed:", fn {key, value}, acc ->
               description =
                 case key do
                   :name ->
-                    "Updated name to #{value}"
+                    "Name to #{value}"
 
                   :owner_id ->
-                    "Assigned to #{owner.name}"
+                    "Owner to #{owner.name}"
 
                   :team_id ->
-                    "Assigned to the #{new_team.name} team"
+                    "Team to #{new_team.name}"
 
                   :is_milestone ->
-                    if value == true, do: "Marked as milestone", else: "Unmarked as milestone"
+                    if value == true, do: "As milestone", else: "Not Milestone"
 
                   :due_date ->
-                    "Set due date to #{value}"
+                    "Due date to #{value}"
 
                   :estimate ->
-                    "Set estimate to #{value} hours"
+                    "Estimate to #{value} hours"
 
                   :status ->
-                    "#{value} Task"
+                    "Status to#{value}"
 
                   :stage ->
-                    "Moved task to #{value}"
+                    "Stage to #{value}"
 
                   :description ->
-                    "the description"
+                    "Description"
 
                   :project_tags ->
-                    if value != [],
-                      do: "Unset project associations.",
-                      else: "Updated project associations to #{Enum.join(value, ", ")}"
+                    if value == [],
+                      do: "Projects to none",
+                      else: "Projects to #{Enum.join(value, ", ")}"
 
                   :tags ->
-                    if value != [],
-                      do: "Unset tags.",
-                      else: "Updated tags to #{Enum.join(value, ", ")}"
+                    "Tags"
 
                   :task_order ->
-                    "Updated task priority"
+                    "Task priority"
+
+                  :status_updated_at ->
+                    nil
 
                   :current_user_id ->
-                    ""
+                    nil
 
                   _ ->
                     "#{key} to #{value}"
                 end
 
-              Enum.join([acc, description], ", ")
+              case description do
+                nil -> acc
+                _ -> "#{acc} #{description};"
+              end
             end)
 
           :delete ->
@@ -299,14 +303,17 @@ defmodule PmTool.Tasks.Task do
             nil
         end
 
-      changeset.repo.insert!(%Change{
-        action: "#{changeset.action}",
-        name: changeset.data.name || get_field(changeset, :name),
-        task_id: get_field(changeset, :id),
-        team_id: get_field(changeset, :team_id),
-        user_id: current_user.id,
-        description: description
-      })
+      if length(Map.keys(changeset.changes)) > 1 do
+        changeset.repo.insert!(%Change{
+          action: "#{changeset.action}",
+          name: changeset.data.name || get_field(changeset, :name),
+          task_id: get_field(changeset, :id),
+          team_id: get_field(changeset, :team_id),
+          project_tags: get_field(changeset, :project_tags) || [],
+          user_id: current_user.id,
+          description: description
+        })
+      end
 
       changeset
     end)

@@ -488,6 +488,7 @@ defmodule PmTool.Tasks do
 
   # Get Task by slug
   def get_task_by_slug!(slug), do: Repo.get_by!(Task, slug: slug)
+  def get_tasks_for_slugs!(slugs), do: Repo.all(from t in Task, where: t.slug in ^slugs)
 
   def move_task_above(%Task{} = task, %Task{} = target_task, %User{} = user) do
     prev_order = task.task_order
@@ -577,7 +578,7 @@ defmodule PmTool.Tasks do
     Repo.one(query)
   end
 
-  def replace_project_tag(old_project_tag, new_project_tag) do
+  def replace_project_tag(old_project_tag, new_project_tag, %User{} = current_user) do
     query = from t in Task, where: ^old_project_tag in t.project_tags
     tasks = Repo.all(query)
 
@@ -585,38 +586,47 @@ defmodule PmTool.Tasks do
       tasks,
       fn task ->
         update_task(task, %{
-          "project_tags" => (task.project_tags -- [old_project_tag]) ++ [new_project_tag]
+          "project_tags" => (task.project_tags -- [old_project_tag]) ++ [new_project_tag],
+          "current_user_id" => current_user.id
         })
       end
     )
   end
 
-  def start_task(%Task{} = task) do
-    update_task(task, %{"status" => "Started", "stage" => "Now"})
+  def start_task(%Task{} = task, %User{} = current_user) do
+    update_task(task, %{
+      "status" => "Started",
+      "stage" => "Now",
+      "current_user_id" => current_user.id
+    })
   end
 
-  def finish_task(%Task{} = task) do
-    update_task(task, %{"status" => "Finished"})
+  def finish_task(%Task{} = task, %User{} = current_user) do
+    update_task(task, %{"status" => "Finished", "current_user_id" => current_user.id})
   end
 
-  def deliver_task(%Task{} = task) do
-    update_task(task, %{"status" => "Delivered"})
+  def deliver_task(%Task{} = task, %User{} = current_user) do
+    update_task(task, %{"status" => "Delivered", "current_user_id" => current_user.id})
   end
 
-  def accept_task(%Task{} = task) do
-    update_task(task, %{"status" => "Accepted"})
+  def accept_task(%Task{} = task, %User{} = current_user) do
+    update_task(task, %{"status" => "Accepted", "current_user_id" => current_user.id})
   end
 
-  def reject_task(%Task{} = task) do
-    update_task(task, %{"status" => "Rejected"})
+  def reject_task(%Task{} = task, %User{} = current_user) do
+    update_task(task, %{"status" => "Rejected", "current_user_id" => current_user.id})
   end
 
-  def close_task(%Task{} = task) do
-    update_task(task, %{"status" => "Closed"})
+  def close_task(%Task{} = task, %User{} = current_user) do
+    update_task(task, %{"status" => "Closed", "current_user_id" => current_user.id})
   end
 
-  def estimate_task(%Task{} = task, estimate) do
-    update_task(task, %{"estimate" => estimate, "status" => "Unstarted"})
+  def estimate_task(%Task{} = task, estimate, %User{} = current_user) do
+    update_task(task, %{
+      "estimate" => estimate,
+      "status" => "Unstarted",
+      "current_user_id" => current_user.id
+    })
   end
 
   # Be able to delete a Task
@@ -651,7 +661,8 @@ defmodule PmTool.Tasks do
             description: "#{user.name} moved #{task.name} to #{stage}",
             user_id: user.id,
             team_id: task.team_id,
-            task_id: task.id
+            task_id: task.id,
+            project_tags: task.project_tags
           }
         )
       end)
@@ -680,7 +691,8 @@ defmodule PmTool.Tasks do
             name: task.name,
             description: "#{user.name} deleted task #{task.name}",
             user_id: user.id,
-            team_id: task.team_id
+            team_id: task.team_id,
+            project_tags: task.project_tags
           }
         )
       end)

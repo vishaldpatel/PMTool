@@ -9,6 +9,9 @@ defmodule PmTool.Teams do
   alias PmTool.Teams.Team
   alias PmTool.Teams.TeamMember
   alias PmTool.Accounts.User
+  alias PmTool.Teams.Change
+  alias PmTool.Tasks
+  alias PmTool.Tasks.Task
 
   # Be able to find teams for which
   # the current uesr has a membership
@@ -33,6 +36,57 @@ defmodule PmTool.Teams do
         where: tm.team_id == ^team.id
 
     Repo.all(query)
+  end
+
+  def list_changes(%User{} = user, team, task_slugs) do
+    user_or_team_changes =
+      case is_nil(team) do
+        true -> list_changes(user)
+        false -> list_changes(team)
+      end
+
+    task_changes =
+      Tasks.get_tasks_for_slugs!(task_slugs)
+      |> Enum.map(& &1.id)
+      |> list_changes()
+      |> Enum.group_by(& &1.task_id)
+
+    {user_or_team_changes, task_changes}
+  end
+
+  def list_changes(%Team{} = team) do
+    Repo.all(from c in Change, where: c.team_id == ^team.id, order_by: [desc: c.inserted_at])
+  end
+
+  def list_changes(%User{} = user) do
+    user_teams =
+      Repo.all(from tm in TeamMember, where: tm.email == ^user.email, select: tm.team_id)
+
+    Repo.all(
+      from c in Change,
+        where:
+          c.user_id == ^user.id or
+            c.team_id in ^user_teams,
+        order_by: [desc: c.inserted_at]
+    )
+  end
+
+  def list_changes(%Task{} = task) do
+    Repo.all(from c in Change, where: c.task_id == ^task.id, order_by: [desc: c.inserted_at])
+  end
+
+  def list_changes(task_ids) do
+    case task_ids do
+      [] ->
+        []
+
+      _ ->
+        Repo.all(
+          from c in Change,
+            where: c.task_id in ^task_ids,
+            order_by: [asc: c.task_id, desc: c.inserted_at]
+        )
+    end
   end
 
   # Be able to create a Team

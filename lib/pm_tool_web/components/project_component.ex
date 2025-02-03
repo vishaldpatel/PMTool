@@ -46,7 +46,11 @@ defmodule PmToolWeb.ProjectComponent do
     if project_params["slug"] == socket.assigns.project.slug do
       timestamp = DateTime.to_unix(DateTime.utc_now())
 
-      case Projects.update_project(socket.assigns.project, project_params) do
+      case Projects.update_project(
+             socket.assigns.project,
+             project_params,
+             socket.assigns.current_user
+           ) do
         {:ok, %Project{} = updated_project} ->
           send(self(), {:project_updated, updated_project})
 

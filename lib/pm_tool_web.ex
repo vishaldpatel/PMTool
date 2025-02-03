@@ -43,7 +43,7 @@ defmodule PmToolWeb do
         layouts: [html: PmToolWeb.Layouts]
 
       import Plug.Conn
-      import PmToolWeb.Gettext
+      use Gettext, backend: PmToolWeb.Gettext
 
       unquote(verified_routes())
     end
@@ -85,7 +85,7 @@ defmodule PmToolWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import PmToolWeb.CoreComponents
-      import PmToolWeb.Gettext
+      use Gettext, backend: PmToolWeb.Gettext
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
