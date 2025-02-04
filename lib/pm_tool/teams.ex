@@ -44,6 +44,11 @@ defmodule PmTool.Teams do
         true -> list_changes(user)
         false -> list_changes(team)
       end
+      |> Enum.group_by(
+        &(DateTime.from_naive!(&1.inserted_at, "Etc/UTC")
+          |> DateTime.to_date()
+          |> Date.beginning_of_week())
+      )
 
     task_changes =
       Tasks.get_tasks_for_slugs!(task_slugs)
@@ -59,14 +64,14 @@ defmodule PmTool.Teams do
   end
 
   def list_changes(%User{} = user) do
-    user_teams =
-      Repo.all(from tm in TeamMember, where: tm.email == ^user.email, select: tm.team_id)
+    user_teams_query =
+      from tm in TeamMember, where: tm.email == ^user.email, select: tm.team_id
 
     Repo.all(
       from c in Change,
         where:
           c.user_id == ^user.id or
-            c.team_id in ^user_teams,
+            c.team_id in subquery(user_teams_query),
         order_by: [desc: c.inserted_at]
     )
   end

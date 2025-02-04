@@ -25,25 +25,33 @@ defmodule PmToolWeb.ChangesComponent do
       </button>
       <span class="font-semibold uppercase align-top ml-1 text-gray-400">{@title}</span>
       <ul>
-        <% changes =
-          Enum.reduce(@changes, [{false, %{name: nil}}], fn x, acc ->
-            [{_is_same, c} | _] = acc
-            [{x.name == c.name, x} | acc]
-          end) %>
-        <%= for {is_same, change} <- Enum.reverse(changes) do %>
-          <%= if change.name != nil do %>
+        <%= for {start_of_week, changes} <- @changes do %>
+          <% change_groups = Enum.group_by(changes, & &1.name) |> Enum.to_list() %>
+          <% change_groups =
+            Enum.sort(change_groups, fn {_a, al}, {_b, bl} ->
+              Enum.map(al, & &1.inserted_at) |> Enum.max() >
+                Enum.map(bl, & &1.inserted_at) |> Enum.max()
+            end) %>
+          <li>
+            <div class="text-gray-300 text-xs p-1 text-right uppercase">
+              Week of {Date.to_string(start_of_week)}
+            </div>
+          </li>
+          <%= for {change_group_name, changes} <- change_groups do %>
             <li>
-              <div class="bg-gray-800">
-                <%= if not is_same do %>
-                  <div class="text-gray-100 text-sm bg-gray-600 border border-gray-400 border-[1px] p-1 mt-1">
-                    {change.name}
-                  </div>
-                <% end %>
-                <div class="text-gray-300 text-xs p-1 border border-gray-700 border-[1px]">
-                  {change.inserted_at} | {change.description}
-                </div>
+              <div class="text-gray-100 text-sm bg-gray-600 border border-gray-400 border-[1px] p-1 mt-1">
+                {change_group_name}
               </div>
             </li>
+            <%= for change <- changes do %>
+              <li>
+                <div class="bg-gray-800">
+                  <div class="text-gray-300 text-xs p-1 border border-gray-700 border-[1px]">
+                    <% cdt = DateTime.from_naive!(change.inserted_at, "Etc/UTC") %> [{cdt.month}/{cdt.day}, {cdt.hour}:{cdt.minute}] {change.description}
+                  </div>
+                </div>
+              </li>
+            <% end %>
           <% end %>
         <% end %>
       </ul>

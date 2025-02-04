@@ -261,7 +261,7 @@ defmodule PmTool.Tasks.Task do
                     "Estimate to #{value} hours"
 
                   :status ->
-                    "Status to#{value}"
+                    "Status to #{value}"
 
                   :stage ->
                     "Stage to #{value}"

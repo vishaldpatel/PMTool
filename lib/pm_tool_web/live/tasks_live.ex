@@ -172,7 +172,7 @@ defmodule PmToolWeb.TasksLive do
         |> assign(search_tags: [])
         |> assign(open_projects: [])
         |> assign(changes: [])
-        |> assign(task_slugs_for_changes: %{})
+        |> assign(task_slugs_for_changes: [])
         |> assign(open_tags: open_tags)
         |> assign(open_tasks: %{})
         |> assign(open_project_tasks: %{})
@@ -368,6 +368,21 @@ defmodule PmToolWeb.TasksLive do
     end
   end
 
+  defp get_changes(socket) do
+    current_user = socket.assigns.current_user
+    current_team = socket.assigns.current_team
+    task_slugs = socket.assigns.task_slugs_for_changes
+
+    socket
+    |> start_async(:get_changes, fn ->
+      Teams.list_changes(
+        current_user,
+        current_team,
+        task_slugs
+      )
+    end)
+  end
+
   defp get_tasks(socket) do
     current_user = socket.assigns.current_user
     teams = socket.assigns.teams
@@ -461,6 +476,7 @@ defmodule PmToolWeb.TasksLive do
      |> get_tasks()
      |> assign_new_task_ids()
      |> assign_new_project_id()
+     |> get_changes()
      |> get_project_progress()}
   end
 
@@ -475,6 +491,7 @@ defmodule PmToolWeb.TasksLive do
      socket
      |> assign(task: task)
      |> get_tasks()
+     |> get_changes()
      |> get_project_progress()}
   end
 
@@ -593,6 +610,7 @@ defmodule PmToolWeb.TasksLive do
      socket
      |> assign(current_team: team)
      |> get_tasks()
+     |> get_changes()
      |> get_project_progress()}
   end
 
@@ -608,6 +626,7 @@ defmodule PmToolWeb.TasksLive do
      |> assign(current_team: nil)
      |> assign_new_task_ids()
      |> get_tasks()
+     |> get_changes()
      |> get_project_progress()}
   end
 
@@ -696,6 +715,7 @@ defmodule PmToolWeb.TasksLive do
     {:noreply,
      socket
      |> get_tasks()
+     |> get_changes()
      |> get_project_progress()}
   end
 
@@ -713,6 +733,7 @@ defmodule PmToolWeb.TasksLive do
     {:noreply,
      socket
      |> get_tasks()
+     |> get_changes()
      |> assign_new_team_id()
      |> get_project_progress()}
   end
@@ -736,6 +757,7 @@ defmodule PmToolWeb.TasksLive do
     {:noreply,
      socket
      |> get_tasks()
+     |> get_changes()
      # This should also reset the add to project button.
      |> assign_new_project_id()
      |> get_project_progress()}
@@ -756,7 +778,8 @@ defmodule PmToolWeb.TasksLive do
     {:noreply,
      socket
      |> assign_new_project_id()
-     |> get_tasks()}
+     |> get_tasks()
+     |> get_changes()}
   end
 
   def handle_event("remove_tasks_from_project", params, socket) do
@@ -775,6 +798,7 @@ defmodule PmToolWeb.TasksLive do
     {:noreply,
      socket
      |> get_tasks()
+     |> get_changes()
      |> assign_new_project_id()
      |> get_project_progress()}
   end
@@ -805,6 +829,7 @@ defmodule PmToolWeb.TasksLive do
     {:noreply,
      socket
      |> get_tasks()
+     |> get_changes()
      |> assign_new_task_ids()
      |> get_project_progress()}
   end
