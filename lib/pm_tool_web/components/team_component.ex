@@ -247,36 +247,38 @@ defmodule PmToolWeb.TeamComponent do
               current_user={@current_user}
             />
           <% end %>
-          <div class="flex-auto w-full px-1 bg-gray-600 text-left">
-            <button
-              title="Add A Team Member"
-              class="font-bold rounded my-1 bg-gray-600 hover:bg-gray-500 rounded p-[1px]"
-              phx-click={JS.toggle_class("hidden", to: "#edit-#{@new_team_member_id}")}
-            >
-              <svg
-                class="h-4 w-4 text-lime-500 hover:text-lime-400"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+          <%= if @current_user.id == @team.owner_id do %>
+            <div class="flex-auto w-full px-1 bg-gray-600 text-left">
+              <button
+                title="Add A Team Member"
+                class="font-bold rounded my-1 bg-gray-600 hover:bg-gray-500 rounded p-[1px]"
+                phx-click={JS.toggle_class("hidden", to: "#edit-#{@new_team_member_id}")}
               >
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                <circle cx="8.5" cy="7" r="4" /> <line x1="20" y1="8" x2="20" y2="14" />
-                <line x1="23" y1="11" x2="17" y2="11" />
-              </svg>
-            </button>
-            <div id={"create_team_member-#{@team.slug}"}>
-              <.live_component
-                module={PmToolWeb.TeamMemberComponent}
-                id={@new_team_member_id}
-                team={@team}
-                team_member={%TeamMember{team_id: @team.id}}
-                current_user={@current_user}
-              />
+                <svg
+                  class="h-4 w-4 text-lime-500 hover:text-lime-400"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="8.5" cy="7" r="4" /> <line x1="20" y1="8" x2="20" y2="14" />
+                  <line x1="23" y1="11" x2="17" y2="11" />
+                </svg>
+              </button>
+              <div id={"create_team_member-#{@team.slug}"}>
+                <.live_component
+                  module={PmToolWeb.TeamMemberComponent}
+                  id={@new_team_member_id}
+                  team={@team}
+                  team_member={%TeamMember{team_id: @team.id}}
+                  current_user={@current_user}
+                />
+              </div>
             </div>
-          </div>
+          <% end %>
         </div>
       </div>
     </li>

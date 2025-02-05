@@ -16,12 +16,37 @@ defmodule PmToolWeb.TeamMemberComponent do
     {:ok,
      assign(socket,
        show_team_member: "flex",
-       show_team_member_edit: "hidden"
+       show_team_member_edit: "hidden",
+       email_input_title:
+         "Email address must match the address the team member's login email address.",
+       disable_email_input: false
      )}
   end
 
   def update(assigns, socket) do
-    {:ok, assign(socket, assigns)}
+    socket = assign(socket, assigns)
+    current_user = socket.assigns.current_user
+    team_member = socket.assigns.team_member
+
+    {disable_email_input, email_input_title} =
+      cond do
+        team_member.email == current_user.email ->
+          {true, "You can only edit this from the settings page."}
+
+        team_member.role == "owner" or team_member.role == "admin" ->
+          {true, "This can only be changed by the team owner from their settings page."}
+
+        true ->
+          {false, "Email address must match the address the team member's login email address."}
+      end
+
+    {:ok,
+     socket
+     |> assign(assigns)
+     |> assign(
+       disable_email_input: disable_email_input,
+       email_input_title: email_input_title
+     )}
   end
 
   def handle_event("update_team_member", %{"team_member" => team_member_params}, socket) do
@@ -111,6 +136,9 @@ defmodule PmToolWeb.TeamMemberComponent do
         action="create_team_member"
         myself={@myself}
         show_team_member_edit={@show_team_member_edit}
+        current_user={@current_user}
+        disable_email_input={@disable_email_input}
+        email_input_title={@email_input_title}
       />
     </div>
     """
@@ -168,7 +196,10 @@ defmodule PmToolWeb.TeamMemberComponent do
         id={@id}
         action="update_team_member"
         myself={@myself}
+        current_user={@current_user}
         show_team_member_edit={@show_team_member_edit}
+        disable_email_input={@disable_email_input}
+        email_input_title={@email_input_title}
       />
     </div>
     """
@@ -192,15 +223,26 @@ defmodule PmToolWeb.TeamMemberComponent do
           name="team_member[name]"
           value={@team_member.name}
           type="text"
-          class="rounded-sm w-full py-0 px-1 mb-1"
+          class="rounded-sm w-full py-0 px-1 mb-1 mt-1"
         />
-        <input
-          placeholder="email@domain.tld"
-          name="team_member[email]"
-          value={@team_member.email}
-          type="email"
-          class="rounded-sm w-full py-0 px-1 mb-1"
-        />
+
+        <%= if @disable_email_input do %>
+          <span
+            title={@email_input_title}
+            class="inline-block rounded-sm w-full py-0 px-1 mb-1 bg-gray-300 text-left border border-[1px] border-gray-500"
+          >
+            {@team_member.email}
+          </span>
+        <% else %>
+          <input
+            placeholder="email@domain.tld"
+            name="team_member[email]"
+            value={@team_member.email}
+            title={@email_input_title}
+            type="email"
+            class="rounded-sm w-full py-0 px-1 mb-1"
+          />
+        <% end %>
         <input type="hidden" name="team_member[role]" value="member" />
         <input type="hidden" name="team_member[team_slug]" value={@team.slug} />
         <input type="hidden" name="team_member[id]" value={@team_member.id} />
