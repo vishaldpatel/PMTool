@@ -2,6 +2,9 @@ defmodule PmTool.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @max_trial_actions 250
+  def max_trial_actions, do: @max_trial_actions
+
   schema "users" do
     field :name, :string
     field :email, :string
@@ -9,6 +12,7 @@ defmodule PmTool.Accounts.User do
     field :hashed_password, :string, redact: true
     field :current_password, :string, virtual: true, redact: true
     field :confirmed_at, :naive_datetime
+    field :stripe_customer_id, :string
 
     has_many :memberships, PmTool.Teams.TeamMember
     has_many :teams, through: [:memberships, :team]
@@ -140,6 +144,16 @@ defmodule PmTool.Accounts.User do
   def confirm_changeset(user) do
     now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
     change(user, confirmed_at: now)
+  end
+
+  @doc """
+  A user changeset for changing the stripe id
+  """
+  def stripe_customer_id_changeset(user, attrs \\ %{}) do
+    user
+    |> cast(attrs, [:stripe_customer_id])
+    |> validate_required([:stripe_customer_id])
+    |> unique_constraint(:stripe_customer_id)
   end
 
   @doc """

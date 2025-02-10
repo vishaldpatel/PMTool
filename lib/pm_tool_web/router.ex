@@ -24,9 +24,11 @@ defmodule PmToolWeb.Router do
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", PmToolWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", PmToolWeb do
+    pipe_through :api
+
+    post "/stripe/webhook", StripeController, :webhook
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:pm_tool, :dev_routes) do

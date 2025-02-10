@@ -24,7 +24,7 @@ defmodule PmToolWeb.ChangesComponent do
         </svg>
       </button>
       <span class="font-semibold uppercase align-top ml-1 text-gray-400">{@title}</span>
-      <ul>
+      <ul style="margin-top: -20px;">
         <%= for {start_of_week, changes} <- @changes do %>
           <% change_groups = Enum.group_by(changes, & &1.name) |> Enum.to_list() %>
           <% change_groups =

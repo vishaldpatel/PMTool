@@ -76,6 +76,17 @@ defmodule PmToolWeb.UserSettingsLive do
           </:actions>
         </.simple_form>
       </div>
+
+      <h3 class="text-center mt-5">Subscripion Settings</h3>
+      <div class="text-center">
+        <.live_component
+          module={PmToolWeb.SubscriptionComponent}
+          id="subscription"
+          subscription={@subscription}
+          current_user={@current_user}
+          can_cancel={true}
+        />
+      </div>
     </div>
     """
   end
@@ -108,6 +119,7 @@ defmodule PmToolWeb.UserSettingsLive do
       |> assign(:email_form, to_form(email_changeset))
       |> assign(:password_form, to_form(password_changeset))
       |> assign(:trigger_submit, false)
+      |> assign(subscription: Accounts.get_subscription(user))
 
     {:ok, socket}
   end

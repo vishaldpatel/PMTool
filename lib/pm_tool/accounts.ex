@@ -6,6 +6,10 @@ defmodule PmTool.Accounts do
   import Ecto.Query, warn: false
   alias PmTool.Repo
 
+  alias PmTool.Accounts.User
+  alias PmTool.Accounts.Subscription
+  alias PmTool.Teams.Change
+
   alias PmTool.Accounts.{User, UserToken, UserNotifier, UserPreferences}
 
   ## Database getters
@@ -156,6 +160,12 @@ defmodule PmTool.Accounts do
     end
   end
 
+  def update_user_stripe_customer_id(user, stripe_customer_id) do
+    user
+    |> User.stripe_customer_id_changeset(%{stripe_customer_id: stripe_customer_id})
+    |> Repo.update()
+  end
+
   defp user_email_multi(user, email, context) do
     changeset =
       user
@@ -242,6 +252,13 @@ defmodule PmTool.Accounts do
   def get_user_by_session_token(token) do
     {:ok, query} = UserToken.verify_session_token_query(token)
     Repo.one(query)
+  end
+
+  @doc """
+  Gets the user with the given `stripe_id`.
+  """
+  def get_user_by_stripe_customer_id(stripe_customer_id) do
+    Repo.get_by(User, stripe_customer_id: stripe_customer_id)
   end
 
   @doc """
@@ -390,5 +407,57 @@ defmodule PmTool.Accounts do
       {:ok, %{user: user}} -> {:ok, user}
       {:error, :user, changeset, _} -> {:error, changeset}
     end
+  end
+
+  @doc """
+    Returns the number of actions performed by the user
+
+    ## Examples
+
+        iex> get_action_count(user)
+        3
+  """
+  def get_user_actions_count(%User{} = user) do
+    from(c in Change, where: c.user_id == ^user.id, select: count(c.id))
+    |> Repo.one()
+  end
+
+  def create_subscription(attrs \\ %{}) do
+    sub =
+      %Subscription{}
+      |> Subscription.changeset(attrs)
+
+    IO.inspect(sub)
+
+    sub
+    |> Repo.insert()
+  end
+
+  def get_subscription_by_stripe_id(stripe_id) do
+    Repo.one(from s in Subscription, where: s.stripe_id == ^stripe_id)
+  end
+
+  def get_subscription(%User{} = user) do
+    Repo.one(from s in Subscription, where: s.stripe_customer_id == ^user.stripe_customer_id)
+  end
+
+  def cancel_subscription_for(%User{} = user) do
+    Repo.one(from s in Subscription, where: s.stripe_customer_id == ^user.stripe_customer_id)
+    |> update_subscription(%{cancel_at_period_end: true})
+  end
+
+  def reinstate_subscription_for(%User{} = user) do
+    Repo.one(from s in Subscription, where: s.stripe_customer_id == ^user.stripe_customer_id)
+    |> update_subscription(%{status: "active", cancel_at_period_end: false})
+  end
+
+  def update_subscription(%Subscription{} = subscription, attrs) do
+    subscription
+    |> Subscription.changeset(attrs)
+    |> Repo.update()
+  end
+
+  def delete_subscription(%Subscription{} = subscription) do
+    Repo.delete(subscription)
   end
 end

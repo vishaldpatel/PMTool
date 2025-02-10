@@ -33,6 +33,14 @@ defmodule PmToolWeb.TasksLive do
           show_changelog={@show_changelog}
         />
         <.live_component module={PmToolWeb.SearchTagsComponent} id="search_tags" tags={@search_tags} />
+        <.live_component
+          module={PmToolWeb.SubscriptionComponent}
+          id="subscription"
+          subscription={@subscription}
+          current_user={@current_user}
+          action_count={@action_count}
+          can_cancel={false}
+        />
       </div>
       <%= for project <- @open_projects do %>
         <.live_component
@@ -155,7 +163,6 @@ defmodule PmToolWeb.TasksLive do
       user_preferences = Accounts.get_preferences(current_user)
       open_project_slugs = user_preferences["open_project_slugs"] || []
       open_tags = user_preferences["open_tags"] || []
-      task_slugs_for_changes = user_preferences["task_slugs_for_changes"] || []
       teams = Teams.list_teams(current_user)
 
       current_team =
@@ -168,11 +175,12 @@ defmodule PmToolWeb.TasksLive do
         socket
         |> assign(user_preferences: user_preferences)
         |> assign(open_project_slugs: open_project_slugs)
+        |> assign(subscription: Accounts.get_subscription(current_user))
+        |> assign(action_count: 0)
         |> assign(projects: [])
         |> assign(search_tags: [])
         |> assign(open_projects: [])
         |> assign(changes: [])
-        |> assign(task_slugs_for_changes: [])
         |> assign(open_tags: open_tags)
         |> assign(open_tasks: %{})
         |> assign(open_project_tasks: %{})
@@ -203,9 +211,7 @@ defmodule PmToolWeb.TasksLive do
             end
         )
         |> start_async(:get_search_tags, fn -> Tasks.list_tags(current_user, teams) end)
-        |> start_async(:get_changes, fn ->
-          Teams.list_changes(current_user, current_team, task_slugs_for_changes)
-        end)
+        |> get_changes()
         |> assign_new_project_id()
         |> assign_new_team_id()
         |> assign_new_task_ids()
@@ -255,11 +261,11 @@ defmodule PmToolWeb.TasksLive do
     {:noreply, socket}
   end
 
-  def handle_async(:get_changes, {:ok, {user_or_team_changes, task_changes}}, socket) do
+  def handle_async(:get_changes, {:ok, {user_or_team_changes, action_count}}, socket) do
     socket =
       socket
       |> assign(changes: user_or_team_changes)
-      |> assign(task_changes: task_changes)
+      |> assign(action_count: action_count)
 
     {:noreply, socket}
   end
@@ -371,15 +377,17 @@ defmodule PmToolWeb.TasksLive do
   defp get_changes(socket) do
     current_user = socket.assigns.current_user
     current_team = socket.assigns.current_team
-    task_slugs = socket.assigns.task_slugs_for_changes
 
     socket
     |> start_async(:get_changes, fn ->
-      Teams.list_changes(
-        current_user,
-        current_team,
-        task_slugs
-      )
+      user_or_team_changes =
+        Teams.list_changes(
+          current_user,
+          current_team
+        )
+
+      user_action_count = Accounts.get_user_actions_count(current_user)
+      {user_or_team_changes, user_action_count}
     end)
   end
 
