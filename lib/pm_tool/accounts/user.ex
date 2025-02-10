@@ -2,7 +2,7 @@ defmodule PmTool.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @max_trial_actions 20
+  @max_trial_actions 250
   def max_trial_actions, do: @max_trial_actions
 
   schema "users" do
