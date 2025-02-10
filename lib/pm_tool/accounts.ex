@@ -423,13 +423,8 @@ defmodule PmTool.Accounts do
   end
 
   def create_subscription(attrs \\ %{}) do
-    sub =
-      %Subscription{}
-      |> Subscription.changeset(attrs)
-
-    IO.inspect(sub)
-
-    sub
+    %Subscription{}
+    |> Subscription.changeset(attrs)
     |> Repo.insert()
   end
 
@@ -438,17 +433,77 @@ defmodule PmTool.Accounts do
   end
 
   def get_subscription(%User{} = user) do
-    Repo.one(from s in Subscription, where: s.stripe_customer_id == ^user.stripe_customer_id)
+    case user.stripe_customer_id do
+      nil ->
+        nil
+
+      _ ->
+        Repo.one(from s in Subscription, where: s.stripe_customer_id == ^user.stripe_customer_id)
+    end
   end
 
   def cancel_subscription_for(%User{} = user) do
-    Repo.one(from s in Subscription, where: s.stripe_customer_id == ^user.stripe_customer_id)
-    |> update_subscription(%{cancel_at_period_end: true})
+    case user.stripe_customer_id do
+      nil ->
+        nil
+
+      _ ->
+        sub =
+          Repo.one(
+            from s in Subscription, where: s.stripe_customer_id == ^user.stripe_customer_id
+          )
+
+        response =
+          HTTPoison.request(
+            :post,
+            "https://api.stripe.com/v1/subscriptions/#{sub.stripe_id}",
+            "cancel_at_period_end=true",
+            [
+              {"Authorization", "Bearer #{Application.get_env(:pm_tool, :stripe_api_key)}"},
+              {"Content-Type", "application/x-www-form-urlencoded"}
+            ]
+          )
+
+        case response do
+          {:ok, _data} ->
+            sub |> update_subscription(%{cancel_at_period_end: true})
+
+          _ ->
+            nil
+        end
+    end
   end
 
   def reinstate_subscription_for(%User{} = user) do
-    Repo.one(from s in Subscription, where: s.stripe_customer_id == ^user.stripe_customer_id)
-    |> update_subscription(%{status: "active", cancel_at_period_end: false})
+    case user.stripe_customer_id do
+      nil ->
+        nil
+
+      _ ->
+        sub =
+          Repo.one(
+            from s in Subscription, where: s.stripe_customer_id == ^user.stripe_customer_id
+          )
+
+        response =
+          HTTPoison.request(
+            :post,
+            "https://api.stripe.com/v1/subscriptions/#{sub.stripe_id}",
+            "cancel_at_period_end=false",
+            [
+              {"Authorization", "Bearer #{Application.get_env(:pm_tool, :stripe_api_key)}"},
+              {"Content-Type", "application/x-www-form-urlencoded"}
+            ]
+          )
+
+        case response do
+          {:ok, _data} ->
+            sub |> update_subscription(%{cancel_at_period_end: false})
+
+          _ ->
+            nil
+        end
+    end
   end
 
   def update_subscription(%Subscription{} = subscription, attrs) do

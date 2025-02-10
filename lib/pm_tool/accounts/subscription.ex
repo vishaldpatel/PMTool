@@ -9,7 +9,7 @@ defmodule PmTool.Accounts.Subscription do
     field :status, :string
     field :current_period_started_at, :utc_datetime
     field :current_period_ends_at, :utc_datetime
-    field :cancel_at_period_end, :boolean
+    field :cancel_at_period_end, :boolean, default: false
     timestamps()
   end
 

@@ -39,13 +39,22 @@ defmodule PmToolWeb.SubscriptionComponent do
   end
 
   def handle_event("reinstate_subscription", _, socket) do
+    Application.fetch_env!(:pm_tool, :stripe_api_key) |> IO.inspect()
     Accounts.reinstate_subscription_for(socket.assigns.current_user)
-    {:noreply, socket}
+
+    {:noreply,
+     assign(socket,
+       subscription: Accounts.get_subscription(socket.assigns.current_user),
+       can_canel: true
+     )}
   end
 
   def handle_event("cancel_subscription", _, socket) do
+    Application.fetch_env!(:pm_tool, :stripe_api_key) |> IO.inspect()
     Accounts.cancel_subscription_for(socket.assigns.current_user)
-    {:noreply, socket}
+
+    {:noreply,
+     assign(socket, subscription: Accounts.get_subscription(socket.assigns.current_user))}
   end
 
   def active_subscription(assigns) do
@@ -56,7 +65,7 @@ defmodule PmToolWeb.SubscriptionComponent do
 
   def cancelable_subscription(assigns) do
     ~H"""
-    <div>
+    <div id={@id}>
       <button
         id="cancel_subscription"
         phx-click={JS.toggle(to: "#confirm_cancellation") |> JS.toggle(to: "#cancel_subscription")}
@@ -97,7 +106,11 @@ defmodule PmToolWeb.SubscriptionComponent do
     ~H"""
     <div id={@id} class="mt-4 text-center bg-gray-800 p-1 pb-2">
       <div class="bold text-sm text-gray-200 mt-1 uppercase">
-        {@trial_actions_left} Actions Remaining in Trial
+        <%= if @trial_actions_left <= 0 do %>
+          Trial Actions Limit Reached
+        <% else %>
+          {@trial_actions_left} Actions Remaining in Trial
+        <% end %>
       </div>
       <a href="https://buy.stripe.com/test_3cs7vJ72WdGM5kQ8ww" target="_blank">
         <button class={"font-bold rounded my-1 px-2 mr-1 text-gray-100 #{@sub_button_color} rounded p-[1px]"}>
