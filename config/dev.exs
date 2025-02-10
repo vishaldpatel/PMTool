@@ -77,5 +77,5 @@ config :swoosh, :api_client, false
 
 # Stripe API key
 config :pm_tool,
-       :stripe_api_key,
+       :STRIPE_API_KEY,
        "rk_test_51QpJsc2cef6LvcHoR7i7qLcJ47uIzaUKkWHzEqPDAPN3Drt1vGRZk26T00e6VrttJ09e7VrEStW1EVVianefedqU003yjjVamF"

@@ -459,7 +459,7 @@ defmodule PmTool.Accounts do
             "https://api.stripe.com/v1/subscriptions/#{sub.stripe_id}",
             "cancel_at_period_end=true",
             [
-              {"Authorization", "Bearer #{Application.get_env(:pm_tool, :stripe_api_key)}"},
+              {"Authorization", "Bearer #{Application.get_env(:pm_tool, :STRIPE_API_KEY)}"},
               {"Content-Type", "application/x-www-form-urlencoded"}
             ]
           )
@@ -491,7 +491,7 @@ defmodule PmTool.Accounts do
             "https://api.stripe.com/v1/subscriptions/#{sub.stripe_id}",
             "cancel_at_period_end=false",
             [
-              {"Authorization", "Bearer #{Application.get_env(:pm_tool, :stripe_api_key)}"},
+              {"Authorization", "Bearer #{Application.get_env(:pm_tool, :STRIPE_API_KEY)}"},
               {"Content-Type", "application/x-www-form-urlencoded"}
             ]
           )
