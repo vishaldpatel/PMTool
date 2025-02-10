@@ -471,7 +471,7 @@ defmodule PmToolWeb.TaskComponent do
             name="task[name]"
             type="text"
             value={@task.name}
-            class="rounded-sm w-full py-0 px-1 mb-1"
+            class="text-sm rounded-sm w-full py-0 px-1 mb-1"
           /><br />
           <input
             id={"edit-#{@id}-is_milestone"}
@@ -480,27 +480,26 @@ defmodule PmToolWeb.TaskComponent do
             value={if @task.is_milestone == true, do: "true", else: "false"}
           />
           <input
-            class="py-0 mb-1"
+            class="py-0 rounded-sm"
             type="checkbox"
             phx-click={
               JS.toggle_attribute({"value", "true", "false"}, to: "#edit-#{@id}-is_milestone")
             }
             checked={@task.is_milestone == true}
           />
-          <label for="milestone">Milestone</label>
-          <br />
-          <label for="due_date">Due Date</label>
-          <input class="py-0 mb-1" type="date" name="task[due_date]" value={@task.due_date} /><br />
+          <label for="milestone" class="text-sm">Milestone</label>
+          <label for="due_date" class="text-sm ml-2">Due Date</label>
+          <input class="py-0 mb-1 text-sm uppercase px-1" type="date" name="task[due_date]" value={@task.due_date} /><br />
           <textarea
             placeholder="Task Description"
             name="task[description]"
             type="text"
-            class="rounded-sm w-full py-0 px-1 mb-1"
+            class="text-sm rounded-sm w-full py-0 px-1 mb-1 h-[150px]"
           ><%= @task.description %></textarea><br />
           <%= if Ecto.assoc_loaded?(@task.team) and @task.team do %>
             <select
               name="task[owner_id]"
-              class="w-full py-0 px-2 mb-1 rounded-sm"
+              class="text-sm w-1/2 py-0 px-2 mb-1 rounded-sm"
               value={@task.owner_id}
             >
               <%= for member <- @task.team.team_members do %>
@@ -515,21 +514,20 @@ defmodule PmToolWeb.TaskComponent do
           <% else %>
             <select
               name="task[estimate]"
-              class="w-full py-0 px-2 mb-1 rounded-sm"
+              class="text-sm w-1/5 py-0 px-2 mb-1 rounded-sm"
               value={@task.estimate}
             >
               <%= for estimate <- Tasks.Task.estimates() do %>
                 <option value={estimate} selected={@task.estimate == estimate}>{estimate}</option>
               <% end %>
-            </select>
+            </select> hours
             <br />
-            <select name="task[status]" class="w-full py-0 px-2 mb-1 rounded-sm" value={@task.status}>
+            <select name="task[status]" class="text-sm w-3/5 py-0 px-2 mb-1 rounded-sm" value={@task.status}>
               <%= for status <- Tasks.Task.statuses() do %>
                 <option value={status} selected={@task.status == status}>{status}</option>
               <% end %>
             </select>
-            <br />
-            <select name="task[stage]" class="w-full py-0 px-2 mb-1 rounded-sm" value={@task.stage}>
+            <select name="task[stage]" class="text-sm w-1/3 py-0 px-2 mb-1 rounded-sm" value={@task.stage}>
               <%= for stage <- Tasks.Task.stages() do %>
                 <option value={stage} selected={@task.stage == stage}>{stage}</option>
               <% end %>
