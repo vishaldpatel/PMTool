@@ -55,6 +55,7 @@ defmodule PmTool.Teams do
         |> DateTime.to_date()
         |> Date.beginning_of_week())
     )
+    |> Enum.reverse()
   end
 
   def list_changes(%Team{} = team) do

@@ -61,7 +61,7 @@ defmodule PmToolWeb.TagComponent do
     ~H"""
     <div>
       <div class="text-sm" title="Required">*{String.capitalize(@type)} Tag</div>
-      <div class="tags_outer w-full px-1 mb-1 bg-white border border-gray-500 rounded rounded-sm focus:border-blue-500 cursor-text">
+      <div class="tags_outer w-full px-1 mb-1 bg-gray-500 border border-gray-500 rounded rounded-sm focus:border-blue-500 cursor-text">
         <input type="hidden" name="tag_type" value={@tag_type} />
         <input type="hidden" name="tag_limit" value={1} />
         <div class="tags inline">
@@ -84,13 +84,13 @@ defmodule PmToolWeb.TagComponent do
             title="Add a tag and then press Return / Enter"
             type="text"
             placeholder=""
-            class="new_tag_input bg-transparent text-cyan-700 italic border-0 inline text-xs p-0 m-0 w-20 focus:ring-0 cursor-text"
+            class="new_tag_input bg-transparent text-cyan-300 italic border-0 inline text-xs p-0 m-0 w-20 focus:ring-0 cursor-text"
           />
         <% else %>
           <input
             type="text"
             placeholder=""
-            class="new_tag_input bg-transparent text-cyan-700 italic border-0 inline text-xs p-0 m-0 w-20 focus:ring-0 cursor-text"
+            class="new_tag_input bg-transparent text-cyan-300 italic border-0 inline text-xs p-0 m-0 w-20 focus:ring-0 cursor-text"
             disabled
           />
         <% end %>

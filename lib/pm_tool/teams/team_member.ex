@@ -97,7 +97,7 @@ defmodule PmTool.Teams.TeamMember do
 
       changeset.repo.insert!(%Change{
         action: "#{changeset.action}",
-        name: changeset.data.name || get_field(changeset, :name),
+        name: "Team: #{team.name}",
         team_id: get_field(changeset, :team_id),
         user_id: get_field(changeset, :current_user_id),
         description: description

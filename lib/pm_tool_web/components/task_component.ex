@@ -464,23 +464,24 @@ defmodule PmToolWeb.TaskComponent do
 
     ~H"""
     <div id={"edit-#{@id}"} class={"text-left w-full #{@show_task_edit}"}>
-      <div class="inline-block w-full bg-gray-200 text-left border border-gray-500 p-1 rounded">
+      <div class="inline-block w-full bg-gray-700 text-gray-100 text-left border border-gray-400 p-1 rounded">
         <form phx-submit={@action} phx-target={@myself}>
           <input
             placeholder="Task Name"
             name="task[name]"
             type="text"
             value={@task.name}
-            class="text-sm rounded-sm w-full py-0 px-1 mb-1"
+            class="mt-0.5 bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm w-full py-0 px-1 mb-1"
           /><br />
           <input
             id={"edit-#{@id}-is_milestone"}
             type="hidden"
             name="task[is_milestone]"
             value={if @task.is_milestone == true, do: "true", else: "false"}
+            class="text-sm bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm"
           />
           <input
-            class="py-0 rounded-sm"
+            class="py-0 ml-1 text-sm bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm"
             type="checkbox"
             phx-click={
               JS.toggle_attribute({"value", "true", "false"}, to: "#edit-#{@id}-is_milestone")
@@ -490,7 +491,7 @@ defmodule PmToolWeb.TaskComponent do
           <label for="milestone" class="text-sm">Milestone</label>
           <label for="due_date" class="text-sm ml-2">Due Date</label>
           <input
-            class="py-0 mb-1 text-sm uppercase px-1"
+            class="py-0 mb-1 text-sm uppercase px-1 bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm"
             type="date"
             name="task[due_date]"
             value={@task.due_date}
@@ -499,12 +500,12 @@ defmodule PmToolWeb.TaskComponent do
             placeholder="Task Description"
             name="task[description]"
             type="text"
-            class="text-sm rounded-sm w-full py-0 px-1 mb-1 h-[150px]"
+            class="text-sm leading-none w-full p-1 mb-0.5 h-[150px] bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm"
           ><%= @task.description %></textarea><br />
           <%= if Ecto.assoc_loaded?(@task.team) and @task.team do %>
             <select
               name="task[owner_id]"
-              class="text-sm w-1/2 py-0 px-2 mb-1 rounded-sm"
+              class="text-sm w-1/2 py-0 px-2 mb-1 rounded-sm bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm"
               value={@task.owner_id}
             >
               <%= for member <- @task.team.team_members do %>
@@ -519,7 +520,7 @@ defmodule PmToolWeb.TaskComponent do
           <% else %>
             <select
               name="task[estimate]"
-              class="text-sm w-1/5 py-0 px-2 mb-1 rounded-sm"
+              class="text-sm w-1/5 py-0 px-2 mb-1 bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm"
               value={@task.estimate}
             >
               <%= for estimate <- Tasks.Task.estimates() do %>
@@ -529,7 +530,7 @@ defmodule PmToolWeb.TaskComponent do
             hours <br />
             <select
               name="task[status]"
-              class="text-sm w-3/5 py-0 px-2 mb-1 rounded-sm"
+              class="text-sm w-3/5 py-0 px-2 mb-1 bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm"
               value={@task.status}
             >
               <%= for status <- Tasks.Task.statuses() do %>
@@ -538,7 +539,7 @@ defmodule PmToolWeb.TaskComponent do
             </select>
             <select
               name="task[stage]"
-              class="text-sm w-1/3 py-0 px-2 mb-1 rounded-sm"
+              class="text-sm w-1/3 py-0 px-2 mb-1 rounded-sm bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm"
               value={@task.stage}
             >
               <%= for stage <- Tasks.Task.stages() do %>
@@ -559,12 +560,13 @@ defmodule PmToolWeb.TaskComponent do
             <a
               href={"/tasks/#{@task.slug}"}
               onclick="event.preventDefault(); navigator.clipboard.writeText(event.target.href)"
-              class="float-left my-1 bg-orange-100 hover:bg-orange-200 text-orange-600 text-sm px-2 py-1 rounded"
+              class="float-left mt-1 mb-0.5 bg-orange-100 hover:bg-orange-200 text-orange-600 px-2 py-1 rounded"
             >
               Copy Link
             </a>
             <button
               type="reset"
+              class="mt-1 mb-0.5"
               phx-click={
                 JS.toggle_class("flex", to: "#edit-#{@id}")
                 |> JS.toggle_class("hidden", to: "#edit-#{@id}")
@@ -575,7 +577,7 @@ defmodule PmToolWeb.TaskComponent do
             >
               Cancel
             </button>
-            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold px-2 py-1 ml-1 rounded">
+            <button class="mt-1 mb-0.5 bg-blue-500 hover:bg-blue-700 text-white px-2 py-1 ml-1 rounded">
               {@save_button_name}
             </button>
           </div>
