@@ -33,14 +33,16 @@ defmodule PmToolWeb.TasksLive do
           show_changelog={@show_changelog}
         />
         <.live_component module={PmToolWeb.SearchTagsComponent} id="search_tags" tags={@search_tags} />
-        <.live_component
-          module={PmToolWeb.SubscriptionComponent}
-          id="subscription"
-          subscription={@subscription}
-          current_user={@current_user}
-          action_count={@action_count}
-          can_cancel={false}
-        />
+        <div class="absolute bottom-1">
+          <.live_component
+            module={PmToolWeb.SubscriptionComponent}
+            id="subscription"
+            subscription={@subscription}
+            current_user={@current_user}
+            action_count={@action_count}
+            can_cancel={false}
+          />
+        </div>
       </div>
       <%= for project <- @open_projects do %>
         <.live_component
@@ -504,16 +506,18 @@ defmodule PmToolWeb.TasksLive do
   end
 
   defp show_tasks_with_tag(socket, tag) do
-    unless Enum.member?(socket.assigns.open_tags, tag) do
+    open_tags = socket.assigns.open_tags || []
+
+    if not Enum.member?(open_tags, tag) do
       Accounts.set_preference(
         socket.assigns.current_user,
         "open_tags",
-        [tag | socket.assigns.open_tags]
+        [tag | open_tags]
       )
 
       {:noreply,
        socket
-       |> assign(open_tags: [tag | socket.assigns.open_tags])
+       |> assign(open_tags: [tag | open_tags])
        |> get_tasks()}
     else
       {:noreply, socket}
@@ -521,20 +525,24 @@ defmodule PmToolWeb.TasksLive do
   end
 
   defp hide_tasks_with_tag(socket, tag) do
+    open_tags = socket.assigns.open_tags
+
     Accounts.set_preference(
       socket.assigns.current_user,
       "open_tags",
-      List.delete(socket.assigns.open_tags, tag)
+      List.delete(open_tags, tag)
     )
 
     {:noreply,
      socket
-     |> assign(open_tags: List.delete(socket.assigns.open_tags, tag))
+     |> assign(open_tags: List.delete(open_tags, tag))
      |> assign(open_tag_tasks: Map.delete(socket.assigns.open_tag_tasks, tag))}
   end
 
   defp show_hide_team_members(socket, team_slug) do
-    if Enum.member?(socket.assigns.open_team_slugs, team_slug) do
+    open_team_slugs = socket.assigns.open_team_slugs || []
+
+    if Enum.member?(open_team_slugs, team_slug) do
       hide_team_members(socket, team_slug)
     else
       show_team_members(socket, team_slug)
@@ -542,47 +550,53 @@ defmodule PmToolWeb.TasksLive do
   end
 
   defp show_team_members(socket, team_slug) do
+    open_team_slugs = socket.assigns.open_team_slugs || []
+
     Accounts.set_preference(
       socket.assigns.current_user,
       "open_team_slugs",
-      [team_slug | socket.assigns.open_team_slugs]
+      [team_slug | open_team_slugs]
     )
 
-    team_slugs = [team_slug | socket.assigns.open_team_slugs]
+    open_team_slugs = [team_slug | open_team_slugs]
 
     {:noreply,
      socket
-     |> assign(open_team_slugs: team_slugs)}
+     |> assign(open_team_slugs: open_team_slugs)}
   end
 
   defp hide_team_members(socket, team_slug) do
+    open_team_slugs = socket.assigns.open_team_slugs
+
     Accounts.set_preference(
       socket.assigns.current_user,
       "open_team_slugs",
-      List.delete(socket.assigns.open_team_slugs, team_slug)
+      List.delete(open_team_slugs, team_slug)
     )
 
-    team_slugs = List.delete(socket.assigns.open_team_slugs, team_slug)
+    open_team_slugs = List.delete(open_team_slugs, team_slug)
 
     {:noreply,
      socket
-     |> assign(open_team_slugs: team_slugs)}
+     |> assign(open_team_slugs: open_team_slugs)}
   end
 
   defp show_project(socket, project_slug) do
-    unless Enum.member?(socket.assigns.open_project_slugs, project_slug) do
+    open_project_slugs = socket.assigns.open_project_slugs || []
+
+    if not Enum.member?(open_project_slugs, project_slug) do
       Accounts.set_preference(
         socket.assigns.current_user,
         "open_project_slugs",
-        [project_slug | socket.assigns.open_project_slugs]
+        [project_slug | open_project_slugs]
       )
 
-      project_slugs = [project_slug | socket.assigns.open_project_slugs]
+      open_project_slugs = [project_slug | open_project_slugs]
 
       {:noreply,
        socket
-       |> assign(open_project_slugs: project_slugs)
-       |> assign(open_projects: Projects.get_projects!(project_slugs))
+       |> assign(open_project_slugs: open_project_slugs)
+       |> assign(open_projects: Projects.get_projects!(open_project_slugs))
        |> get_tasks()}
     else
       {:noreply, socket}
@@ -590,19 +604,22 @@ defmodule PmToolWeb.TasksLive do
   end
 
   defp hide_project(socket, project_slug) do
+    open_project_slugs = socket.assigns.open_project_slugs
+
     Accounts.set_preference(
       socket.assigns.current_user,
       "open_project_slugs",
-      List.delete(socket.assigns.open_project_slugs, project_slug)
+      List.delete(open_project_slugs, project_slug)
     )
 
-    project_slugs = List.delete(socket.assigns.open_project_slugs, project_slug)
+    open_project_slugs = List.delete(open_project_slugs, project_slug)
+    open_project_tasks = socket.assigns.open_project_tasks
 
     {:noreply,
      socket
-     |> assign(open_project_slugs: project_slugs)
-     |> assign(open_project_tasks: Map.delete(socket.assigns.open_project_tasks, project_slug))
-     |> assign(open_projects: Projects.get_projects!(project_slugs))}
+     |> assign(open_project_slugs: open_project_slugs)
+     |> assign(open_project_tasks: Map.delete(open_project_tasks, project_slug))
+     |> assign(open_projects: Projects.get_projects!(open_project_slugs))}
   end
 
   defp set_current_team(socket, slug) do

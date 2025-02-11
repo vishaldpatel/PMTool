@@ -15,12 +15,14 @@ defmodule PmToolWeb.SubscriptionComponent do
 
   def update(assigns, socket) do
     socket = assign(socket, assigns)
+    trial_actions_left = User.max_trial_actions() - socket.assigns.action_count
 
     socket =
-      assign(socket,
-        trial_actions_left: User.max_trial_actions() - socket.assigns.action_count,
+      socket
+      |> assign(trial_actions_left: trial_actions_left)
+      |> assign(
         sub_button_color:
-          case socket.assigns.trial_actions_left do
+          case trial_actions_left do
             y when y > 100 ->
               "bg-gray-600 hover:bg-lime-500"
 

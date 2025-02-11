@@ -489,7 +489,12 @@ defmodule PmToolWeb.TaskComponent do
           />
           <label for="milestone" class="text-sm">Milestone</label>
           <label for="due_date" class="text-sm ml-2">Due Date</label>
-          <input class="py-0 mb-1 text-sm uppercase px-1" type="date" name="task[due_date]" value={@task.due_date} /><br />
+          <input
+            class="py-0 mb-1 text-sm uppercase px-1"
+            type="date"
+            name="task[due_date]"
+            value={@task.due_date}
+          /><br />
           <textarea
             placeholder="Task Description"
             name="task[description]"
@@ -520,14 +525,22 @@ defmodule PmToolWeb.TaskComponent do
               <%= for estimate <- Tasks.Task.estimates() do %>
                 <option value={estimate} selected={@task.estimate == estimate}>{estimate}</option>
               <% end %>
-            </select> hours
-            <br />
-            <select name="task[status]" class="text-sm w-3/5 py-0 px-2 mb-1 rounded-sm" value={@task.status}>
+            </select>
+            hours <br />
+            <select
+              name="task[status]"
+              class="text-sm w-3/5 py-0 px-2 mb-1 rounded-sm"
+              value={@task.status}
+            >
               <%= for status <- Tasks.Task.statuses() do %>
                 <option value={status} selected={@task.status == status}>{status}</option>
               <% end %>
             </select>
-            <select name="task[stage]" class="text-sm w-1/3 py-0 px-2 mb-1 rounded-sm" value={@task.stage}>
+            <select
+              name="task[stage]"
+              class="text-sm w-1/3 py-0 px-2 mb-1 rounded-sm"
+              value={@task.stage}
+            >
               <%= for stage <- Tasks.Task.stages() do %>
                 <option value={stage} selected={@task.stage == stage}>{stage}</option>
               <% end %>
