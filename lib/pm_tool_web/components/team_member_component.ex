@@ -246,7 +246,7 @@ defmodule PmToolWeb.TeamMemberComponent do
         <input type="hidden" name="team_member[role]" value="member" />
         <input type="hidden" name="team_member[team_slug]" value={@team.slug} />
         <input type="hidden" name="team_member[id]" value={@team_member.id} />
-        <%= if @team_member.id do %>
+        <%= if @team_member.role == "member" and @team_member.id do %>
           <button
             title={"Remove #{@team_member.name} from #{@team.name}"}
             type="button"

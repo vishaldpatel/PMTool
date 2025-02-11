@@ -30,6 +30,13 @@ defmodule PmTool.Teams.TeamMember do
     |> add_history()
   end
 
+  def delete_changeset(team_member, attrs) do
+    team_member
+    |> cast(attrs, [:current_user_id])
+    |> validate_required([:current_user_id])
+    |> add_history()
+  end
+
   defp maybe_make_a_thumbnail(changeset) do
     if changed?(changeset, :email) or changed?(changeset, :name) do
       # Create a thumbnail for the email and store it in the assets directory
@@ -49,6 +56,8 @@ defmodule PmTool.Teams.TeamMember do
   end
 
   defp add_history(changeset) do
+    IO.inspect("add history for..")
+    IO.inspect(changeset)
     current_user = PmTool.Accounts.get_user!(get_field(changeset, :current_user_id))
 
     current_team_member =
@@ -63,7 +72,9 @@ defmodule PmTool.Teams.TeamMember do
       description =
         case changeset.action do
           :insert ->
-            "#{current_team_member.name} added member #{changeset.changes.name}"
+            if current_team_member,
+              do: "#{current_team_member.name} added member #{changeset.changes.name}",
+              else: "Added #{changeset.changes.name}"
 
           :update ->
             Enum.reduce(
@@ -78,7 +89,7 @@ defmodule PmTool.Teams.TeamMember do
             )
 
           :delete ->
-            "#{get_field(changeset, :name)} removed member #{team.name}"
+            "#{get_field(changeset, :name)} removed member #{changeset.data.name}"
 
           _ ->
             nil

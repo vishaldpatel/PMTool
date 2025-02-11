@@ -189,7 +189,7 @@ defmodule PmToolWeb.TasksLive do
         |> assign(open_tag_tasks: %{})
         |> assign(show_changelog: user_preferences["show_changelog"] || false)
         |> assign(open_team_slugs: user_preferences["open_team_slugs"] || [])
-        |> assign(tasks: %{Now: %{}, Next: %{}, Done: %{}})
+        |> assign(tasks: %{Now: [], Next: %{}, Done: %{}})
         |> assign(project_progress: %{})
         |> assign(teams: teams)
         |> assign(current_team: current_team)

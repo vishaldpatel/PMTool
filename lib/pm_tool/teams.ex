@@ -101,7 +101,7 @@ defmodule PmTool.Teams do
 
     case result do
       {:ok, team} ->
-        case create_team_member(team, user, "owner") do
+        case create_team_member(team, user, user, "owner") do
           {:ok, _} -> {:ok, team}
           {:error, changeset} -> {:error, changeset}
         end
@@ -166,7 +166,7 @@ defmodule PmTool.Teams do
   # Remove a user from a team
   def remove_team_member(%TeamMember{} = team_member, %User{} = current_user) do
     team_member
-    |> TeamMember.changeset(%{current_user_id: current_user.id})
+    |> TeamMember.delete_changeset(%{current_user_id: current_user.id})
     |> Repo.delete()
   end
 end

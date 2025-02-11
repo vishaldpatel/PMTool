@@ -570,6 +570,7 @@ defmodule PmToolWeb.TaskComponent do
                 |> JS.toggle_class("hidden", to: "#edit-#{@id}")
                 |> JS.toggle_class("hidden", to: "#show-" <> @id)
                 |> JS.toggle_class("flex", to: "#show-#{@id}")
+                |> JS.toggle_class("hidden", to: "#new_task_helper")
               }
             >
               Cancel
