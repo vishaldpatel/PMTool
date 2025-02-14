@@ -358,11 +358,21 @@ defmodule PmTool.Tasks do
   defp sort_and_merge_now_and_done_tasks(tasks) do
     now_tasks = tasks[:Now]
     done_tasks = tasks[:Done]
+    now_status_order = %{
+      "Accepted" => "1",
+      "Closed" => "1",
+      "Delivered" => "2",
+      "Finished" => "3",
+      "Rejected" => "4",
+      "Started" => "4",
+      "Unstarted" => "5",
+      "Unappraised" => "6",
+    }
 
     now_tasks =
       now_tasks
-      |> Map.put(:done, Enum.sort_by(now_tasks[:done], & &1.status_updated_at))
-      |> Map.put(:ongoing, Enum.sort_by(now_tasks[:ongoing], & &1.status_updated_at))
+      |> Map.put(:done, Enum.sort_by(now_tasks[:done], & "#{now_status_order[&1.status]}-#{&1.status_updated_at}"))
+      |> Map.put(:ongoing, Enum.sort_by(now_tasks[:ongoing], & "#{now_status_order[&1.status]}-#{&1.status_updated_at}"))
       |> Map.put(:unstarted, Enum.sort_by(now_tasks[:unstarted], & &1.task_order))
 
     done_tasks =
