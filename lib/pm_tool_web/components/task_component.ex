@@ -467,12 +467,18 @@ defmodule PmToolWeb.TaskComponent do
       <div class="inline-block w-full bg-gray-700 text-gray-100 text-left border border-gray-400 p-1 rounded">
         <form phx-submit={@action} phx-target={@myself}>
           <input
-            placeholder="Task Name"
+            placeholder="* Task Name"
             name="task[name]"
             type="text"
             value={@task.name}
             class="mt-0.5 bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm w-full py-0 px-1 mb-1"
           /><br />
+          <textarea
+            placeholder="Task Description"
+            name="task[description]"
+            type="text"
+            class="text-sm leading-none w-full p-1 mb-0.5 h-[150px] bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm"
+          ><%= @task.description %></textarea><br />
           <input
             id={"edit-#{@id}-is_milestone"}
             type="hidden"
@@ -485,6 +491,12 @@ defmodule PmToolWeb.TaskComponent do
             type="checkbox"
             phx-click={
               JS.toggle_attribute({"value", "true", "false"}, to: "#edit-#{@id}-is_milestone")
+              |> JS.toggle_class("hidden", to: "#edit-#{@id}-owner")
+              |> JS.toggle_class("hidden", to: "#edit-#{@id}-owner_label")
+              |> JS.toggle_class("hidden", to: "#edit-#{@id}-status")
+              |> JS.toggle_class("hidden", to: "#edit-#{@id}-status_label")
+              |> JS.toggle_class("hidden", to: "#edit-#{@id}-estimate")
+              |> JS.toggle_class("hidden", to: "#edit-#{@id}-estimate_label")
             }
             checked={@task.is_milestone == true}
           />
@@ -496,16 +508,37 @@ defmodule PmToolWeb.TaskComponent do
             name="task[due_date]"
             value={@task.due_date}
           /><br />
-          <textarea
-            placeholder="Task Description"
-            name="task[description]"
-            type="text"
-            class="text-sm leading-none w-full p-1 mb-0.5 h-[150px] bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm"
-          ><%= @task.description %></textarea><br />
-          <%= if Ecto.assoc_loaded?(@task.team) and @task.team do %>
+          <%= if @save_button_name == "Create" do %>
+            <input type="hidden" name="task[stage]" value={@task.stage} />
+          <% else %>
+            <label for={"edit-#{@id}-status"} id={"edit-#{@id}-status_label"} class="ml-1 text-sm">Status</label>
             <select
+              id={"edit-#{@id}-status"}
+              name="task[status]"
+              class="text-sm w-2/5 py-0 px-2 mb-1 bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm"
+              value={@task.status}
+            >
+              <%= for status <- Tasks.Task.statuses() do %>
+                <option value={status} selected={@task.status == status}>{status}</option>
+              <% end %>
+            </select>
+            <label for={"edit-#{@id}-stage"} id={"edit-#{@id}-stage_label"} class="ml-1 text-sm">Stage</label>
+            <select
+              name="task[stage]"
+              class="text-sm w-1/5 py-0 px-2 mb-1 rounded-sm bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm"
+              value={@task.stage}
+            >
+              <%= for stage <- Tasks.Task.stages() do %>
+                <option value={stage} selected={@task.stage == stage}>{stage}</option>
+              <% end %>
+            </select>
+          <% end %>
+          <%= if Ecto.assoc_loaded?(@task.team) and @task.team do %>
+            <label class="ml-1 text-sm" id={"edit-#{@id}-owner_label"} for={"edit-#{@id}-owner"} class="text-sm">Owner</label>
+            <select
+              id={"edit-#{@id}-owner"}
               name="task[owner_id]"
-              class="text-sm w-1/2 py-0 px-2 mb-1 rounded-sm bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm"
+              class="text-sm w-2/5 py-0 px-2 mb-1 rounded-sm bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm"
               value={@task.owner_id}
             >
               <%= for member <- @task.team.team_members do %>
@@ -515,38 +548,18 @@ defmodule PmToolWeb.TaskComponent do
               <% end %>
             </select>
           <% end %>
-          <%= if @save_button_name == "Create" do %>
-            <input type="hidden" name="task[stage]" value={@task.stage} />
-          <% else %>
+          <%= if @save_button_name != "Create" do %>
             <select
+              id={"edit-#{@id}-estimate"}
               name="task[estimate]"
-              class="text-sm w-1/5 py-0 px-2 mb-1 bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm"
+              class="text-sm ml-1 w-1/5 py-0 px-2 mb-1 bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm"
               value={@task.estimate}
             >
               <%= for estimate <- Tasks.Task.estimates() do %>
                 <option value={estimate} selected={@task.estimate == estimate}>{estimate}</option>
               <% end %>
             </select>
-            hours <br />
-            <select
-              name="task[status]"
-              class="text-sm w-3/5 py-0 px-2 mb-1 bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm"
-              value={@task.status}
-            >
-              <%= for status <- Tasks.Task.statuses() do %>
-                <option value={status} selected={@task.status == status}>{status}</option>
-              <% end %>
-            </select>
-            <select
-              name="task[stage]"
-              class="text-sm w-1/3 py-0 px-2 mb-1 rounded-sm bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm"
-              value={@task.stage}
-            >
-              <%= for stage <- Tasks.Task.stages() do %>
-                <option value={stage} selected={@task.stage == stage}>{stage}</option>
-              <% end %>
-            </select>
-            <br />
+            <label id={"edit-#{@id}-estimate_label"} for={"edit-#{@id}-estimate"} class="text-sm">hours </label>
           <% end %>
           <input type="hidden" name="task[slug]" value={@task.slug} />
           <.live_component

@@ -60,7 +60,7 @@ defmodule PmToolWeb.TagsComponent do
   defp edit_tags(assigns) do
     ~H"""
     <div>
-      <div class="text-sm">{String.capitalize(@tag_type)} Tags</div>
+      <div class="ml-1 text-sm">{String.capitalize(@tag_type)} Tags</div>
       <div class="tags_outer w-full px-1 mb-1 bg-gray-500 border border-gray-500 rounded rounded-sm focus:border-blue-500 cursor-text">
         <input type="hidden" name="tag_type" value={@tag_type} />
         <input type="hidden" name="tag_limit" value={0} />
