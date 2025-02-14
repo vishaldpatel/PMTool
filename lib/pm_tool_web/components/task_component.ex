@@ -36,12 +36,20 @@ defmodule PmToolWeb.TaskComponent do
        show_task: "flex",
        show_task_edit: "hidden",
        hide_project_tag: false,
-       current_team: nil
+       current_team: nil,
+       selectable: true
      )}
   end
 
   def update(assigns, socket) do
     socket = assign(socket, assigns)
+
+    socket =
+      if Enum.member?(["Accepted", "Closed"], socket.assigns.task.status) do
+        assign(socket, selectable: false)
+      else
+        socket
+      end
 
     socket =
       if socket.assigns.task.due_date do
@@ -408,22 +416,24 @@ defmodule PmToolWeb.TaskComponent do
                 <% end %>
               <% end %>
             <% end %>
-            <input
-              type="checkbox"
-              name={"#{@task.stage}_task_slugs[]"}
-              class="rounded"
-              style="margin-bottom: 2px;"
-              phx-click={
-                JS.dispatch("task_checkbox_clicked",
-                  detail: %{
-                    id: @id,
-                    slug: @task.slug,
-                    stage: @task.stage,
-                    project_slug: @project.slug
-                  }
-                )
-              }
-            />
+            <%= if @selectable == true do %>
+              <input
+                type="checkbox"
+                name={"#{@task.stage}_task_slugs[]"}
+                class="rounded"
+                style="margin-bottom: 2px;"
+                phx-click={
+                  JS.dispatch("task_checkbox_clicked",
+                    detail: %{
+                      id: @id,
+                      slug: @task.slug,
+                      stage: @task.stage,
+                      project_slug: @project.slug
+                    }
+                  )
+                }
+              />
+            <% end %>
           </div>
         </div>
         <.task_form
@@ -511,7 +521,9 @@ defmodule PmToolWeb.TaskComponent do
           <%= if @save_button_name == "Create" do %>
             <input type="hidden" name="task[stage]" value={@task.stage} />
           <% else %>
-            <label for={"edit-#{@id}-status"} id={"edit-#{@id}-status_label"} class="ml-1 text-sm">Status</label>
+            <label for={"edit-#{@id}-status"} id={"edit-#{@id}-status_label"} class="ml-1 text-sm">
+              Status
+            </label>
             <select
               id={"edit-#{@id}-status"}
               name="task[status]"
@@ -522,7 +534,9 @@ defmodule PmToolWeb.TaskComponent do
                 <option value={status} selected={@task.status == status}>{status}</option>
               <% end %>
             </select>
-            <label for={"edit-#{@id}-stage"} id={"edit-#{@id}-stage_label"} class="ml-1 text-sm">Stage</label>
+            <label for={"edit-#{@id}-stage"} id={"edit-#{@id}-stage_label"} class="ml-1 text-sm">
+              Stage
+            </label>
             <select
               name="task[stage]"
               class="text-sm w-1/5 py-0 px-2 mb-1 rounded-sm bg-gray-500 placeholder-gray-300 focus:ring-0 focus:border-gray-900 rounded-sm"
@@ -534,7 +548,14 @@ defmodule PmToolWeb.TaskComponent do
             </select>
           <% end %>
           <%= if Ecto.assoc_loaded?(@task.team) and @task.team do %>
-            <label class="ml-1 text-sm" id={"edit-#{@id}-owner_label"} for={"edit-#{@id}-owner"} class="text-sm">Owner</label>
+            <label
+              class="ml-1 text-sm"
+              id={"edit-#{@id}-owner_label"}
+              for={"edit-#{@id}-owner"}
+              class="text-sm"
+            >
+              Owner
+            </label>
             <select
               id={"edit-#{@id}-owner"}
               name="task[owner_id]"
@@ -559,7 +580,9 @@ defmodule PmToolWeb.TaskComponent do
                 <option value={estimate} selected={@task.estimate == estimate}>{estimate}</option>
               <% end %>
             </select>
-            <label id={"edit-#{@id}-estimate_label"} for={"edit-#{@id}-estimate"} class="text-sm">hours </label>
+            <label id={"edit-#{@id}-estimate_label"} for={"edit-#{@id}-estimate"} class="text-sm">
+              hours 
+            </label>
           <% end %>
           <input type="hidden" name="task[slug]" value={@task.slug} />
           <.live_component
