@@ -79,7 +79,7 @@ defmodule PmToolWeb.LaterTasksComponent do
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
           </svg>
         </button>
-        <form phx-submit="task_actions" class="inline-block">
+        <form phx-submit="task_actions" class="inline-block" id="later_task_options_form">
           <button
             id="btn_confirm_delete_selected_later_tasks"
             title="Confirm Delete Selected Tasks"

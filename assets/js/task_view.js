@@ -1,9 +1,19 @@
 export default class TaskView {
   setup_batch_tasks() {
     let now_task_options = document.getElementById("now_task_options")
+    let now_task_options_form = document.getElementById("now_task_options_form")
     let next_task_options = document.getElementById("next_task_options")
     let done_task_options = document.getElementById("done_task_options")
     let later_task_options = document.getElementById("later_task_options")
+    let later_task_options_form = document.getElementById("later_task_options_form")
+
+    function task_options_form_for_stage(stage) {
+      if (stage === "Now") {
+        return now_task_options_form
+      } else if (stage === "Later") {
+        return later_task_options_form
+      }
+    }
 
     function task_options_for_stage(stage) {
       if (stage === "Now") {
@@ -20,6 +30,7 @@ export default class TaskView {
     function checkbox_clicked_handler(event) {
       let stage = event.detail.stage
       let task_options = task_options_for_stage(stage)
+      let task_options_form = task_options_form_for_stage(stage)
       let task_container = document.getElementById("show-"+event.detail.id)
       let btns_add_to_project = document.getElementsByClassName("btn_add_to_project")
       let btns_move_to_team = document.getElementsByClassName("btn_move_to_team")
@@ -71,7 +82,7 @@ export default class TaskView {
       selected_tasks = selected_tasks == "" ? [] : selected_tasks.split(",")
 
       if (event.target.checked) {
-        task_options.innerHTML += `<input type="hidden" name="task_slugs[]" value="${event.detail.slug}" id="chk-${event.detail.slug}">`
+        task_options_form.innerHTML += `<input type="hidden" name="task_slugs[]" value="${event.detail.slug}" id="chk-${event.detail.slug}">`
         if (selected_tasks.length == 0) {
           selected_tasks.push(event.detail.slug)
         }
