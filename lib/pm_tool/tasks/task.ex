@@ -36,6 +36,8 @@ defmodule PmTool.Tasks.Task do
     field :status_updated_at, :utc_datetime,
       default: DateTime.truncate(DateTime.utc_now(), :second)
 
+    field :iteration_end_date, :utc_datetime, virtual: true
+
     field :tags, {:array, :string}, default: []
     field :project_tags, {:array, :string}, default: []
     field :is_milestone, :boolean, default: false

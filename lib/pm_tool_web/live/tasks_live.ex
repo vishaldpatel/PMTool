@@ -162,9 +162,18 @@ defmodule PmToolWeb.TasksLive do
     if not connected?(socket) do
       {:ok, render_with(socket, &render_empty/1)}
     else
+      zero_tasks = %{
+            Now: [],
+            Next: %{},
+            Done: %{last: [], two: [], three: [], earlier: []},
+            Later: []
+          }
       user_preferences = Accounts.get_preferences(current_user)
       open_project_slugs = user_preferences["open_project_slugs"] || []
       open_tags = user_preferences["open_tags"] || []
+      open_tag_tasks = Enum.into(open_tags, %{}, fn tag -> {tag, zero_tasks} end)
+      open_project_tasks = Enum.into(open_project_slugs, %{}, fn slug -> {slug, zero_tasks} end)
+
       teams = Teams.list_teams(current_user)
 
       current_team =
@@ -172,6 +181,16 @@ defmodule PmToolWeb.TasksLive do
           nil -> nil
           team_id -> Teams.get_team!(team_id)
         end
+
+      user_velocity = Tasks.get_velocity(current_user)
+      team_velocity = case current_team do 
+        nil -> nil
+        current_team -> Tasks.get_velocity(current_team)
+      end
+      team_velocities = case Enum.count(teams) > 0 do
+        true -> Tasks.get_velocities(teams)
+        false -> {}
+      end
 
       socket =
         socket
@@ -185,8 +204,8 @@ defmodule PmToolWeb.TasksLive do
         |> assign(changes: [])
         |> assign(open_tags: open_tags)
         |> assign(open_tasks: %{})
-        |> assign(open_project_tasks: %{})
-        |> assign(open_tag_tasks: %{})
+        |> assign(open_project_tasks: open_project_tasks)
+        |> assign(open_tag_tasks: open_tag_tasks)
         |> assign(show_changelog: user_preferences["show_changelog"] || false)
         |> assign(open_team_slugs: user_preferences["open_team_slugs"] || [])
         |> assign(tasks: %{Now: [], Next: %{}, Done: %{}})
@@ -195,13 +214,13 @@ defmodule PmToolWeb.TasksLive do
         |> assign(current_team: current_team)
         |> maybe_get_current_task(params)
         |> start_async(:get_open_tag_tasks, fn ->
-          get_tasks_for_tags(current_user, teams, open_tags)
+          get_tasks_for_tags(current_user, teams, open_tags, user_velocity, team_velocities)
         end)
         |> start_async(:get_open_project_tasks, fn ->
-          get_tasks_for_open_projects(current_user, current_team, teams, open_project_slugs)
+          get_tasks_for_open_projects(current_user, current_team, teams, open_project_slugs, user_velocity, team_velocity, team_velocities)
         end)
         |> start_async(:get_main_tasks, fn ->
-          get_now_next_later_and_done_tasks(current_user, current_team, teams)
+          get_now_next_later_and_done_tasks(current_user, current_team, teams, user_velocity, team_velocity, team_velocities)
         end)
         |> start_async(:get_projects, fn -> Projects.list_projects_for(current_user) end)
         |> start_async(:get_open_projects, fn -> Projects.get_projects!(open_project_slugs) end)
@@ -328,27 +347,29 @@ defmodule PmToolWeb.TasksLive do
     )
   end
 
-  defp get_tasks_for_tags(user, teams, tags) do
+  defp get_tasks_for_tags(user, teams, tags, user_velocity, team_velocities) do
     Enum.reduce(tags, %{}, fn tag, acc ->
       tag_tasks =
-        Tasks.list_tasks_for_tag(user, teams, tag)
+        Tasks.list_tasks_for_tag(user, teams, tag, user_velocity, team_velocities)
 
       Map.put(acc, tag, tag_tasks)
     end)
   end
 
-  defp get_tasks_for_open_projects(user, team, teams, project_slugs) do
+  defp get_tasks_for_open_projects(user, team, teams, project_slugs, user_velocity, team_velocity, team_velocities) do
     Enum.reduce(project_slugs, %{}, fn project_slug, acc ->
       project_tasks =
         case team do
           current_team = %Team{} ->
-            Tasks.list_tasks(current_team, project_slug)
+            Tasks.list_tasks(current_team, project_slug, team_velocity)
 
           _ ->
             Tasks.list_tasks(
               user,
               project_slug,
-              teams
+              teams,
+              user_velocity,
+              team_velocities
             )
         end
 
@@ -363,15 +384,17 @@ defmodule PmToolWeb.TasksLive do
       (tasks[:Done] |> Map.values() |> List.flatten())
   end
 
-  defp get_now_next_later_and_done_tasks(user, team, teams) do
+  defp get_now_next_later_and_done_tasks(user, team, teams, user_velocity, team_velocity, team_velocities) do
     case team do
       current_team = %Team{} ->
-        Tasks.list_tasks(current_team)
+        Tasks.list_tasks(current_team, team_velocity)
 
       _ ->
         Tasks.list_tasks(
           user,
-          teams
+          teams,
+          user_velocity,
+          team_velocities
         )
     end
   end
@@ -399,14 +422,23 @@ defmodule PmToolWeb.TasksLive do
     open_tags = socket.assigns.open_tags
     current_team = socket.assigns.current_team
     open_project_slugs = socket.assigns.open_project_slugs
+    user_velocity = Tasks.get_velocity(current_user)
+    team_velocity = case current_team do
+      nil -> nil
+      current_team -> Tasks.get_velocity(current_team)
+    end
+    team_velocities = case Enum.count(teams) > 0 do
+      true -> Tasks.get_velocities(teams)
+      false -> {}
+    end
 
     socket
-    |> assign(open_tag_tasks: get_tasks_for_tags(current_user, teams, open_tags))
+    |> assign(open_tag_tasks: get_tasks_for_tags(current_user, teams, open_tags, user_velocity, team_velocities))
     |> assign(
       open_project_tasks:
-        get_tasks_for_open_projects(current_user, current_team, teams, open_project_slugs)
+        get_tasks_for_open_projects(current_user, current_team, teams, open_project_slugs, user_velocity, team_velocity, team_velocities)
     )
-    |> assign(tasks: get_now_next_later_and_done_tasks(current_user, current_team, teams))
+    |> assign(tasks: get_now_next_later_and_done_tasks(current_user, current_team, teams, user_velocity, team_velocity, team_velocities))
   end
 
   defp assign_new_timestamp_for_ids(socket) do
