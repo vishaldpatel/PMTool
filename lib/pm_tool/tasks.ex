@@ -52,15 +52,23 @@ defmodule PmTool.Tasks do
 
   def now_and_next_stage_query(query) do
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
-    last_period_end_date = Date.utc_today() |> Date.end_of_week() |> Date.add(-7) |> DateTime.new!(just_before_midnight, "Etc/UTC")
+
+    last_period_end_date =
+      Date.utc_today()
+      |> Date.end_of_week()
+      |> Date.add(-7)
+      |> DateTime.new!(just_before_midnight, "Etc/UTC")
+
     # TODO: Get tasks where
     # for milestones, get tasks whose due-date is during the current week
     # for other tasks, get tasks whose status-updated-at date is in the current week
     from t in query,
-      where: (t.is_milestone == true and not is_nil(t.due_date) and t.due_date > ^last_period_end_date) or
-        (t.is_milestone != true and 
-          (((t.status == "Accepted" or t.status == "Closed") and t.status_updated_at > ^last_period_end_date) or 
-          (t.stage == "Now" and t.status != "Accepted" and t.status != "Closed")))
+      where:
+        (t.is_milestone == true and not is_nil(t.due_date) and t.due_date > ^last_period_end_date) or
+          (t.is_milestone != true and
+             (((t.status == "Accepted" or t.status == "Closed") and
+                 t.status_updated_at > ^last_period_end_date) or
+                (t.stage == "Now" and t.status != "Accepted" and t.status != "Closed")))
   end
 
   def later_stage_query(query) do
@@ -71,29 +79,46 @@ defmodule PmTool.Tasks do
 
   def done_stage_query(query) do
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
-    last_period_end_date = Date.utc_today() |> Date.end_of_week() |> Date.add(-7) |> DateTime.new!(just_before_midnight, "Etc/UTC")
+
+    last_period_end_date =
+      Date.utc_today()
+      |> Date.end_of_week()
+      |> Date.add(-7)
+      |> DateTime.new!(just_before_midnight, "Etc/UTC")
 
     from t in query,
-      where: ((t.status == "Accepted" or t.status == "Closed") and t.status_updated_at <= ^last_period_end_date) or 
-        (t.is_milestone == true and not is_nil(t.due_date) and t.due_date <= ^last_period_end_date),
-      order_by: fragment("CASE WHEN is_milestone = true AND due_date IS NOT NULL THEN due_date ELSE status_updated_at END DESC"),
-      select: %{t | iteration_end_date: fragment("case when is_milestone = true AND due_date IS NOT NULL THEN date(due_date, 'weekday 1') ELSE date(status_updated_at, 'weekday 1') END")}
+      where:
+        ((t.status == "Accepted" or t.status == "Closed") and
+           t.status_updated_at <= ^last_period_end_date) or
+          (t.is_milestone == true and not is_nil(t.due_date) and
+             t.due_date <= ^last_period_end_date),
+      order_by:
+        fragment(
+          "CASE WHEN is_milestone = true AND due_date IS NOT NULL THEN due_date ELSE status_updated_at END DESC"
+        ),
+      select: %{
+        t
+        | iteration_end_date:
+            fragment(
+              "case when is_milestone = true AND due_date IS NOT NULL THEN date(due_date, 'weekday 1') ELSE date(status_updated_at, 'weekday 1') END"
+            )
+      }
   end
 
-  defp get_results_for_team(query, team_velocity) do 
+  defp get_results_for_team(query, team_velocity) do
     now_and_next_tasks =
       Repo.all(now_and_next_stage_query(query))
       |> Repo.preload(team: [:team_members])
       |> Repo.preload(:owner)
       |> separate_team_tasks_into_stages(team_velocity, :Now)
 
-    later_tasks = 
+    later_tasks =
       Repo.all(later_stage_query(query))
       |> Repo.preload(team: [:team_members])
       |> Repo.preload(:owner)
       |> separate_team_tasks_into_stages(team_velocity, :Later)
-  
-    done_tasks = 
+
+    done_tasks =
       Repo.all(done_stage_query(query))
       |> Repo.preload(team: [:team_members])
       |> Repo.preload(:owner)
@@ -111,13 +136,13 @@ defmodule PmTool.Tasks do
       |> Repo.preload(:owner)
       |> separate_team_tasks_into_stages(user_velocity, team_velocities, :Now)
 
-    later_tasks = 
+    later_tasks =
       Repo.all(later_stage_query(query))
       |> Repo.preload(team: [:team_members])
       |> Repo.preload(:owner)
       |> separate_team_tasks_into_stages(user_velocity, team_velocities, :Later)
-  
-    done_tasks = 
+
+    done_tasks =
       Repo.all(done_stage_query(query))
       |> Repo.preload(team: [:team_members])
       |> Repo.preload(:owner)
@@ -181,7 +206,7 @@ defmodule PmTool.Tasks do
   end
 
   def base_list_tasks_query() do
-    from t in Task
+    from(t in Task)
   end
 
   def base_list_tasks_query(%Team{} = team) do
@@ -250,7 +275,13 @@ defmodule PmTool.Tasks do
     end)
   end
 
-  defp sort_task(task, [total_estimate, current_period, tasks], iteration_end_times, velocity, stage) do
+  defp sort_task(
+         task,
+         [total_estimate, current_period, tasks],
+         iteration_end_times,
+         velocity,
+         stage
+       ) do
     [last_period_end | _] = iteration_end_times
     status_updated_at = DateTime.from_naive!(task.status_updated_at, "Etc/UTC")
     slots = [{3, :earlier}, {2, :three}, {1, :two}, {0, :last}]
@@ -285,8 +316,10 @@ defmodule PmTool.Tasks do
             ]
           end
         end)
+
       :Later ->
         [total_estimate, current_period, Map.put(tasks, :Later, tasks[:Later] ++ [task])]
+
       :Now ->
         cond do
           # Manage milestones separately because they need
@@ -311,18 +344,20 @@ defmodule PmTool.Tasks do
                   due_period_tasks = tasks[:Next][due_period]
 
                   cond do
-                    due_date_diff < 0 -> 
+                    due_date_diff < 0 ->
                       Map.put(
                         tasks,
                         :Now,
                         Map.put(tasks[:Now], :done, tasks[:Now][:done] ++ [task])
                       )
-                    due_date_diff == 0 -> 
+
+                    due_date_diff == 0 ->
                       Map.put(
                         tasks,
                         :Now,
                         Map.put(tasks[:Now], :ongoing, tasks[:Now][:ongoing] ++ [task])
                       )
+
                     due_period == 0 ->
                       Map.put(
                         tasks,
@@ -415,6 +450,7 @@ defmodule PmTool.Tasks do
       :Now ->
         now_tasks = tasks[:Now]
         next_tasks = tasks[:Next]
+
         now_status_order = %{
           "Accepted" => "1",
           "Closed" => "1",
@@ -423,12 +459,25 @@ defmodule PmTool.Tasks do
           "Started" => "4",
           "Rejected" => "5",
           "Unstarted" => "6",
-          "Unappraised" => "7",
+          "Unappraised" => "7"
         }
+
         now_tasks =
           now_tasks
-          |> Map.put(:done, Enum.sort_by(now_tasks[:done], & "#{now_status_order[&1.status]}-#{&1.status_updated_at}"))
-          |> Map.put(:ongoing, Enum.sort_by(now_tasks[:ongoing], & "#{now_status_order[&1.status]}-#{&1.status_updated_at}"))
+          |> Map.put(
+            :done,
+            Enum.sort_by(
+              now_tasks[:done],
+              &"#{now_status_order[&1.status]}-#{&1.status_updated_at}"
+            )
+          )
+          |> Map.put(
+            :ongoing,
+            Enum.sort_by(
+              now_tasks[:ongoing],
+              &"#{now_status_order[&1.status]}-#{&1.status_updated_at}"
+            )
+          )
           |> Map.put(:unstarted, Enum.sort_by(now_tasks[:unstarted], & &1.task_order))
 
         %{}
@@ -440,6 +489,7 @@ defmodule PmTool.Tasks do
 
       :Done ->
         done_tasks = tasks[:Done]
+
         done_tasks =
           done_tasks
           |> Map.put(:last, Enum.sort_by(done_tasks[:last], & &1.status_updated_at, :desc))
@@ -449,11 +499,17 @@ defmodule PmTool.Tasks do
 
         %{Done: done_tasks}
 
-      _ -> %{}
+      _ ->
+        %{}
     end
   end
 
-  defp separate_team_tasks_into_stages(unsorted_tasks, user_velocity, team_velocities, stage \\ nil) do
+  defp separate_team_tasks_into_stages(
+         unsorted_tasks,
+         user_velocity,
+         team_velocities,
+         stage \\ nil
+       ) do
     iteration_end_times = get_past_iteration_end_times()
     team_estimates = for {team_id, _velocity} <- team_velocities, into: %{}, do: {team_id, 0}
     team_periods = team_estimates

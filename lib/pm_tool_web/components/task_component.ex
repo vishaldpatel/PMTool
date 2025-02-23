@@ -581,7 +581,7 @@ defmodule PmToolWeb.TaskComponent do
               <% end %>
             </select>
             <label id={"edit-#{@id}-estimate_label"} for={"edit-#{@id}-estimate"} class="text-sm">
-              hours 
+              hours
             </label>
           <% end %>
           <input type="hidden" name="task[slug]" value={@task.slug} />
