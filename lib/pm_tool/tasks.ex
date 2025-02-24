@@ -38,18 +38,6 @@ defmodule PmTool.Tasks do
     for team <- teams, into: %{}, do: {team.id, determine_velocity(team)}
   end
 
-  def list_tasks(%User{} = user, user_velocity) do
-    Repo.all(base_list_tasks_query(user))
-    |> separate_tasks_into_stages(user_velocity)
-  end
-
-  def list_tasks(%Team{} = team, team_velocity) do
-    Repo.all(base_list_tasks_query(team))
-    |> Repo.preload(team: [:team_members])
-    |> Repo.preload(:owner)
-    |> separate_tasks_into_stages(team_velocity)
-  end
-
   def now_and_next_stage_query(query) do
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
 
@@ -105,52 +93,70 @@ defmodule PmTool.Tasks do
       }
   end
 
+  def get_now_and_next_tasks_for_team(query, team_velocity) do
+    Repo.all(now_and_next_stage_query(query))
+    |> Repo.preload(team: [:team_members])
+    |> Repo.preload(:owner)
+    |> separate_tasks_into_stages(team_velocity, :Now)
+  end
+
+  def get_later_tasks_for_team(query, team_velocity) do
+    Repo.all(later_stage_query(query))
+    |> Repo.preload(team: [:team_members])
+    |> Repo.preload(:owner)
+    |> separate_tasks_into_stages(team_velocity, :Later)
+  end
+
+  def get_done_tasks_for_team(query, team_velocity) do
+    Repo.all(done_stage_query(query))
+    |> Repo.preload(team: [:team_members])
+    |> Repo.preload(:owner)
+    |> separate_tasks_into_stages(team_velocity, :Done)
+  end
+
   defp get_results_for_team(query, team_velocity) do
-    now_and_next_tasks =
-      Repo.all(now_and_next_stage_query(query))
-      |> Repo.preload(team: [:team_members])
-      |> Repo.preload(:owner)
-      |> separate_team_tasks_into_stages(team_velocity, :Now)
+    get_now_and_next_tasks_for_team(query, team_velocity)
+    |> Map.merge(get_later_tasks_for_team(query, team_velocity))
+    |> Map.merge(get_done_tasks_for_team(query, team_velocity))
+  end
 
-    later_tasks =
-      Repo.all(later_stage_query(query))
-      |> Repo.preload(team: [:team_members])
-      |> Repo.preload(:owner)
-      |> separate_team_tasks_into_stages(team_velocity, :Later)
+  defp get_now_and_next_tasks_for_user_and_teams(query, user_velocity, team_velocities) do
+    Repo.all(now_and_next_stage_query(query))
+    |> Repo.preload(team: [:team_members])
+    |> Repo.preload(:owner)
+    |> separate_team_tasks_into_stages(user_velocity, team_velocities, :Now)
+  end
 
-    done_tasks =
-      Repo.all(done_stage_query(query))
-      |> Repo.preload(team: [:team_members])
-      |> Repo.preload(:owner)
-      |> separate_team_tasks_into_stages(team_velocity, :Done)
+  defp get_later_tasks_for_user_and_teams(query, user_velocity, team_velocities) do
+    Repo.all(later_stage_query(query))
+    |> Repo.preload(team: [:team_members])
+    |> Repo.preload(:owner)
+    |> separate_team_tasks_into_stages(user_velocity, team_velocities, :Later)
+  end
 
-    now_and_next_tasks
-    |> Map.merge(later_tasks)
-    |> Map.merge(done_tasks)
+  defp get_done_tasks_for_user_and_teams(query, user_velocity, team_velocities) do
+    Repo.all(done_stage_query(query))
+    |> Repo.preload(team: [:team_members])
+    |> Repo.preload(:owner)
+    |> separate_team_tasks_into_stages(user_velocity, team_velocities, :Done)
   end
 
   defp get_results_for_user_and_teams(query, user_velocity, team_velocities) do
-    now_and_next_tasks =
-      Repo.all(now_and_next_stage_query(query))
-      |> Repo.preload(team: [:team_members])
-      |> Repo.preload(:owner)
-      |> separate_team_tasks_into_stages(user_velocity, team_velocities, :Now)
+    get_now_and_next_tasks_for_user_and_teams(query, user_velocity, team_velocities)
+    |> Map.merge(get_later_tasks_for_user_and_teams(query, user_velocity, team_velocities))
+    |> Map.merge(get_done_tasks_for_user_and_teams(query, user_velocity, team_velocities))
+  end
 
-    later_tasks =
-      Repo.all(later_stage_query(query))
-      |> Repo.preload(team: [:team_members])
-      |> Repo.preload(:owner)
-      |> separate_team_tasks_into_stages(user_velocity, team_velocities, :Later)
+  def list_tasks(%User{} = user, user_velocity) do
+    tasks = Repo.all(base_list_private_tasks_query(user))
+    separate_tasks_into_stages(tasks, user_velocity, :Now)
+    |> Map.merge(separate_tasks_into_stages(tasks, user_velocity, :Later))
+    |> Map.merge(separate_tasks_into_stages(tasks, user_velocity, :Done))
+  end
 
-    done_tasks =
-      Repo.all(done_stage_query(query))
-      |> Repo.preload(team: [:team_members])
-      |> Repo.preload(:owner)
-      |> separate_team_tasks_into_stages(user_velocity, team_velocities, :Done)
-
-    now_and_next_tasks
-    |> Map.merge(later_tasks)
-    |> Map.merge(done_tasks)
+  def list_tasks(%Team{} = team, team_velocity) do
+    base_list_tasks_query(team)
+    |> get_results_for_team(team_velocity)
   end
 
   def list_tasks_for_tag(%User{} = user, teams, tag, user_velocity, team_velocities) do
@@ -214,8 +220,14 @@ defmodule PmTool.Tasks do
       where: t.team_id == ^team.id
   end
 
-  def base_list_tasks_query(%User{} = user) do
-    from t in Task,
+  def base_list_tasks_query(%TeamMember{} = team_member) do
+    from t in Task, 
+      where: t.owner_id == ^team_member.id,
+      select: t
+  end
+
+  def base_list_private_tasks_query(%User{} = user) do
+    from t in Task, 
       where: t.creator_id == ^user.id and is_nil(t.team_id)
   end
 
@@ -508,7 +520,7 @@ defmodule PmTool.Tasks do
          unsorted_tasks,
          user_velocity,
          team_velocities,
-         stage \\ nil
+         stage
        ) do
     iteration_end_times = get_past_iteration_end_times()
     team_estimates = for {team_id, _velocity} <- team_velocities, into: %{}, do: {team_id, 0}
@@ -563,7 +575,7 @@ defmodule PmTool.Tasks do
     sort_and_merge_now_and_done_tasks(tasks, stage)
   end
 
-  defp separate_tasks_into_stages(unsorted_tasks, velocity, stage \\ nil) do
+  defp separate_tasks_into_stages(unsorted_tasks, velocity, stage) do
     iteration_end_times = get_past_iteration_end_times()
 
     [_now_estimate, _current_period, tasks] =
