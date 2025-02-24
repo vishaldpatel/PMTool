@@ -45,10 +45,10 @@ defmodule PmTool.Teams do
     |> Enum.group_by(& &1.task_id)
   end
 
-  def list_changes(%User{} = user, team) do
+  def list_changes(%User{} = user, team, changes_week_number) do
     case is_nil(team) do
-      true -> list_changes(user)
-      false -> list_changes(team)
+      true -> list_changes(user, changes_week_number)
+      false -> list_changes(team, changes_week_number)
     end
     |> Enum.group_by(
       &(DateTime.from_naive!(&1.inserted_at, "Etc/UTC")
@@ -58,11 +58,40 @@ defmodule PmTool.Teams do
     |> Enum.reverse()
   end
 
-  def list_changes(%Team{} = team) do
-    Repo.all(from c in Change, where: c.team_id == ^team.id, order_by: [desc: c.inserted_at])
+  def start_and_end_dates(changes_week_number) do
+    just_before_midnight = Time.new!(23, 59, 59, 999_999)
+    just_after_midnight = Time.new!(0, 0, 0, 0)
+
+    period_start_date =
+      Date.utc_today()
+      |> Date.beginning_of_week()
+      |> Date.add(7 * changes_week_number)
+      |> DateTime.new!(just_after_midnight, "Etc/UTC")
+
+    period_end_date =
+      period_start_date
+      |> Date.add(6)
+      |> DateTime.new!(just_before_midnight, "Etc/UTC")
+
+    {period_start_date, period_end_date}
   end
 
-  def list_changes(%User{} = user) do
+  def list_changes(%Team{} = team, changes_week_number) do
+    {period_start_date, period_end_date} = start_and_end_dates(changes_week_number)
+
+    Repo.all(
+      from c in Change,
+        where:
+          c.team_id == ^team.id and
+            c.inserted_at >= ^period_start_date and
+            c.inserted_at <= ^period_end_date,
+        order_by: [desc: c.inserted_at]
+    )
+  end
+
+  def list_changes(%User{} = user, changes_week_number) do
+    {period_start_date, period_end_date} = start_and_end_dates(changes_week_number)
+
     user_teams_query =
       from tm in TeamMember, where: tm.email == ^user.email, select: tm.team_id
 
@@ -71,6 +100,7 @@ defmodule PmTool.Teams do
         where:
           c.user_id == ^user.id or
             c.team_id in subquery(user_teams_query),
+        where: c.inserted_at >= ^period_start_date and c.inserted_at <= ^period_end_date,
         order_by: [desc: c.inserted_at]
     )
   end

@@ -149,6 +149,7 @@ defmodule PmTool.Tasks do
 
   def list_tasks(%User{} = user, user_velocity) do
     tasks = Repo.all(base_list_private_tasks_query(user))
+
     separate_tasks_into_stages(tasks, user_velocity, :Now)
     |> Map.merge(separate_tasks_into_stages(tasks, user_velocity, :Later))
     |> Map.merge(separate_tasks_into_stages(tasks, user_velocity, :Done))
@@ -221,13 +222,13 @@ defmodule PmTool.Tasks do
   end
 
   def base_list_tasks_query(%TeamMember{} = team_member) do
-    from t in Task, 
+    from t in Task,
       where: t.owner_id == ^team_member.id,
       select: t
   end
 
   def base_list_private_tasks_query(%User{} = user) do
-    from t in Task, 
+    from t in Task,
       where: t.creator_id == ^user.id and is_nil(t.team_id)
   end
 

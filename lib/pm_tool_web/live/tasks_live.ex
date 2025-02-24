@@ -71,6 +71,7 @@ defmodule PmToolWeb.TasksLive do
           id="changelog"
           title="Changelog"
           changes={@changes}
+          changes_week_number={@changes_week_number}
         />
       <% end %>
       <%= if @merge_now_and_next_tasks do %>
@@ -207,6 +208,7 @@ defmodule PmToolWeb.TasksLive do
         |> assign(search_tags: [])
         |> assign(open_projects: [])
         |> assign(changes: [])
+        |> assign(changes_week_number: 0)
         |> assign(open_tags: open_tags)
         |> assign(open_tasks: %{})
         |> assign(open_project_tasks: open_project_tasks)
@@ -437,13 +439,15 @@ defmodule PmToolWeb.TasksLive do
   defp get_changes(socket) do
     current_user = socket.assigns.current_user
     current_team = socket.assigns.current_team
+    changes_week_number = socket.assigns.changes_week_number
 
     socket
     |> start_async(:get_changes, fn ->
       user_or_team_changes =
         Teams.list_changes(
           current_user,
-          current_team
+          current_team,
+          changes_week_number
         )
 
       user_action_count = Accounts.get_user_actions_count(current_user)
@@ -729,6 +733,27 @@ defmodule PmToolWeb.TasksLive do
      |> get_tasks()
      |> get_changes()
      |> get_project_progress()}
+  end
+
+  def handle_event("changes_for_previous_week_requested", _params, socket) do
+    changes_week_number = socket.assigns.changes_week_number
+
+    {:noreply,
+     socket
+     |> assign(changes_week_number: changes_week_number - 1)
+     |> get_changes()}
+  end
+
+  def handle_event("changes_for_next_week_requested", _params, socket) do
+    changes_week_number =
+      if socket.assigns.changes_week_number < 0,
+        do: socket.assigns.changes_week_number + 1,
+        else: 0
+
+    {:noreply,
+     socket
+     |> assign(changes_week_number: changes_week_number)
+     |> get_changes()}
   end
 
   def handle_event("unset_current_team", _params, socket) do
