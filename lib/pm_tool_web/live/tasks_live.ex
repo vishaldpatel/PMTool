@@ -735,6 +735,14 @@ defmodule PmToolWeb.TasksLive do
      |> get_project_progress()}
   end
 
+  def handle_event("done_tasks_from_older_weeks_requested", _params, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_event("done_tasks_from_recent_weeks_requested", _params, socket) do
+    {:noreply, socket}
+  end
+
   def handle_event("changes_for_previous_week_requested", _params, socket) do
     changes_week_number = socket.assigns.changes_week_number
 
