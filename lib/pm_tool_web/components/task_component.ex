@@ -44,25 +44,28 @@ defmodule PmToolWeb.TaskComponent do
   def update(assigns, socket) do
     socket = assign(socket, assigns)
 
+    task = socket.assigns.task
+    due_days = 
+      if task.due_date do
+        Date.diff(task.due_date, Date.utc_today())
+      else
+        nil
+      end
+    socket = assign(socket, due_days: due_days)
+
     socket =
-      if Enum.member?(["Accepted", "Closed"], socket.assigns.task.status) do
+      if Enum.member?(["Accepted", "Closed"], task.status) or 
+        (task.is_milestone == true and not is_nil(due_days) and due_days < 0) do
         assign(socket, selectable: false)
       else
         socket
       end
 
     socket =
-      if socket.assigns.task.due_date do
-        assign(socket, due_days: Date.diff(socket.assigns.task.due_date, Date.utc_today()))
-      else
-        assign(socket, due_days: nil)
-      end
-
-    socket =
-      if is_nil(socket.assigns.task.id) and socket.assigns.current_team do
+      if is_nil(task.id) and socket.assigns.current_team do
         assign(socket,
           task:
-            socket.assigns.task
+            task
             |> Map.put(:team_id, socket.assigns.current_team.id)
             |> Map.put(:team, socket.assigns.current_team)
         )
