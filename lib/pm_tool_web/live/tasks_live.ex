@@ -118,7 +118,8 @@ defmodule PmToolWeb.TasksLive do
         timestamp={@timestamp}
         current_team={@current_team}
       />
-      <%= if @tasks[:Done] |> Map.values() |> List.flatten() |> Enum.count() > 0 do %>
+      <%= if not is_nil(@done_months_ago) or 
+             @tasks[:Done] |> Map.values() |> List.flatten() |> Enum.count() > 0 do %>
         <.live_component
           module={PmToolWeb.DoneTasksComponent}
           id="done"
@@ -126,6 +127,7 @@ defmodule PmToolWeb.TasksLive do
           tasks={@tasks[:Done]}
           open_tasks={@open_tasks}
           timestamp={@timestamp}
+          done_months_ago={@done_months_ago}
         />
       <% end %>
     </div>
@@ -216,6 +218,7 @@ defmodule PmToolWeb.TasksLive do
         |> assign(show_changelog: user_preferences["show_changelog"] || false)
         |> assign(open_team_slugs: user_preferences["open_team_slugs"] || [])
         |> assign(tasks: %{Now: [], Next: %{}, Done: %{}})
+        |> assign(done_months_ago: nil)
         |> assign(project_progress: %{})
         |> assign(teams: teams)
         |> assign(current_team: current_team)
@@ -453,6 +456,45 @@ defmodule PmToolWeb.TasksLive do
       user_action_count = Accounts.get_user_actions_count(current_user)
       {user_or_team_changes, user_action_count}
     end)
+  end
+
+  defp get_done_tasks(socket) do
+    current_user = socket.assigns.current_user
+    teams = socket.assigns.teams
+    current_team = socket.assigns.current_team
+    user_velocity = Tasks.get_velocity(current_user)
+    done_months_ago = socket.assigns.done_months_ago
+
+    team_velocity =
+      case current_team do
+        nil -> nil
+        current_team -> Tasks.get_velocity(current_team)
+      end
+
+    team_velocities =
+      case Enum.count(teams) > 0 do
+        true -> Tasks.get_velocities(teams)
+        false -> {}
+      end
+
+    done_tasks = case current_team do
+      current_team = %Team{} ->
+        Tasks.list_done_tasks(current_team, team_velocity, done_months_ago)
+
+      _ ->
+        Tasks.list_done_tasks(
+          current_user,
+          teams,
+          user_velocity,
+          team_velocities,
+          done_months_ago
+        )
+      end
+
+    socket
+    |> assign(
+      tasks: Map.put(socket.assigns.tasks, :Done, done_tasks[:Done])
+    )
   end
 
   defp get_tasks(socket) do
@@ -736,19 +778,36 @@ defmodule PmToolWeb.TasksLive do
   end
 
   def handle_event("done_tasks_from_older_weeks_requested", _params, socket) do
-    {:noreply, socket}
+    done_months_ago = case socket.assigns.done_months_ago do
+      nil -> -1
+      num when num >= 0 -> -1
+      num -> num - 1
+    end
+
+    {:noreply,
+      socket
+      |> assign(done_months_ago: done_months_ago)
+      |> get_done_tasks()}
   end
 
   def handle_event("done_tasks_from_recent_weeks_requested", _params, socket) do
-    {:noreply, socket}
+    done_months_ago = case socket.assigns.done_months_ago do
+      num when num >= -1 -> nil
+      num -> num + 1
+    end
+
+    {:noreply,
+      socket
+      |> assign(done_months_ago: done_months_ago)
+      |> get_done_tasks()}
   end
 
   def handle_event("changes_for_previous_week_requested", _params, socket) do
-    changes_week_number = socket.assigns.changes_week_number
+    changes_week_number = socket.assigns.changes_week_number - 1
 
     {:noreply,
      socket
-     |> assign(changes_week_number: changes_week_number - 1)
+     |> assign(changes_week_number: changes_week_number)
      |> get_changes()}
   end
 

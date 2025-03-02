@@ -5,6 +5,28 @@ defmodule PmToolWeb.DoneTasksComponent do
     ~H"""
     <div class="mr-2 text-left w-80 flex-shrink-0">
       <span class="font-semibold uppercase align-top ml-1 text-gray-400">Done</span>
+      <button class="align-top mt-1" title="Older Tasks" phx-click="done_tasks_from_older_weeks_requested">
+        <svg
+          class={"h-4 w-4 #{@prev_color}"}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="size-6"
+        >
+          <path d="M9.195 18.44c1.25.714 2.805-.189 2.805-1.629v-2.34l6.945 3.968c1.25.715 2.805-.188 2.805-1.628V8.69c0-1.44-1.555-2.343-2.805-1.628L12 11.029v-2.34c0-1.44-1.555-2.343-2.805-1.628l-7.108 4.061c-1.26.72-1.26 2.536 0 3.256l7.108 4.061Z" />
+        </svg>
+      </button>
+      <button class="align-top mt-1" title="Newer Tasks" phx-click="done_tasks_from_recent_weeks_requested">
+        <svg
+          class={"h-4 w-4 #{@next_color}"}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          class="size-6"
+        >
+          <path d="M5.055 7.06C3.805 6.347 2.25 7.25 2.25 8.69v8.122c0 1.44 1.555 2.343 2.805 1.628L12 14.471v2.34c0 1.44 1.555 2.343 2.805 1.628l7.108-4.061c1.26-.72 1.26-2.536 0-3.256l-7.108-4.061C13.555 6.346 12 7.249 12 8.689v2.34L5.055 7.061Z" />
+        </svg>
+      </button>
 
       <%= if @tasks do %>
         <%= for group <- [:last, :two, :three, :earlier] do %>
@@ -12,40 +34,10 @@ defmodule PmToolWeb.DoneTasksComponent do
             <%= case group do %>
               <% :last -> %>
                 <div class="font-bold text-gray-400 uppercase text-xs mb-1 mt-[-12px] text-right">
-                  Previous Week
+                  Last Week
                 </div>
               <% :earlier -> %>
-                <div class="inline-block text-xs mt-1">
-                  <button
-                    class="align-text-top"
-                    title="Older"
-                    phx-click="done_tasks_from_older_weeks_requested"
-                  >
-                    <svg
-                      class="h-4 w-4 text-lime-600 hover:text-lime-500"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M9.195 18.44c1.25.714 2.805-.189 2.805-1.629v-2.34l6.945 3.968c1.25.715 2.805-.188 2.805-1.628V8.69c0-1.44-1.555-2.343-2.805-1.628L12 11.029v-2.34c0-1.44-1.555-2.343-2.805-1.628l-7.108 4.061c-1.26.72-1.26 2.536 0 3.256l7.108 4.061Z" />
-                    </svg>
-                  </button>
-                  <button
-                    class="align-text-top"
-                    title="Newer"
-                    phx-click="done_tasks_from_recent_weeks_requested"
-                  >
-                    <svg
-                      class="h-4 w-4 text-lime-600 hover:text-lime-500"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M5.055 7.06C3.805 6.347 2.25 7.25 2.25 8.69v8.122c0 1.44 1.555 2.343 2.805 1.628L12 14.471v2.34c0 1.44 1.555 2.343 2.805 1.628l7.108-4.061c1.26-.72 1.26-2.536 0-3.256l-7.108-4.061C13.555 6.346 12 7.249 12 8.689v2.34L5.055 7.061Z" />
-                    </svg>
-                  </button>
-                </div>
-                <div class="float-right inline-block text-right font-bold text-gray-400 uppercase text-xs my-1">
+                <div class="font-bold text-gray-400 uppercase text-xs mb-1 mt-[-12px] text-right">
                   {group}
                 </div>
               <% _ -> %>
@@ -84,6 +76,18 @@ defmodule PmToolWeb.DoneTasksComponent do
       socket
       |> assign(assigns)
       |> assign(timestamp: DateTime.to_unix(DateTime.utc_now()))
+      |> assign(
+        next_color: case assigns.done_months_ago do
+          nil -> "text-gray-400"
+          _ -> "text-lime-500 hover:text-lime-200"
+        end
+      )
+      |> assign(
+        prev_color: case assigns.tasks |> Map.values() |> List.flatten() |> Enum.count() > 0 do
+          false -> "text-gray-400"
+          true -> "text-lime-500 hover:text-lime-200"
+        end
+      )
 
     {:ok, socket}
   end

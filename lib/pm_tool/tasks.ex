@@ -16,7 +16,7 @@ defmodule PmTool.Tasks do
     %{
       Now: %{done: [], ongoing: [], unstarted: []},
       Next: %{},
-      Done: %{last: [], two: [], three: [], earlier: []},
+      Done: %{current: [], last: [], two: [], three: [], earlier: []},
       Later: []
     }
   end
@@ -38,18 +38,16 @@ defmodule PmTool.Tasks do
     for team <- teams, into: %{}, do: {team.id, determine_velocity(team)}
   end
 
+  def last_period_end_date() do 
+    Date.utc_today()
+    |> Date.end_of_week()
+    |> Date.add(-7)
+  end
+
   def now_and_next_stage_query(query) do
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
+    last_period_end_date = last_period_end_date() |> DateTime.new!(just_before_midnight, "Etc/UTC")
 
-    last_period_end_date =
-      Date.utc_today()
-      |> Date.end_of_week()
-      |> Date.add(-7)
-      |> DateTime.new!(just_before_midnight, "Etc/UTC")
-
-    # TODO: Get tasks where
-    # for milestones, get tasks whose due-date is during the current week
-    # for other tasks, get tasks whose status-updated-at date is in the current week
     from t in query,
       where:
         (t.is_milestone == true and not is_nil(t.due_date) and t.due_date > ^last_period_end_date) or
@@ -68,18 +66,17 @@ defmodule PmTool.Tasks do
   def done_stage_query(query) do
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
 
-    last_period_end_date =
-      Date.utc_today()
-      |> Date.end_of_week()
-      |> Date.add(-7)
-      |> DateTime.new!(just_before_midnight, "Etc/UTC")
+    last_period_end_date = last_period_end_date() |> DateTime.new!(just_before_midnight, "Etc/UTC")
+    max_end_date = last_period_end_date() |> Date.add(-21) |> DateTime.new!(just_before_midnight, "Etc/UTC")
 
     from t in query,
       where:
         ((t.status == "Accepted" or t.status == "Closed") and
-           t.status_updated_at <= ^last_period_end_date) or
+           t.status_updated_at <= ^last_period_end_date and
+           t.status_updated_at > ^max_end_date) or
           (t.is_milestone == true and not is_nil(t.due_date) and
-             t.due_date <= ^last_period_end_date),
+             t.due_date <= ^last_period_end_date and
+             t.due_date > ^max_end_date),
       order_by:
         fragment(
           "CASE WHEN is_milestone = true AND due_date IS NOT NULL THEN due_date ELSE status_updated_at END DESC"
@@ -147,12 +144,75 @@ defmodule PmTool.Tasks do
     |> Map.merge(get_done_tasks_for_user_and_teams(query, user_velocity, team_velocities))
   end
 
-  def list_tasks(%User{} = user, user_velocity) do
-    tasks = Repo.all(base_list_private_tasks_query(user))
+  def list_done_tasks(%Team{} = team, team_velocity, done_months_ago) do
+    case done_months_ago do
+      nil -> 
+        base_list_tasks_query(team)
+        |> get_done_tasks_for_team(team_velocity)
 
-    separate_tasks_into_stages(tasks, user_velocity, :Now)
-    |> Map.merge(separate_tasks_into_stages(tasks, user_velocity, :Later))
-    |> Map.merge(separate_tasks_into_stages(tasks, user_velocity, :Done))
+      _ ->
+        query = from t in base_list_tasks_query(team),
+          where: (t.status == "Accepted" or t.status == "Closed") or
+            (t.is_milestone == true and not is_nil(t.due_date)),
+          order_by:
+            fragment(
+              "CASE WHEN is_milestone = true AND due_date IS NOT NULL THEN due_date ELSE status_updated_at END DESC"
+            ),
+          limit: ^20,
+          offset: ^((done_months_ago*-1-1) * 20)
+
+        done_tasks =
+          Repo.all(query)
+          |> Repo.preload(team: [:team_members])
+          |> Repo.preload(:owner)
+        %{
+          Now: %{done: [], ongoing: [], unstarted: []},
+          Next: %{},
+          Done: %{current: [], last: [], two: [], three: [], earlier: done_tasks},
+          Later: []
+        }
+    end
+  end
+
+  def list_done_tasks(%User{} = user, teams, user_velocity, team_velocities, done_months_ago) do
+    team_ids = get_ids_from(teams)
+
+    case done_months_ago do
+      nil ->
+        query =
+          from t in base_list_tasks_query(),
+            where: t.creator_id == ^user.id or t.team_id in ^team_ids
+
+        get_done_tasks_for_user_and_teams(query, user_velocity, team_velocities)
+
+      _ ->
+        just_before_midnight = Time.new!(23, 59, 59, 999_999)
+        max_end_date = last_period_end_date() |> Date.add(-21) |> DateTime.new!(just_before_midnight, "Etc/UTC")
+        query = from t in base_list_tasks_query(),
+          where: (t.creator_id == ^user.id or t.team_id in ^team_ids) and 
+            (((t.status == "Accepted" or t.status == "Closed") and
+               t.status_updated_at <= ^max_end_date) or
+            (t.is_milestone == true and not is_nil(t.due_date) and
+               t.due_date <= ^max_end_date)),
+          order_by:
+            fragment(
+              "CASE WHEN is_milestone = true AND due_date IS NOT NULL THEN due_date ELSE status_updated_at END DESC"
+            ),
+          limit: ^20,
+          offset: ^((done_months_ago*-1-1) * 20)
+
+        done_tasks =
+          Repo.all(query)
+          |> Repo.preload(team: [:team_members])
+          |> Repo.preload(:owner)
+
+        %{
+          Now: %{done: [], ongoing: [], unstarted: []},
+          Next: %{},
+          Done: %{current: [], last: [], two: [], three: [], earlier: done_tasks},
+          Later: []
+        }
+    end
   end
 
   def list_tasks(%Team{} = team, team_velocity) do
@@ -234,7 +294,7 @@ defmodule PmTool.Tasks do
 
   defp determine_velocity(%Team{} = team) do
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
-    last_period_end_date = Date.utc_today() |> Date.end_of_week() |> Date.add(-7)
+    last_period_end_date = last_period_end_date()
     two_period_end_date = Date.add(last_period_end_date, -7)
 
     two_iterations =
@@ -256,7 +316,7 @@ defmodule PmTool.Tasks do
 
   defp determine_velocity(%User{} = user) do
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
-    last_period_end_date = Date.utc_today() |> Date.end_of_week() |> Date.add(-7)
+    last_period_end_date = last_period_end_date()
     two_period_end_date = Date.add(last_period_end_date, -7)
 
     two_iterations =
@@ -277,10 +337,10 @@ defmodule PmTool.Tasks do
     if velocity <= 20, do: 20, else: velocity
   end
 
-  def get_past_iteration_end_times() do
+  def get_iteration_end_times() do
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
 
-    Enum.map(1..4, fn slot ->
+    Enum.map(0..4, fn slot ->
       Date.utc_today()
       |> Date.end_of_week()
       |> Date.add(-7 * slot)
@@ -296,8 +356,7 @@ defmodule PmTool.Tasks do
          stage
        ) do
     [last_period_end | _] = iteration_end_times
-    status_updated_at = DateTime.from_naive!(task.status_updated_at, "Etc/UTC")
-    slots = [{3, :earlier}, {2, :three}, {1, :two}, {0, :last}]
+    slots = [{4, :earlier}, {3, :three}, {2, :two}, {1, :last}, {0, :current}]
 
     task =
       case task.is_milestone == true do
@@ -315,9 +374,10 @@ defmodule PmTool.Tasks do
         Enum.find_value(slots, fn {slot, period_name} ->
           iteration_end_time = Enum.fetch!(iteration_end_times, slot)
 
-          if DateTime.compare(status_updated_at, iteration_end_time) == :lt or
-               (task.is_milestone == true and not is_nil(task.due_date) and
-                  Date.diff(task.due_date, iteration_end_time) <= 0) do
+          if (((is_nil(task.due_date) and task.is_milestone == true) or task.is_milestone != true) and
+              Date.diff(task.status_updated_at, iteration_end_time) <= 0) or
+            (task.is_milestone == true and not is_nil(task.due_date) and
+              Date.diff(task.due_date, iteration_end_time) <= 0) do
             [
               total_estimate,
               current_period,
@@ -523,7 +583,7 @@ defmodule PmTool.Tasks do
          team_velocities,
          stage
        ) do
-    iteration_end_times = get_past_iteration_end_times()
+    iteration_end_times = get_iteration_end_times()
     team_estimates = for {team_id, _velocity} <- team_velocities, into: %{}, do: {team_id, 0}
     team_periods = team_estimates
 
@@ -577,7 +637,7 @@ defmodule PmTool.Tasks do
   end
 
   defp separate_tasks_into_stages(unsorted_tasks, velocity, stage) do
-    iteration_end_times = get_past_iteration_end_times()
+    iteration_end_times = get_iteration_end_times()
 
     [_now_estimate, _current_period, tasks] =
       Enum.reduce_while(
