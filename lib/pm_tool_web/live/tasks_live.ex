@@ -128,6 +128,7 @@ defmodule PmToolWeb.TasksLive do
           open_tasks={@open_tasks}
           timestamp={@timestamp}
           done_months_ago={@done_months_ago}
+          loading_done_tasks={@loading_done_tasks}
         />
       <% end %>
     </div>
@@ -220,6 +221,7 @@ defmodule PmToolWeb.TasksLive do
         |> assign(tasks: %{Now: [], Next: %{}, Done: %{}})
         |> assign(done_months_ago: nil)
         |> assign(project_progress: %{})
+        |> assign(loading_done_tasks: false)
         |> assign(teams: teams)
         |> assign(current_team: current_team)
         |> maybe_get_current_task(params)
@@ -583,6 +585,14 @@ defmodule PmToolWeb.TasksLive do
     )
   end
 
+  def handle_info({:load_done_tasks, done_months_ago}, socket) do
+    {:noreply,
+      socket
+      |> assign(loading_done_tasks: false)
+      |> assign(done_months_ago: done_months_ago)
+      |> get_done_tasks()}
+  end
+
   def handle_info({:new_project_created}, socket) do
     {:noreply,
      get_projects(socket)
@@ -784,10 +794,9 @@ defmodule PmToolWeb.TasksLive do
       num -> num - 1
     end
 
-    {:noreply,
-      socket
-      |> assign(done_months_ago: done_months_ago)
-      |> get_done_tasks()}
+    socket = assign(socket, loading_done_tasks: true)
+    send(self(), {:load_done_tasks, done_months_ago})
+    {:noreply, socket}
   end
 
   def handle_event("done_tasks_from_recent_weeks_requested", _params, socket) do
@@ -796,10 +805,9 @@ defmodule PmToolWeb.TasksLive do
       num -> num + 1
     end
 
-    {:noreply,
-      socket
-      |> assign(done_months_ago: done_months_ago)
-      |> get_done_tasks()}
+    socket = assign(socket, loading_done_tasks: true)
+    send(self(), {:load_done_tasks, done_months_ago})
+    {:noreply, socket}
   end
 
   def handle_event("changes_for_previous_week_requested", _params, socket) do
