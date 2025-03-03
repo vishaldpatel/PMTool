@@ -80,14 +80,7 @@ defmodule PmTool.Tasks do
       order_by:
         fragment(
           "CASE WHEN is_milestone = true AND due_date IS NOT NULL THEN due_date ELSE status_updated_at END DESC"
-        ),
-      select: %{
-        t
-        | iteration_end_date:
-            fragment(
-              "case when is_milestone = true AND due_date IS NOT NULL THEN date(due_date, 'weekday 1') ELSE date(status_updated_at, 'weekday 1') END"
-            )
-      }
+        )
   end
 
   def get_now_and_next_tasks_for_team(query, team_velocity) do
@@ -355,7 +348,7 @@ defmodule PmTool.Tasks do
          velocity,
          stage
        ) do
-    [last_period_end | _] = iteration_end_times
+    last_period_end = Enum.at(iteration_end_times, 1)
     slots = [{4, :earlier}, {3, :three}, {2, :two}, {1, :last}, {0, :current}]
 
     task =
