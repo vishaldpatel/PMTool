@@ -198,7 +198,7 @@ defmodule PmToolWeb.TasksLive do
       team_velocities =
         case Enum.count(teams) > 0 do
           true -> Tasks.get_velocities(teams)
-          false -> {}
+          false -> %{}
         end
 
       socket =
@@ -476,7 +476,7 @@ defmodule PmToolWeb.TasksLive do
     team_velocities =
       case Enum.count(teams) > 0 do
         true -> Tasks.get_velocities(teams)
-        false -> {}
+        false -> %{}
       end
 
     done_tasks = case current_team do
@@ -516,7 +516,7 @@ defmodule PmToolWeb.TasksLive do
     team_velocities =
       case Enum.count(teams) > 0 do
         true -> Tasks.get_velocities(teams)
-        false -> {}
+        false -> %{}
       end
 
     socket
