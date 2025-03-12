@@ -74,40 +74,26 @@ defmodule PmToolWeb.TasksLive do
           changes_week_number={@changes_week_number}
         />
       <% end %>
-      <%= if @merge_now_and_next_tasks do %>
-        <.live_component
-          module={PmToolWeb.NowAndNextTasksComponent}
-          id="now_and_next"
-          current_user={@current_user}
-          now_tasks={@tasks[:Now]}
-          next_tasks={@tasks[:Next]}
-          new_task_id={@new_now_next_task_id}
-          open_tasks={@open_tasks}
-          timestamp={@timestamp}
-          current_team={@current_team}
-        />
-      <% else %>
-        <.live_component
-          module={PmToolWeb.NowTasksComponent}
-          id="now"
-          current_user={@current_user}
-          tasks={@tasks[:Now]}
-          new_task_id={@new_now_task_id}
-          open_tasks={@open_tasks}
-          timestamp={@timestamp}
-          current_team={@current_team}
-        />
-        <.live_component
-          module={PmToolWeb.NextTasksComponent}
-          id="next"
-          current_user={@current_user}
-          tasks={@tasks[:Next]}
-          new_task_id={@new_next_task_id}
-          open_tasks={@open_tasks}
-          timestamp={@timestamp}
-          current_team={@current_team}
-        />
-      <% end %>
+      <.live_component
+        module={PmToolWeb.NowTasksComponent}
+        id="now"
+        current_user={@current_user}
+        tasks={@tasks[:Now]}
+        new_task_id={@new_now_task_id}
+        open_tasks={@open_tasks}
+        timestamp={@timestamp}
+        current_team={@current_team}
+      />
+      <.live_component
+        module={PmToolWeb.NextTasksComponent}
+        id="next"
+        current_user={@current_user}
+        tasks={@tasks[:Next]}
+        new_task_id={@new_next_task_id}
+        open_tasks={@open_tasks}
+        timestamp={@timestamp}
+        current_team={@current_team}
+      />
       <.live_component
         module={PmToolWeb.LaterTasksComponent}
         id="later"
@@ -251,13 +237,6 @@ defmodule PmToolWeb.TasksLive do
         end)
         |> start_async(:get_projects, fn -> Projects.list_projects_for(current_user) end)
         |> start_async(:get_open_projects, fn -> Projects.get_projects!(open_project_slugs) end)
-        |> assign(
-          merge_now_and_next_tasks:
-            case user_preferences["merge_now_and_next_tasks"] do
-              false -> false
-              _ -> true
-            end
-        )
         |> start_async(:get_search_tags, fn -> Tasks.list_tags(current_user, teams) end)
         |> get_changes()
         |> assign_new_project_id()
@@ -889,32 +868,6 @@ defmodule PmToolWeb.TasksLive do
     end
   end
 
-  def handle_event("separate_now_and_next_tasks", _params, socket) do
-    Accounts.set_preference(
-      socket.assigns.current_user,
-      "merge_now_and_next_tasks",
-      false
-    )
-
-    {:noreply,
-     socket
-     |> get_tasks()
-     |> assign(merge_now_and_next_tasks: false)}
-  end
-
-  def handle_event("merge_now_and_next_tasks", _params, socket) do
-    Accounts.set_preference(
-      socket.assigns.current_user,
-      "merge_now_and_next_tasks",
-      true
-    )
-
-    {:noreply,
-     socket
-     |> get_tasks()
-     |> assign(merge_now_and_next_tasks: true)}
-  end
-
   def handle_event("task_action", params, socket) do
     task_slug = params["task_slug"]
     task = Tasks.get_task_by_slug!(task_slug)
@@ -923,7 +876,6 @@ defmodule PmToolWeb.TasksLive do
     case params["action"] do
       "start_task" -> Tasks.start_task(task, current_user)
       "finish_task" -> Tasks.finish_task(task, current_user)
-      "deliver_task" -> Tasks.deliver_task(task, current_user)
       "accept_task" -> Tasks.accept_task(task, current_user)
       "reject_task" -> Tasks.reject_task(task, current_user)
       "estimate_task" -> Tasks.estimate_task(task, params["estimate"], current_user)

@@ -13,7 +13,6 @@ defmodule PmTool.Tasks.Task do
     "Unstarted",
     "Started",
     "Finished",
-    "Delivered",
     "Rejected",
     "Accepted",
     "Closed"

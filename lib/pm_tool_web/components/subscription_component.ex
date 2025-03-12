@@ -68,6 +68,7 @@ defmodule PmToolWeb.SubscriptionComponent do
   def cancelable_subscription(assigns) do
     ~H"""
     <div id={@id}>
+      <div class="text-cyan-800">You currently have an active subscription.</div>
       <button
         id="cancel_subscription"
         phx-click={JS.toggle(to: "#confirm_cancellation") |> JS.toggle(to: "#cancel_subscription")}

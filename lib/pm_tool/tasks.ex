@@ -474,7 +474,7 @@ defmodule PmTool.Tasks do
                     Map.put(tasks[:Now], :done, tasks[:Now][:done] ++ [task])
                   )
 
-                Enum.member?(["Started", "Rejected", "Finished", "Delivered"], task.status) ->
+                Enum.member?(["Started", "Rejected", "Finished"], task.status) ->
                   Map.put(
                     tasks,
                     :Now,
@@ -520,12 +520,11 @@ defmodule PmTool.Tasks do
         now_status_order = %{
           "Accepted" => "1",
           "Closed" => "1",
-          "Delivered" => "2",
-          "Finished" => "3",
-          "Started" => "4",
-          "Rejected" => "5",
-          "Unstarted" => "6",
-          "Unappraised" => "7"
+          "Finished" => "2",
+          "Started" => "3",
+          "Rejected" => "4",
+          "Unstarted" => "5",
+          "Unappraised" => "6"
         }
 
         now_tasks =
@@ -794,10 +793,6 @@ defmodule PmTool.Tasks do
 
   def finish_task(%Task{} = task, %User{} = current_user) do
     update_task(task, %{"status" => "Finished", "current_user_id" => current_user.id})
-  end
-
-  def deliver_task(%Task{} = task, %User{} = current_user) do
-    update_task(task, %{"status" => "Delivered", "current_user_id" => current_user.id})
   end
 
   def accept_task(%Task{} = task, %User{} = current_user) do

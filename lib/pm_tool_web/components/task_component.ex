@@ -11,8 +11,7 @@ defmodule PmToolWeb.TaskComponent do
     "Unappraised" => "bg-gray-600 hover:bg-gray-500",
     "Unstarted" => "bg-gray-600 hover:bg-gray-500",
     "Started" => "bg-yellow-700 hover:bg-yellow-600",
-    "Finished" => "bg-lime-700 hover:bg-lime-600",
-    "Delivered" => "bg-emerald-800 hover:bg-emerald-700",
+    "Finished" => "bg-emerald-800 hover:bg-emerald-700",
     "Rejected" => "bg-red-900 hover:bg-red-800",
     "Accepted" => "bg-sky-700 hover:bg-sky-600",
     "Closed" => "bg-gray-900 hover:bg-gray-800"
@@ -286,7 +285,7 @@ defmodule PmToolWeb.TaskComponent do
               <% end %>
             <% else %>
               <%= if @actions == true do %>
-                <%= if @task.status == "Delivered" do %>
+                <%= if @task.status == "Finished" do %>
                   <button
                     phx-click="task_action"
                     phx-value-action="accept_task"
@@ -302,16 +301,6 @@ defmodule PmToolWeb.TaskComponent do
                     class="bg-red-600 hover:bg-red-500 text-white text-xs px-1 my-1 rounded"
                   >
                     Reject
-                  </button>
-                <% end %>
-                <%= if @task.status == "Finished" do %>
-                  <button
-                    phx-click="task_action"
-                    phx-value-action="deliver_task"
-                    phx-value-task_slug={@task.slug}
-                    class="bg-emerald-800 hover:bg-emerald-600 text-white text-xs px-1 my-1 rounded"
-                  >
-                    Deliver
                   </button>
                 <% end %>
                 <%= if @task.status == "Started" do %>

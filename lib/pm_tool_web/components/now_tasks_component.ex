@@ -27,26 +27,6 @@ defmodule PmToolWeb.NowTasksComponent do
         </svg>
       </button>
 
-      <button
-        title="Merge Now and Next Tasks"
-        class="font-bold rounded"
-        phx-click="merge_now_and_next_tasks"
-      >
-        <svg
-          class="h-6 w-6 text-red-500 hover:text-red-400"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          stroke-width="2"
-          stroke="currentColor"
-          fill="none"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path stroke="none" d="M0 0h24v24H0z" /> <path d="M3 12h7l-3 -3m0 6l3 -3" />
-          <path d="M21 12h-7l3 -3m0 6l-3 -3" /> <path d="M9 6v-3h6v3" /> <path d="M9 18v3h6v-3" />
-        </svg>
-      </button>
       <span class="font-semibold uppercase align-top ml-1 text-gray-400">Now</span>
       <div style="display: none;" id="now_task_options">
         <button
