@@ -161,8 +161,9 @@ defmodule PmToolWeb.TaskComponent do
           phx-click={
             JS.toggle_class("flex", to: "#show-#{@id}")
             |> JS.toggle_class("hidden", to: "#show-#{@id}")
-            |> JS.toggle_class("hidden", to: "#edit-#{@id}")
+            |> JS.show(to: "#edit-#{@id}")
             |> JS.toggle_class("flex", to: "#edit-#{@id}")
+            |> JS.dispatch("scrollTo", to: "#edit-#{@id}")
           }
           class={"inline-block text-md w-full pl-1 pr-1 text-gray-100 #{@show_task}"}
         >
@@ -469,6 +470,7 @@ defmodule PmToolWeb.TaskComponent do
       <div class="inline-block w-full bg-gray-700 text-gray-100 text-left border border-gray-400 p-1 rounded">
         <form phx-submit={@action} phx-target={@myself}>
           <input
+            id={"edit-#{@id}-txt-name"}
             placeholder="* Task Name"
             name="task[name]"
             type="text"
@@ -593,11 +595,12 @@ defmodule PmToolWeb.TaskComponent do
               Copy Link
             </a>
             <button
+              id={"edit-#{@id}-btn-cancel"}
               type="reset"
               class="mt-1 mb-0.5"
               phx-click={
                 JS.toggle_class("flex", to: "#edit-#{@id}")
-                |> JS.toggle_class("hidden", to: "#edit-#{@id}")
+                |> JS.hide(to: "#edit-#{@id}")
                 |> JS.toggle_class("hidden", to: "#show-" <> @id)
                 |> JS.toggle_class("flex", to: "#show-#{@id}")
                 |> JS.toggle_class("hidden", to: "#new_task_helper")

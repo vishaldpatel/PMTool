@@ -50,6 +50,16 @@ window.addEventListener("phx:update", _info => {
   taskView.mount()
 })
 
+window.addEventListener("scrollTo", e => {
+  let ref = e.target
+  setTimeout(function () {
+   ref.scrollIntoView({
+     behavior: "smooth",
+     block: "start",
+   });
+  }, 100);
+})
+
 // connect if there are any LiveViews on the page
 liveSocket.connect()
 

@@ -10,7 +10,11 @@ defmodule PmToolWeb.NowTasksComponent do
       <button
         title="Create New Task"
         class="font-bold rounded"
-        phx-click={JS.toggle_class("hidden", to: "#edit-#{@new_task_id}")}
+        phx-click={
+          JS.show(to: "#edit-#{@new_task_id}")
+          |> JS.dispatch("scrollTo", to: "#edit-#{@new_task_id}")
+          |> JS.focus(to: "#edit-#{@new_task_id}-txt-name")
+        }
       >
         <svg
           class="h-6 w-6 text-cyan-500 hover:text-cyan-400"
