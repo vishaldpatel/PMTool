@@ -55,7 +55,7 @@ window.addEventListener("scrollTo", e => {
   setTimeout(function () {
    ref.scrollIntoView({
      behavior: "smooth",
-     block: "start",
+     block: "center",
    });
   }, 100);
 })
