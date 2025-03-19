@@ -21,6 +21,7 @@ defmodule PmToolWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/pricing", PageController, :pricing
     get "/tos", PageController, :tos
     get "/privacy", PageController, :privacy
   end

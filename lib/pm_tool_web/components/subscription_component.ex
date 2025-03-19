@@ -41,7 +41,7 @@ defmodule PmToolWeb.SubscriptionComponent do
   end
 
   def handle_event("reinstate_subscription", _, socket) do
-    Application.fetch_env!(:pm_tool, :stripe_api_key) |> IO.inspect()
+    Application.fetch_env!(:pm_tool, :STRIPE_API_KEY) |> IO.inspect()
     Accounts.reinstate_subscription_for(socket.assigns.current_user)
 
     {:noreply,
@@ -52,7 +52,7 @@ defmodule PmToolWeb.SubscriptionComponent do
   end
 
   def handle_event("cancel_subscription", _, socket) do
-    Application.fetch_env!(:pm_tool, :stripe_api_key) |> IO.inspect()
+    Application.fetch_env!(:pm_tool, :STRIPE_API_KEY) |> IO.inspect()
     Accounts.cancel_subscription_for(socket.assigns.current_user)
 
     {:noreply,

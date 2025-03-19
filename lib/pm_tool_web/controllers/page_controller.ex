@@ -4,6 +4,10 @@ defmodule PmToolWeb.PageController do
   def home(conn, _params) do
     render(conn, :home, layout: false)
   end
+
+  def pricing(conn, _params) do
+    render(conn, :pricing, layout: false)
+  end
   
   def privacy(conn, _params) do
     render(conn, :privacy, layout: false)
