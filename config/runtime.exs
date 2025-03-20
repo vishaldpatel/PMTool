@@ -14,6 +14,9 @@ import Config
 #
 #     PHX_SERVER=true bin/pm_tool start
 #
+
+config :pm_tool, :STRIPE_API_KEY, System.get_env("STRIPE_API_KEY")
+
 # Alternatively, you can use `mix phx.gen.release` to generate a `bin/server`
 # script that automatically sets the env var above.
 if System.get_env("PHX_SERVER") do
@@ -109,8 +112,4 @@ if config_env() == :prod do
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
 
-  # Stripe API key
-  config :pm_tool,
-         :STRIPE_API_KEY,
-         {:system, "STRIPE_API_KEY"}
 end
