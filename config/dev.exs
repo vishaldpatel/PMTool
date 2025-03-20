@@ -75,7 +75,3 @@ config :phoenix, :plug_init_mode, :runtime
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
 
-# Stripe API key
-config :pm_tool,
-       :STRIPE_API_KEY,
-       "rk_test_51QpJsc2cef6LvcHoR7i7qLcJ47uIzaUKkWHzEqPDAPN3Drt1vGRZk26T00e6VrttJ09e7VrEStW1EVVianefedqU003yjjVamF"

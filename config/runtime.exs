@@ -108,4 +108,9 @@ if config_env() == :prod do
   #     config :swoosh, :api_client, Swoosh.ApiClient.Hackney
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
+
+  # Stripe API key
+  config :pm_tool,
+         :STRIPE_API_KEY,
+         {:system, "STRIPE_API_KEY"}
 end
