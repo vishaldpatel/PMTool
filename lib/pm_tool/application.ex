@@ -17,7 +17,9 @@ defmodule PmTool.Application do
       # Start Finch
       {Finch, name: PmTool.Finch},
       # Start the Endpoint (http/https)
-      PmToolWeb.Endpoint
+      PmToolWeb.Endpoint,
+      # Start worker that updates subscription info from Stripe
+      PmTool.SubscriptionChecker
       # Start a worker by calling: PmTool.Worker.start_link(arg)
       # {PmTool.Worker, arg}
     ]

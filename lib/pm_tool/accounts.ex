@@ -442,6 +442,60 @@ defmodule PmTool.Accounts do
     end
   end
 
+  def renew_subscription_info_for_users_that_need_it() do
+    from(u in User,
+      join: s in Subscription,
+      on: s.stripe_customer_id == u.stripe_customer_id,
+      where: is_nil(s.stripe_customer_id) == false and s.current_period_ends_at < ^DateTime.utc_now() and s.status == "active",
+      select: u)
+    |> Repo.all()
+    |> Enum.each(fn user -> update_subscription_info_for(user) end)
+  end
+
+  def update_subscription_info_for(%User{} = user) do
+    case user.stripe_customer_id do
+      nil ->
+        nil
+
+      _ ->
+        sub =
+          Repo.one(
+            from s in Subscription, where: s.stripe_customer_id == ^user.stripe_customer_id
+          )
+
+        response =
+          HTTPoison.request(
+            :get,
+            "https://api.stripe.com/v1/subscriptions/#{sub.stripe_id}",
+            "",
+            [
+              {"Authorization", "Bearer #{Application.get_env(:pm_tool, :STRIPE_API_KEY)}"},
+              {"Content-Type", "application/x-www-form-urlencoded"}
+            ]
+          )
+
+        expected_fields = ~w(current_period_start current_period_end status cancel_at_period_end) 
+        case response do
+          {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+            updated_vals =
+              body
+              |> Poison.decode!()
+              |> Map.take(expected_fields)
+              |> Enum.map(fn({k, v}) -> {String.to_atom(k), v} end)
+              |> Enum.into(%{})
+
+            sub |> update_subscription(%{
+              current_period_ends_at: updated_vals[:current_period_end] |> DateTime.from_unix!(),
+              current_period_started_at: updated_vals[:current_period_start] |> DateTime.from_unix!(),
+              status: updated_vals[:status],
+              cancel_at_period_end: updated_vals[:cancel_at_period_end]
+            })
+          _ ->
+            nil
+        end
+    end
+  end
+
   def cancel_subscription_for(%User{} = user) do
     case user.stripe_customer_id do
       nil ->
