@@ -490,7 +490,8 @@ defmodule PmTool.Accounts do
               status: updated_vals[:status],
               cancel_at_period_end: updated_vals[:cancel_at_period_end]
             })
-          _ ->
+          err ->
+            IO.inspect(err)
             nil
         end
     end

@@ -115,7 +115,7 @@ defmodule PmToolWeb.SubscriptionComponent do
           {@trial_actions_left} Actions Remaining in Trial
         <% end %>
       </div>
-      <a href="https://buy.stripe.com/test_3cs7vJ72WdGM5kQ8ww" target="_blank">
+      <a href="https://buy.stripe.com/28o5n21abfsUbXG8ww" target="_blank">
         <button class={"font-bold rounded my-1 px-2 mr-1 text-gray-100 #{@sub_button_color} rounded p-[1px]"}>
           Upgrade Subscription
         </button>
