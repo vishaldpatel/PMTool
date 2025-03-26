@@ -105,10 +105,10 @@ if config_env() == :prod do
     relay: "smtp.fastmail.com",
     username: System.get_env("MAIL_LOGIN"),
     password: System.get_env("MAIL_PASSWORD"),
-    ssl: true,
+    ssl: false,
     tls: :always,
     auth: :always,
-    port: 465,
+    port: 587,
     retries: 2,
     no_mx_lookups: false
 
