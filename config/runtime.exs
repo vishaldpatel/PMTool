@@ -100,16 +100,22 @@ if config_env() == :prod do
   # Also, you may need to configure the Swoosh API client of your choice if you
   # are not using SMTP. Here is an example of the configuration:
   #
-  #     config :pm_tool, PmTool.Mailer,
-  #       adapter: Swoosh.Adapters.Mailgun,
-  #       api_key: System.get_env("MAILGUN_API_KEY"),
-  #       domain: System.get_env("MAILGUN_DOMAIN")
-  #
+  config :pm_tool, PmTool.Mailer,
+    adapter: Swoosh.Adapters.SMTP,
+    relay: "smtp.fastmail.com",
+    username: System.get_env("MAIL_LOGIN"),
+    password: System.get_env("MAIL_PASSWORD"),
+    ssl: true,
+    tls: :always,
+    auth: :always,
+    port: 465,
+    retries: 2,
+    no_mx_lookups: false
+
   # For this example you need include a HTTP client required by Swoosh API client.
   # Swoosh supports Hackney and Finch out of the box:
   #
   #     config :swoosh, :api_client, Swoosh.ApiClient.Hackney
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
-
 end

@@ -446,8 +446,11 @@ defmodule PmTool.Accounts do
     from(u in User,
       join: s in Subscription,
       on: s.stripe_customer_id == u.stripe_customer_id,
-      where: is_nil(s.stripe_customer_id) == false and s.current_period_ends_at < ^DateTime.utc_now() and s.status == "active",
-      select: u)
+      where:
+        is_nil(s.stripe_customer_id) == false and s.current_period_ends_at < ^DateTime.utc_now() and
+          s.status == "active",
+      select: u
+    )
     |> Repo.all()
     |> Enum.each(fn user -> update_subscription_info_for(user) end)
   end
@@ -474,22 +477,26 @@ defmodule PmTool.Accounts do
             ]
           )
 
-        expected_fields = ~w(current_period_start current_period_end status cancel_at_period_end) 
+        expected_fields = ~w(current_period_start current_period_end status cancel_at_period_end)
+
         case response do
           {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
             updated_vals =
               body
               |> Poison.decode!()
               |> Map.take(expected_fields)
-              |> Enum.map(fn({k, v}) -> {String.to_atom(k), v} end)
+              |> Enum.map(fn {k, v} -> {String.to_atom(k), v} end)
               |> Enum.into(%{})
 
-            sub |> update_subscription(%{
+            sub
+            |> update_subscription(%{
               current_period_ends_at: updated_vals[:current_period_end] |> DateTime.from_unix!(),
-              current_period_started_at: updated_vals[:current_period_start] |> DateTime.from_unix!(),
+              current_period_started_at:
+                updated_vals[:current_period_start] |> DateTime.from_unix!(),
               status: updated_vals[:status],
               cancel_at_period_end: updated_vals[:cancel_at_period_end]
             })
+
           err ->
             IO.inspect(err)
             nil

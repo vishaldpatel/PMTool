@@ -458,24 +458,23 @@ defmodule PmToolWeb.TasksLive do
         false -> %{}
       end
 
-    done_tasks = case current_team do
-      current_team = %Team{} ->
-        Tasks.list_done_tasks(current_team, team_velocity, done_months_ago)
+    done_tasks =
+      case current_team do
+        current_team = %Team{} ->
+          Tasks.list_done_tasks(current_team, team_velocity, done_months_ago)
 
-      _ ->
-        Tasks.list_done_tasks(
-          current_user,
-          teams,
-          user_velocity,
-          team_velocities,
-          done_months_ago
-        )
+        _ ->
+          Tasks.list_done_tasks(
+            current_user,
+            teams,
+            user_velocity,
+            team_velocities,
+            done_months_ago
+          )
       end
 
     socket
-    |> assign(
-      tasks: Map.put(socket.assigns.tasks, :Done, done_tasks[:Done])
-    )
+    |> assign(tasks: Map.put(socket.assigns.tasks, :Done, done_tasks[:Done]))
   end
 
   defp get_tasks(socket) do
@@ -566,10 +565,10 @@ defmodule PmToolWeb.TasksLive do
 
   def handle_info({:load_done_tasks, done_months_ago}, socket) do
     {:noreply,
-      socket
-      |> assign(loading_done_tasks: false)
-      |> assign(done_months_ago: done_months_ago)
-      |> get_done_tasks()}
+     socket
+     |> assign(loading_done_tasks: false)
+     |> assign(done_months_ago: done_months_ago)
+     |> get_done_tasks()}
   end
 
   def handle_info({:new_project_created}, socket) do
@@ -767,11 +766,12 @@ defmodule PmToolWeb.TasksLive do
   end
 
   def handle_event("done_tasks_from_older_weeks_requested", _params, socket) do
-    done_months_ago = case socket.assigns.done_months_ago do
-      nil -> -1
-      num when num >= 0 -> -1
-      num -> num - 1
-    end
+    done_months_ago =
+      case socket.assigns.done_months_ago do
+        nil -> -1
+        num when num >= 0 -> -1
+        num -> num - 1
+      end
 
     socket = assign(socket, loading_done_tasks: true)
     send(self(), {:load_done_tasks, done_months_ago})
@@ -779,10 +779,11 @@ defmodule PmToolWeb.TasksLive do
   end
 
   def handle_event("done_tasks_from_recent_weeks_requested", _params, socket) do
-    done_months_ago = case socket.assigns.done_months_ago do
-      num when num >= -1 -> nil
-      num -> num + 1
-    end
+    done_months_ago =
+      case socket.assigns.done_months_ago do
+        num when num >= -1 -> nil
+        num -> num + 1
+      end
 
     socket = assign(socket, loading_done_tasks: true)
     send(self(), {:load_done_tasks, done_months_ago})

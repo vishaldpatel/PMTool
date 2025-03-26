@@ -44,17 +44,19 @@ defmodule PmToolWeb.TaskComponent do
     socket = assign(socket, assigns)
 
     task = socket.assigns.task
-    due_days = 
+
+    due_days =
       if task.due_date do
         Date.diff(task.due_date, Date.utc_today())
       else
         nil
       end
+
     socket = assign(socket, due_days: due_days)
 
     socket =
-      if Enum.member?(["Accepted", "Closed"], task.status) or 
-        (task.is_milestone == true and not is_nil(due_days) and due_days < 0) do
+      if Enum.member?(["Accepted", "Closed"], task.status) or
+           (task.is_milestone == true and not is_nil(due_days) and due_days < 0) do
         assign(socket, selectable: false)
       else
         socket

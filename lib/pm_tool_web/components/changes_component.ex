@@ -24,7 +24,11 @@ defmodule PmToolWeb.ChangesComponent do
         </svg>
       </button>
       <span class="font-semibold uppercase align-top ml-1 text-gray-400">{@title}</span>
-      <button class="align-top mt-1" title="Previous Week" phx-click="changes_for_previous_week_requested">
+      <button
+        class="align-top mt-1"
+        title="Previous Week"
+        phx-click="changes_for_previous_week_requested"
+      >
         <svg
           class={"h-4 w-4 #{@prev_color}"}
           xmlns="http://www.w3.org/2000/svg"

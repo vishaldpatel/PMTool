@@ -38,7 +38,7 @@ defmodule PmTool.Tasks do
     for team <- teams, into: %{}, do: {team.id, determine_velocity(team)}
   end
 
-  def last_period_end_date() do 
+  def last_period_end_date() do
     Date.utc_today()
     |> Date.end_of_week()
     |> Date.add(-7)
@@ -46,7 +46,9 @@ defmodule PmTool.Tasks do
 
   def now_and_next_stage_query(query) do
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
-    last_period_end_date = last_period_end_date() |> DateTime.new!(just_before_midnight, "Etc/UTC")
+
+    last_period_end_date =
+      last_period_end_date() |> DateTime.new!(just_before_midnight, "Etc/UTC")
 
     from t in query,
       where:
@@ -66,8 +68,11 @@ defmodule PmTool.Tasks do
   def done_stage_query(query) do
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
 
-    last_period_end_date = last_period_end_date() |> DateTime.new!(just_before_midnight, "Etc/UTC")
-    max_end_date = last_period_end_date() |> Date.add(-21) |> DateTime.new!(just_before_midnight, "Etc/UTC")
+    last_period_end_date =
+      last_period_end_date() |> DateTime.new!(just_before_midnight, "Etc/UTC")
+
+    max_end_date =
+      last_period_end_date() |> Date.add(-21) |> DateTime.new!(just_before_midnight, "Etc/UTC")
 
     from t in query,
       where:
@@ -139,25 +144,28 @@ defmodule PmTool.Tasks do
 
   def list_done_tasks(%Team{} = team, team_velocity, done_months_ago) do
     case done_months_ago do
-      nil -> 
+      nil ->
         base_list_tasks_query(team)
         |> get_done_tasks_for_team(team_velocity)
 
       _ ->
-        query = from t in base_list_tasks_query(team),
-          where: (t.status == "Accepted" or t.status == "Closed") or
-            (t.is_milestone == true and not is_nil(t.due_date)),
-          order_by:
-            fragment(
-              "CASE WHEN is_milestone = true AND due_date IS NOT NULL THEN due_date ELSE status_updated_at END DESC"
-            ),
-          limit: ^20,
-          offset: ^((done_months_ago*-1-1) * 20)
+        query =
+          from t in base_list_tasks_query(team),
+            where:
+              t.status == "Accepted" or t.status == "Closed" or
+                (t.is_milestone == true and not is_nil(t.due_date)),
+            order_by:
+              fragment(
+                "CASE WHEN is_milestone = true AND due_date IS NOT NULL THEN due_date ELSE status_updated_at END DESC"
+              ),
+            limit: ^20,
+            offset: ^((done_months_ago * -1 - 1) * 20)
 
         done_tasks =
           Repo.all(query)
           |> Repo.preload(team: [:team_members])
           |> Repo.preload(:owner)
+
         %{
           Now: %{done: [], ongoing: [], unstarted: []},
           Next: %{},
@@ -180,19 +188,26 @@ defmodule PmTool.Tasks do
 
       _ ->
         just_before_midnight = Time.new!(23, 59, 59, 999_999)
-        max_end_date = last_period_end_date() |> Date.add(-21) |> DateTime.new!(just_before_midnight, "Etc/UTC")
-        query = from t in base_list_tasks_query(),
-          where: (t.creator_id == ^user.id or t.team_id in ^team_ids) and 
-            (((t.status == "Accepted" or t.status == "Closed") and
-               t.status_updated_at <= ^max_end_date) or
-            (t.is_milestone == true and not is_nil(t.due_date) and
-               t.due_date <= ^max_end_date)),
-          order_by:
-            fragment(
-              "CASE WHEN is_milestone = true AND due_date IS NOT NULL THEN due_date ELSE status_updated_at END DESC"
-            ),
-          limit: ^20,
-          offset: ^((done_months_ago*-1-1) * 20)
+
+        max_end_date =
+          last_period_end_date()
+          |> Date.add(-21)
+          |> DateTime.new!(just_before_midnight, "Etc/UTC")
+
+        query =
+          from t in base_list_tasks_query(),
+            where:
+              (t.creator_id == ^user.id or t.team_id in ^team_ids) and
+                (((t.status == "Accepted" or t.status == "Closed") and
+                    t.status_updated_at <= ^max_end_date) or
+                   (t.is_milestone == true and not is_nil(t.due_date) and
+                      t.due_date <= ^max_end_date)),
+            order_by:
+              fragment(
+                "CASE WHEN is_milestone = true AND due_date IS NOT NULL THEN due_date ELSE status_updated_at END DESC"
+              ),
+            limit: ^20,
+            offset: ^((done_months_ago * -1 - 1) * 20)
 
         done_tasks =
           Repo.all(query)
@@ -368,9 +383,9 @@ defmodule PmTool.Tasks do
           iteration_end_time = Enum.fetch!(iteration_end_times, slot)
 
           if (((is_nil(task.due_date) and task.is_milestone == true) or task.is_milestone != true) and
-              Date.diff(task.status_updated_at, iteration_end_time) <= 0) or
-            (task.is_milestone == true and not is_nil(task.due_date) and
-              Date.diff(task.due_date, iteration_end_time) <= 0) do
+                Date.diff(task.status_updated_at, iteration_end_time) <= 0) or
+               (task.is_milestone == true and not is_nil(task.due_date) and
+                  Date.diff(task.due_date, iteration_end_time) <= 0) do
             [
               total_estimate,
               current_period,

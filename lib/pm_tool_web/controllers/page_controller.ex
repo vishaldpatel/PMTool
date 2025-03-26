@@ -8,7 +8,7 @@ defmodule PmToolWeb.PageController do
   def pricing(conn, _params) do
     render(conn, :pricing, layout: false)
   end
-  
+
   def privacy(conn, _params) do
     render(conn, :privacy, layout: false)
   end
