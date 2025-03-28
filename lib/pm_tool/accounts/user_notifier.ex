@@ -8,7 +8,7 @@ defmodule PmTool.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"PmTool", "contact@example.com"})
+      |> from({"Vishal from OkNext", "vishal@oknext.io"})
       |> subject(subject)
       |> text_body(body)
 

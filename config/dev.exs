@@ -59,6 +59,16 @@ config :pm_tool, PmToolWeb.Endpoint,
     ]
   ]
 
+config :pm_tool, PmTool.Mailer,
+  adapter: Swoosh.Adapters.Sendmail,
+  relay: "0.0.0.0",
+  dkim: [
+    s: "elixirdev", d: "oknext.io",
+    private_key: {:pem_plain, File.read!("priv/keys/oknext.io.private")}
+  ],
+  retries: 2,
+  no_mx_lookups: false
+
 # Enable dev routes for dashboard and mailbox
 config :pm_tool, dev_routes: true
 
@@ -72,5 +82,3 @@ config :phoenix, :stacktrace_depth, 20
 # Initialize plugs at runtime for faster development compilation
 config :phoenix, :plug_init_mode, :runtime
 
-# Disable swoosh api client as it is only required for production adapters.
-config :swoosh, :api_client, false

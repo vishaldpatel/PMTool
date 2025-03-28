@@ -101,14 +101,12 @@ if config_env() == :prod do
   # are not using SMTP. Here is an example of the configuration:
   #
   config :pm_tool, PmTool.Mailer,
-    adapter: Swoosh.Adapters.SMTP,
-    relay: "smtp.fastmail.com",
-    username: System.get_env("MAIL_LOGIN"),
-    password: System.get_env("MAIL_PASSWORD"),
-    ssl: true,
-    tls: false,
-    auth: :always,
-    port: 465,
+    adapter: Swoosh.Adapters.Sendmail,
+    relay: "0.0.0.0",
+    dkim: [
+      s: "elixirdev", d: "oknext.io",
+      private_key: {:pem_plain, File.read!("priv/keys/oknext.io.private")}
+    ],
     retries: 2,
     no_mx_lookups: false
 
