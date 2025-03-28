@@ -8,7 +8,7 @@ import Config
 config :pm_tool, PmToolWeb.Endpoint, cache_static_manifest: "priv/static/cache_manifest.json"
 
 # Configures Swoosh API Client
-config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: PmTool.Finch
+# config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: PmTool.Finch
 
 # Do not print debug messages in production
 config :logger, level: :info
