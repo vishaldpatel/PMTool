@@ -65,6 +65,24 @@ defmodule PmTool.Tasks do
       order_by: [asc: t.task_order]
   end
 
+  def done_stage_query(query, :all_done_tasks) do
+    just_before_midnight = Time.new!(23, 59, 59, 999_999)
+
+    last_period_end_date =
+      last_period_end_date() |> DateTime.new!(just_before_midnight, "Etc/UTC")
+
+    from t in query,
+      where:
+        ((t.status == "Accepted" or t.status == "Closed") and
+           t.status_updated_at <= ^last_period_end_date) or
+          (t.is_milestone == true and not is_nil(t.due_date) and
+             t.due_date <= ^last_period_end_date),
+      order_by:
+        fragment(
+          "CASE WHEN is_milestone = true AND due_date IS NOT NULL THEN due_date ELSE status_updated_at END DESC"
+        )
+  end
+
   def done_stage_query(query) do
     just_before_midnight = Time.new!(23, 59, 59, 999_999)
 
@@ -102,6 +120,13 @@ defmodule PmTool.Tasks do
     |> separate_tasks_into_stages(team_velocity, :Later)
   end
 
+  def get_all_done_tasks_for_team(query, team_velocity) do
+    Repo.all(done_stage_query(query, :all_done_tasks))
+    |> Repo.preload(team: [:team_members])
+    |> Repo.preload(:owner)
+    |> separate_tasks_into_stages(team_velocity, :Done)
+  end
+
   def get_done_tasks_for_team(query, team_velocity) do
     Repo.all(done_stage_query(query))
     |> Repo.preload(team: [:team_members])
@@ -113,6 +138,12 @@ defmodule PmTool.Tasks do
     get_now_and_next_tasks_for_team(query, team_velocity)
     |> Map.merge(get_later_tasks_for_team(query, team_velocity))
     |> Map.merge(get_done_tasks_for_team(query, team_velocity))
+  end
+
+  defp get_results_for_team(query, team_velocity, :all_done_tasks) do
+    get_now_and_next_tasks_for_team(query, team_velocity)
+    |> Map.merge(get_later_tasks_for_team(query, team_velocity))
+    |> Map.merge(get_all_done_tasks_for_team(query, team_velocity))
   end
 
   defp get_now_and_next_tasks_for_user_and_teams(query, user_velocity, team_velocities) do
@@ -129,11 +160,24 @@ defmodule PmTool.Tasks do
     |> separate_team_tasks_into_stages(user_velocity, team_velocities, :Later)
   end
 
+  defp get_all_done_tasks_for_user_and_teams(query, user_velocity, team_velocities) do
+    Repo.all(done_stage_query(query, :all_done_tasks))
+    |> Repo.preload(team: [:team_members])
+    |> Repo.preload(:owner)
+    |> separate_team_tasks_into_stages(user_velocity, team_velocities, :Done)
+  end
+
   defp get_done_tasks_for_user_and_teams(query, user_velocity, team_velocities) do
     Repo.all(done_stage_query(query))
     |> Repo.preload(team: [:team_members])
     |> Repo.preload(:owner)
     |> separate_team_tasks_into_stages(user_velocity, team_velocities, :Done)
+  end
+
+  defp get_results_for_user_and_teams(query, user_velocity, team_velocities, :all_done_tasks) do
+    get_now_and_next_tasks_for_user_and_teams(query, user_velocity, team_velocities)
+    |> Map.merge(get_later_tasks_for_user_and_teams(query, user_velocity, team_velocities))
+    |> Map.merge(get_all_done_tasks_for_user_and_teams(query, user_velocity, team_velocities))
   end
 
   defp get_results_for_user_and_teams(query, user_velocity, team_velocities) do
@@ -248,18 +292,7 @@ defmodule PmTool.Tasks do
       from t in base_list_tasks_query(team),
         where: ^project.tag in t.project_tags
 
-    get_results_for_team(query, team_velocity)
-  end
-
-  def list_tasks(%User{} = user, teams, user_velocity, team_velocities) do
-    team_ids = get_ids_from(teams)
-
-    query =
-      from t in base_list_tasks_query(),
-        where: t.creator_id == ^user.id or t.team_id in ^team_ids,
-        order_by: [t.stage, t.task_order]
-
-    get_results_for_user_and_teams(query, user_velocity, team_velocities)
+    get_results_for_team(query, team_velocity, :all_done_tasks)
   end
 
   def list_tasks(%User{} = user, project_slug, teams, user_velocity, team_velocities) do
@@ -271,6 +304,17 @@ defmodule PmTool.Tasks do
         where:
           (t.creator_id == ^user.id or t.team_id in ^team_ids) and
             ^project.tag in t.project_tags,
+        order_by: [t.stage, t.task_order]
+
+    get_results_for_user_and_teams(query, user_velocity, team_velocities, :all_done_tasks)
+  end
+
+  def list_tasks(%User{} = user, teams, user_velocity, team_velocities) do
+    team_ids = get_ids_from(teams)
+
+    query =
+      from t in base_list_tasks_query(),
+        where: t.creator_id == ^user.id or t.team_id in ^team_ids,
         order_by: [t.stage, t.task_order]
 
     get_results_for_user_and_teams(query, user_velocity, team_velocities)
