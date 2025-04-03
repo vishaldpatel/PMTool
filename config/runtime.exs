@@ -102,7 +102,7 @@ if config_env() == :prod do
   #
   config :pm_tool, PmTool.Mailer,
     adapter: Swoosh.Adapters.Sendmail,
-    relay: "0.0.0.0",
+    relay: "127.0.0.1",
     dkim: [
       s: "elixirdev",
       d: "oknext.io",
@@ -114,7 +114,7 @@ if config_env() == :prod do
   # For this example you need include a HTTP client required by Swoosh API client.
   # Swoosh supports Hackney and Finch out of the box:
   #
-  #     config :swoosh, :api_client, Swoosh.ApiClient.Hackney
+  # config :swoosh, :api_client, Swoosh.ApiClient.Hackney
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
 end
