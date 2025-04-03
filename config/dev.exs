@@ -63,7 +63,8 @@ config :pm_tool, PmTool.Mailer,
   adapter: Swoosh.Adapters.Sendmail,
   relay: "0.0.0.0",
   dkim: [
-    s: "elixirdev", d: "oknext.io",
+    s: "elixirdev",
+    d: "oknext.io",
     private_key: {:pem_plain, File.read!("priv/keys/oknext.io.private")}
   ],
   retries: 2,
@@ -81,4 +82,3 @@ config :phoenix, :stacktrace_depth, 20
 
 # Initialize plugs at runtime for faster development compilation
 config :phoenix, :plug_init_mode, :runtime
-

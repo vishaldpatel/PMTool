@@ -96,9 +96,11 @@ defmodule PmToolWeb.DoneTasksComponent do
       )
       |> assign(
         prev_color:
-          case assigns.tasks |> Map.values() |> List.flatten() |> Enum.count() > 0 do
-            false -> "text-gray-400"
-            true -> "text-lime-500 hover:text-lime-200"
+          if not is_nil(assigns.done_months_ago) and
+               assigns.tasks |> Map.values() |> List.flatten() |> Enum.count() == 0 do
+            "text-gray-400"
+          else
+            "text-lime-500 hover:text-lime-200"
           end
       )
 

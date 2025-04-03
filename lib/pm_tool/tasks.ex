@@ -282,7 +282,7 @@ defmodule PmTool.Tasks do
             ^tag in t.tags,
         order_by: [t.stage, t.task_order]
 
-    get_results_for_user_and_teams(query, user_velocity, team_velocities)
+    get_results_for_user_and_teams(query, user_velocity, team_velocities, :all_done_tasks)
   end
 
   def list_tasks(%Team{} = team, project_slug, team_velocity) do

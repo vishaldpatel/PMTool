@@ -104,19 +104,22 @@ defmodule PmToolWeb.TasksLive do
         timestamp={@timestamp}
         current_team={@current_team}
       />
-      <%= if not is_nil(@done_months_ago) or 
-             @tasks[:Done] |> Map.values() |> List.flatten() |> Enum.count() > 0 do %>
-        <.live_component
-          module={PmToolWeb.DoneTasksComponent}
-          id="done"
-          current_user={@current_user}
-          tasks={@tasks[:Done]}
-          open_tasks={@open_tasks}
-          timestamp={@timestamp}
-          done_months_ago={@done_months_ago}
-          loading_done_tasks={@loading_done_tasks}
-        />
-      <% end %>
+      <.live_component
+        module={PmToolWeb.DoneTasksComponent}
+        id="done"
+        current_user={@current_user}
+        tasks={
+          if @tasks[:Done] |> Map.values() |> List.flatten() |> Enum.count() > 0 do
+            @tasks[:Done]
+          else
+            %{last: [], two: [], three: [], earlier: []}
+          end
+        }
+        open_tasks={@open_tasks}
+        timestamp={@timestamp}
+        done_months_ago={@done_months_ago}
+        loading_done_tasks={@loading_done_tasks}
+      />
     </div>
     """
   end

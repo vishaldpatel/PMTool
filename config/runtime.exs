@@ -104,7 +104,8 @@ if config_env() == :prod do
     adapter: Swoosh.Adapters.Sendmail,
     relay: "0.0.0.0",
     dkim: [
-      s: "elixirdev", d: "oknext.io",
+      s: "elixirdev",
+      d: "oknext.io",
       private_key: {:pem_plain, File.read!("priv/keys/oknext.io.private")}
     ],
     retries: 2,
