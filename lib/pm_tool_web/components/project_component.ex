@@ -243,6 +243,31 @@ defmodule PmToolWeb.ProjectComponent do
             type="project"
           />
           <div class="w-full text-right">
+            <%= if assigns.action != "create_project" do %>
+              <input type="hidden" id={"project-archived-#{@id}"} name="project[archived]" value="false" />
+              <button
+                title="Archive This Project"
+                class="float-left"
+                onclick="event.preventDefault();"
+                phx-click={
+                  JS.toggle_class("hidden", to: "#confirm-archive-#{@id}")
+                }
+              >
+                <svg 
+                xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" class="stroke-orange-400 hover:stroke-orange-600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="5" x="2" y="3" rx="1"></rect><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"></path><path d="M10 12h4"></path></svg> 
+              </button>
+              <button
+                id={"confirm-archive-#{@id}"}
+                title="Confirm Archive This Project"
+                class="float-left hidden"
+                phx-click={
+                  JS.set_attribute({"value", "true"}, to: "#project-archived-#{@id}")
+                }
+              >
+                <svg 
+                xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" class="stroke-lime-600 hover:stroke-lime-400" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="5" x="2" y="3" rx="1"></rect><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"></path><path d="M10 12h4"></path></svg> 
+              </button>
+            <% end %>
             <button
               type="reset"
               phx-click={

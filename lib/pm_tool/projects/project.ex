@@ -9,6 +9,7 @@ defmodule PmTool.Projects.Project do
     field :slug, :string
     field :tag, :string
     field :tags, {:array, :string}
+    field :archived, :boolean
 
     belongs_to :creator, PmTool.Accounts.User
 
@@ -18,7 +19,7 @@ defmodule PmTool.Projects.Project do
   @doc false
   def changeset(project, attrs) do
     project
-    |> cast(attrs, [:name, :description, :creator_id, :tag, :tags])
+    |> cast(attrs, [:name, :description, :creator_id, :tag, :tags, :archived])
     |> validate_required([:name, :creator_id, :tag])
     |> slugify()
     |> unique_constraint(:slug)

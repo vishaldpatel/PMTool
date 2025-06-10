@@ -32,21 +32,23 @@ defmodule PmToolWeb.ProjectsComponent do
       <%= if @projects do %>
         <ul phx-hook="Sortable" id={@id}>
           <%= for project <- @projects do %>
-            <.live_component
-              module={PmToolWeb.ProjectComponent}
-              id={"project-#{project.slug}"}
-              project={project}
-              current_user={@current_user}
-              open_project_slugs={@open_project_slugs}
-              timestamp={@timestamp}
-              project_progress={
-                if @project_progress[project.tag] do
-                  @project_progress[project.tag]
-                else
-                  0.0
-                end
-              }
-            />
+            <%= if project.archived != true do %>
+              <.live_component
+                module={PmToolWeb.ProjectComponent}
+                id={"project-#{project.slug}"}
+                project={project}
+                current_user={@current_user}
+                open_project_slugs={@open_project_slugs}
+                timestamp={@timestamp}
+                project_progress={
+                  if @project_progress[project.tag] do
+                    @project_progress[project.tag]
+                  else
+                    0.0
+                  end
+                }
+              />
+            <% end %>
           <% end %>
         </ul>
       <% end %>
