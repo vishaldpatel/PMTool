@@ -1,3 +1,9 @@
+# Design notes
+
+Working notes on planned features. These are ideas, not documentation of current behavior.
+
+## Ideas
+
 - Attributes
   - Name
   - Type (number, text, image, file)
@@ -9,7 +15,8 @@
   - Iteration history
 
 
-Velocity:
+## Velocity
+
 - All tasks, personal and team
 - For a given task, is this a team task or a personal task?
 - If this is a team task?
@@ -17,7 +24,8 @@ Velocity:
 - Not a team task?
   - Get the creator's velocity.
 
-Calculating a user or team's velocity:
+### Calculating a user or team's velocity
+
   - Average of last 3 weeks, with emphasis put on the previous week's velocity.
     So, ((last week * 2) + (prior 2 weeks)) / 4
   - If current week's velocity is already higher than the average:
@@ -26,7 +34,8 @@ Calculating a user or team's velocity:
     - the prior week's velocity.
     - minimum velocity.
 
-Velocity calculator:
+### Velocity calculator
+
   - Runs on startup, and once per day.
   - If not calculated for the prior cycle, calculate velocity for every user
   - Calculates velocity for every team.
