@@ -9,7 +9,7 @@ defmodule PmToolWeb.SubscriptionComponent do
      assign(socket,
        trial_actions_left: 0,
        action_count: 0,
-       can_canel: false
+       can_cancel: false
      )}
   end
 
@@ -41,18 +41,16 @@ defmodule PmToolWeb.SubscriptionComponent do
   end
 
   def handle_event("reinstate_subscription", _, socket) do
-    Application.fetch_env!(:pm_tool, :STRIPE_API_KEY) |> IO.inspect()
     Accounts.reinstate_subscription_for(socket.assigns.current_user)
 
     {:noreply,
      assign(socket,
        subscription: Accounts.get_subscription(socket.assigns.current_user),
-       can_canel: true
+       can_cancel: true
      )}
   end
 
   def handle_event("cancel_subscription", _, socket) do
-    Application.fetch_env!(:pm_tool, :STRIPE_API_KEY) |> IO.inspect()
     Accounts.cancel_subscription_for(socket.assigns.current_user)
 
     {:noreply,
@@ -115,7 +113,7 @@ defmodule PmToolWeb.SubscriptionComponent do
           {@trial_actions_left} Actions Remaining in Trial
         <% end %>
       </div>
-      <a href="https://buy.stripe.com/28o5n21abfsUbXG8ww" target="_blank">
+      <a href={Accounts.stripe_config(:checkout_url)} target="_blank">
         <button class={"font-bold rounded my-1 px-2 mr-1 text-gray-100 #{@sub_button_color} rounded p-[1px]"}>
           Upgrade Subscription
         </button>

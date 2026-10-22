@@ -15,12 +15,24 @@ import Config
 #     PHX_SERVER=true bin/pm_tool start
 #
 
-config :pm_tool, :STRIPE_API_KEY, System.get_env("STRIPE_API_KEY")
-
 # Alternatively, you can use `mix phx.gen.release` to generate a `bin/server`
 # script that automatically sets the env var above.
 if System.get_env("PHX_SERVER") do
   config :pm_tool, PmToolWeb.Endpoint, server: true
+end
+
+# Stripe billing is optional. It is enabled only when STRIPE_API_KEY is set
+# (tests configure it themselves).
+stripe_api_key = System.get_env("STRIPE_API_KEY")
+
+if stripe_api_key && config_env() != :test do
+  config :pm_tool, :stripe,
+    enabled: true,
+    api_key: stripe_api_key,
+    # Signing secret of the webhook endpoint, used to verify incoming events.
+    webhook_secret: System.get_env("STRIPE_WEBHOOK_SECRET"),
+    # Stripe Payment Link that the "Upgrade Subscription" button opens.
+    checkout_url: System.get_env("STRIPE_CHECKOUT_URL")
 end
 
 if config_env() == :prod do
@@ -96,25 +108,25 @@ if config_env() == :prod do
 
   # ## Configuring the mailer
   #
-  # In production you need to configure the mailer to use a different adapter.
-  # Also, you may need to configure the Swoosh API client of your choice if you
-  # are not using SMTP. Here is an example of the configuration:
-  #
-  config :pm_tool, PmTool.Mailer,
-    adapter: Swoosh.Adapters.Sendmail,
-    relay: "127.0.0.1",
-    dkim: [
-      s: "elixirdev",
-      d: "oknext.io",
-      private_key: {:pem_plain, File.read!("priv/keys/oknext.io.private")}
-    ],
-    retries: 2,
-    no_mx_lookups: false
+  # Emails are sent through the local sendmail binary. Set DKIM_DOMAIN,
+  # DKIM_SELECTOR and DKIM_PRIVATE_KEY_PATH to sign them with DKIM.
+  dkim =
+    if dkim_domain = System.get_env("DKIM_DOMAIN") do
+      [
+        dkim: [
+          s: System.get_env("DKIM_SELECTOR") || "default",
+          d: dkim_domain,
+          private_key: {:pem_plain, File.read!(System.fetch_env!("DKIM_PRIVATE_KEY_PATH"))}
+        ]
+      ]
+    else
+      []
+    end
 
-  # For this example you need include a HTTP client required by Swoosh API client.
-  # Swoosh supports Hackney and Finch out of the box:
-  #
-  # config :swoosh, :api_client, Swoosh.ApiClient.Hackney
-  #
-  # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
+  config :pm_tool, PmTool.Mailer, [adapter: Swoosh.Adapters.Sendmail] ++ dkim
+
+  config :pm_tool, :mail_from, {
+    System.get_env("MAIL_FROM_NAME") || "PmTool",
+    System.get_env("MAIL_FROM_ADDRESS") || "noreply@#{host}"
+  }
 end

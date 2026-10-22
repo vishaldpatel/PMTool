@@ -12,7 +12,6 @@ defmodule PmToolWeb.UserForgotPasswordLiveTest do
       {:ok, lv, html} = live(conn, ~p"/users/reset_password")
 
       assert html =~ "Forgot your password?"
-      assert has_element?(lv, ~s|a[href="#{~p"/users/register"}"]|, "Register")
       assert has_element?(lv, ~s|a[href="#{~p"/users/log_in"}"]|, "Log in")
     end
 
@@ -21,7 +20,7 @@ defmodule PmToolWeb.UserForgotPasswordLiveTest do
         conn
         |> log_in_user(user_fixture())
         |> live(~p"/users/reset_password")
-        |> follow_redirect(conn, ~p"/")
+        |> follow_redirect(conn, ~p"/tasks")
 
       assert {:ok, _conn} = result
     end

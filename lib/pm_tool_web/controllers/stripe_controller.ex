@@ -1,8 +1,41 @@
 defmodule PmToolWeb.StripeController do
   use PmToolWeb, :controller
+  require Logger
   alias PmTool.Accounts
+  alias PmToolWeb.{CacheBodyReader, StripeSignature}
 
   def webhook(conn, params) do
+    with {:billing, true} <- {:billing, Accounts.billing_enabled?()},
+         :ok <- verify_signature(conn) do
+      handle_event(params)
+
+      conn
+      |> send_resp(200, "OK")
+      |> halt()
+    else
+      {:billing, false} ->
+        conn
+        |> send_resp(404, "Not Found")
+        |> halt()
+
+      {:error, reason} ->
+        Logger.warning("Rejected Stripe webhook: #{reason}")
+
+        conn
+        |> send_resp(400, "Invalid signature")
+        |> halt()
+    end
+  end
+
+  defp verify_signature(conn) do
+    StripeSignature.verify(
+      CacheBodyReader.raw_body(conn),
+      conn |> get_req_header("stripe-signature") |> List.first(),
+      Accounts.stripe_config(:webhook_secret)
+    )
+  end
+
+  defp handle_event(params) do
     stripe_id = params["data"]["object"]["id"]
     event_type = params["type"]
 
@@ -68,11 +101,7 @@ defmodule PmToolWeb.StripeController do
         end
 
       event_type ->
-        IO.inspect("Ignored Stripe Event: #{event_type}")
+        Logger.info("Ignored Stripe Event: #{event_type}")
     end
-
-    conn
-    |> send_resp(200, "OK")
-    |> halt()
   end
 end

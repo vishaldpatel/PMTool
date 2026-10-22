@@ -36,28 +36,11 @@ defmodule PmToolWeb.UserRegistrationLive do
         <.input field={@form[:password]} type="password" label="Password" required />
 
         <:actions>
-          <.button
-            phx-disable-with="Creating account..."
-            class="w-full"
-            id="btn_create_account"
-            style="display:none;"
-          >
+          <.button phx-disable-with="Creating account..." class="w-full" id="btn_create_account">
             Create an account
           </.button>
         </:actions>
       </.simple_form>
-      <div class="text-center text-sm font-semibold text-gray-700 my-1">
-        In order to create an account,
-        you must read and agree to the <a class="underline" href="/tos">Terms of Service</a>
-      </div>
-      <div class="text-center text-sm font-semibold text-gray-700 mt-2 mb-9">
-        <input
-          type="checkbox"
-          phx-click={JS.toggle(to: "#btn_create_account")}
-          checked={@enable_create_button}
-          id="agree"
-        /> I AGREE
-      </div>
     </div>
     """
   end
@@ -67,7 +50,7 @@ defmodule PmToolWeb.UserRegistrationLive do
 
     socket =
       socket
-      |> assign(trigger_submit: false, check_errors: false, enable_create_button: false)
+      |> assign(trigger_submit: false, check_errors: false)
       |> assign_form(changeset)
 
     {:ok, socket, temporary_assigns: [form: nil]}

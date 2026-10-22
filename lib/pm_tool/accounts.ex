@@ -422,6 +422,18 @@ defmodule PmTool.Accounts do
     |> Repo.one()
   end
 
+  @doc """
+  Returns true when Stripe billing is configured (see `config/runtime.exs`).
+  """
+  def billing_enabled?, do: stripe_config(:enabled, false)
+
+  @doc """
+  Returns a value from the `:stripe` application config.
+  """
+  def stripe_config(key, default \\ nil) do
+    Application.get_env(:pm_tool, :stripe, []) |> Keyword.get(key, default)
+  end
+
   def create_subscription(attrs \\ %{}) do
     %Subscription{}
     |> Subscription.changeset(attrs)
@@ -472,7 +484,7 @@ defmodule PmTool.Accounts do
             "https://api.stripe.com/v1/subscriptions/#{sub.stripe_id}",
             "",
             [
-              {"Authorization", "Bearer #{Application.get_env(:pm_tool, :STRIPE_API_KEY)}"},
+              {"Authorization", "Bearer #{stripe_config(:api_key)}"},
               {"Content-Type", "application/x-www-form-urlencoded"}
             ]
           )
@@ -483,7 +495,7 @@ defmodule PmTool.Accounts do
           {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
             updated_vals =
               body
-              |> Poison.decode!()
+              |> Jason.decode!()
               |> Map.take(expected_fields)
               |> Enum.map(fn {k, v} -> {String.to_atom(k), v} end)
               |> Enum.into(%{})
@@ -521,7 +533,7 @@ defmodule PmTool.Accounts do
             "https://api.stripe.com/v1/subscriptions/#{sub.stripe_id}",
             "cancel_at_period_end=true",
             [
-              {"Authorization", "Bearer #{Application.get_env(:pm_tool, :STRIPE_API_KEY)}"},
+              {"Authorization", "Bearer #{stripe_config(:api_key)}"},
               {"Content-Type", "application/x-www-form-urlencoded"}
             ]
           )
@@ -553,7 +565,7 @@ defmodule PmTool.Accounts do
             "https://api.stripe.com/v1/subscriptions/#{sub.stripe_id}",
             "cancel_at_period_end=false",
             [
-              {"Authorization", "Bearer #{Application.get_env(:pm_tool, :STRIPE_API_KEY)}"},
+              {"Authorization", "Bearer #{stripe_config(:api_key)}"},
               {"Content-Type", "application/x-www-form-urlencoded"}
             ]
           )

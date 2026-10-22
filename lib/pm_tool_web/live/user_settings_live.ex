@@ -77,8 +77,8 @@ defmodule PmToolWeb.UserSettingsLive do
         </.simple_form>
       </div>
 
-      <h3 class="text-center mt-5">Subscripion Settings</h3>
-      <div class="text-center">
+      <h3 :if={@billing_enabled} class="text-center mt-5">Subscription Settings</h3>
+      <div :if={@billing_enabled} class="text-center">
         <.live_component
           module={PmToolWeb.SubscriptionComponent}
           id="subscription"
@@ -119,6 +119,7 @@ defmodule PmToolWeb.UserSettingsLive do
       |> assign(:email_form, to_form(email_changeset))
       |> assign(:password_form, to_form(password_changeset))
       |> assign(:trigger_submit, false)
+      |> assign(billing_enabled: Accounts.billing_enabled?())
       |> assign(subscription: Accounts.get_subscription(user))
 
     {:ok, socket}

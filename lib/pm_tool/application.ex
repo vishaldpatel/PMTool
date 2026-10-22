@@ -17,12 +17,16 @@ defmodule PmTool.Application do
       # Start Finch
       {Finch, name: PmTool.Finch},
       # Start the Endpoint (http/https)
-      PmToolWeb.Endpoint,
-      # Start worker that updates subscription info from Stripe
-      PmTool.SubscriptionChecker
+      PmToolWeb.Endpoint
       # Start a worker by calling: PmTool.Worker.start_link(arg)
       # {PmTool.Worker, arg}
     ]
+
+    # Start worker that updates subscription info from Stripe
+    children =
+      if PmTool.Accounts.billing_enabled?(),
+        do: children ++ [PmTool.SubscriptionChecker],
+        else: children
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options

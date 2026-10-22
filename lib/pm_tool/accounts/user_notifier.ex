@@ -8,7 +8,7 @@ defmodule PmTool.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"Vishal from OkNext", "vishal@oknext.io"})
+      |> from(Application.fetch_env!(:pm_tool, :mail_from))
       |> subject(subject)
       |> text_body(body)
 

@@ -35,8 +35,10 @@ pm_tool-*.tar
 # Ignore keys
 /priv/keys/
 
-# Ignore digested assets cache.
+# Ignore digested assets cache and the files "mix phx.digest" generates.
 /priv/static/cache_manifest.json
+/priv/static/**/*-????????????????????????????????.*
+/priv/static/**/*.gz
 
 # In case you use Node.js/npm, you want to ignore these.
 npm-debug.log

@@ -22,8 +22,6 @@ defmodule PmToolWeb.Router do
 
     get "/", PageController, :home
     get "/pricing", PageController, :pricing
-    get "/tos", PageController, :tos
-    get "/privacy", PageController, :privacy
   end
 
   # Other scopes may use custom stacks.

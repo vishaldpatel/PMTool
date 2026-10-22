@@ -29,6 +29,12 @@ config :pm_tool, PmToolWeb.Endpoint,
 # at the `config/runtime.exs`.
 config :pm_tool, PmTool.Mailer, adapter: Swoosh.Adapters.Local
 
+# The name and address that account emails are sent from.
+config :pm_tool, :mail_from, {"PmTool", "noreply@localhost"}
+
+# Stripe billing is disabled unless STRIPE_API_KEY is set (see config/runtime.exs).
+config :pm_tool, :stripe, enabled: false
+
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.17.11",

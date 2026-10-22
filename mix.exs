@@ -53,8 +53,7 @@ defmodule PmTool.MixProject do
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
       {:exgravatar, "~> 2.0"},
-      {:httpoison, "~> 2.0"},
-      {:poison, "~> 6.0"}
+      {:httpoison, "~> 2.0"}
     ]
   end
 

@@ -6,14 +6,13 @@ defmodule PmToolWeb.PageController do
   end
 
   def pricing(conn, _params) do
-    render(conn, :pricing, layout: false)
-  end
-
-  def privacy(conn, _params) do
-    render(conn, :privacy, layout: false)
-  end
-
-  def tos(conn, _params) do
-    render(conn, :tos, layout: false)
+    if PmTool.Accounts.billing_enabled?() do
+      render(conn, :pricing, layout: false)
+    else
+      conn
+      |> put_status(:not_found)
+      |> put_view(PmToolWeb.ErrorHTML)
+      |> render(:"404")
+    end
   end
 end

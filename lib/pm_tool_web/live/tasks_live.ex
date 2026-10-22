@@ -33,7 +33,7 @@ defmodule PmToolWeb.TasksLive do
           show_changelog={@show_changelog}
         />
         <.live_component module={PmToolWeb.SearchTagsComponent} id="search_tags" tags={@search_tags} />
-        <div class="absolute bottom-1">
+        <div :if={@billing_enabled} class="absolute bottom-1">
           <.live_component
             module={PmToolWeb.SubscriptionComponent}
             id="subscription"
@@ -194,6 +194,7 @@ defmodule PmToolWeb.TasksLive do
         socket
         |> assign(user_preferences: user_preferences)
         |> assign(open_project_slugs: open_project_slugs)
+        |> assign(billing_enabled: Accounts.billing_enabled?())
         |> assign(subscription: Accounts.get_subscription(current_user))
         |> assign(action_count: 0)
         |> assign(projects: [])

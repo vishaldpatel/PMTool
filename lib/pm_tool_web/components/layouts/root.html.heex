@@ -49,7 +49,7 @@
             Home
           </.link>
         </li>
-        <li>
+        <li :if={PmTool.Accounts.billing_enabled?()}>
           <.link
             href={~p"/pricing"}
             class="text-[0.8125rem] leading-6 text-zinc-400 font-semibold hover:text-zinc-500"
@@ -76,25 +76,5 @@
       <% end %>
     </ul>
     {@inner_content}
-    <ul class="fixed bottom-1 right-0 z-10 flex items-center gap-4 justify-start mx-2 mt-2">
-      <%= unless @current_user do %>
-        <li>
-          <.link
-            href={~p"/tos"}
-            class="text-[0.8125rem] leading-6 text-zinc-400 font-semibold hover:text-zinc-500"
-          >
-            Terms Of Service
-          </.link>
-        </li>
-        <li>
-          <.link
-            href={~p"/privacy"}
-            class="text-[0.8125rem] leading-6 text-zinc-400 font-semibold hover:text-zinc-500"
-          >
-            Privacy Policy
-          </.link>
-        </li>
-      <% end %>
-    </ul>
   </body>
 </html>
